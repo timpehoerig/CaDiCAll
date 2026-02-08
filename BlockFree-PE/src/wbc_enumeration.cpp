@@ -21,6 +21,7 @@ bool COUNT = false;
 bool VERBOSE = false;
 bool SHRINK = false;
 bool PROFILE = false;
+bool FIXED = false;
 bool HELP = false;
 
 // cnf must be global so EnumProp can use it
@@ -155,12 +156,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         // the saved decision
         int saved_decision = 0;
 
-        // last decision (to decide wether an assignment is a decision or forced)
-        int last_decision = 0;
-
-        // decision before backtrack (to detect duplication)
-        int decision_b4_backtracked = 0;
-
         // counting decisions on levels
         ivec decision_counts_per_level;
         // decisions per level == decisions[dl]
@@ -294,7 +289,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                         false_backtrack = true;
                         if (VERBOSE) std::cout << "c decision was already made twice on that level, false_backtrack = true" << std::endl;
                     }
-                    decision_b4_backtracked = lit;
 
                 } else {
                     push(lit, dl, false);
@@ -339,22 +333,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (VERBOSE) std::cout << "c to level " + std::to_string(new_level) << std::endl;
             START (wbc_notify_backtrack);
 
-            int pos_new_decsion_b4_backtracked = 0;
-
             // update stack
             while (stack.size() > 0 && dls[stack.back()] > (int)new_level) {
                 int var = stack.back();
                 auto [val, level, is_decision] = pop();
-                if (is_decision) {
-                    last_decision = 0;
-                    pos_new_decsion_b4_backtracked = val * var;
-                }
 
                 if (VERBOSE) std::cout << "c removed " + std::to_string(val * var) + "@" + std::to_string(level) << std::endl;
-            }
-
-            if (!false_backtrack && pos_new_decsion_b4_backtracked != 0) {
-                decision_b4_backtracked = pos_new_decsion_b4_backtracked;
             }
 
             dl = new_level;
@@ -439,6 +423,16 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
 
+            if (FIXED) {
+                for (int var = 1; var <= max_var; var++) {
+                    if (values[var] == 0) {
+                        if (VERBOSE) std::cout << "c returning decision: " + std::to_string(var) << std::endl;
+                        STOP(wbc_cb_decide);
+                        return var;
+                    }
+                }
+            }
+
             STOP (wbc_cb_decide);
 
             if (VERBOSE) std::cout << "c let the solver decide" << std::endl;
@@ -461,19 +455,20 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 };
 
 
-void arg_parser(int argc, char* argv[], bool& count, bool& verbose, bool& profile, bool& shrink, bool& help) {
+void arg_parser(int argc, char* argv[], bool& count, bool& verbose, bool& profile, bool& fixed, bool& shrink, bool& help) {
     std::map<std::string, std::string> parsedArgs = parseArgs(argc, argv);
     count = parsedArgs.count("count") || parsedArgs.count("c");
     verbose = parsedArgs.count("verbose") || parsedArgs.count("v");
     profile = parsedArgs.count("profile") || parsedArgs.count("p");
     shrink = parsedArgs.count("shrink") || parsedArgs.count("s");
+    fixed = parsedArgs.count("fixed") || parsedArgs.count("f");
     help = parsedArgs.count("help") || parsedArgs.count("h");
 }
 
 
 int main(int argc, char* argv[]) {
     // arg parser
-    arg_parser(argc, argv, COUNT, VERBOSE, PROFILE, SHRINK, HELP);
+    arg_parser(argc, argv, COUNT, VERBOSE, PROFILE, FIXED, SHRINK, HELP);
 
     if (HELP) {
         std::string msg =
@@ -489,6 +484,7 @@ int main(int argc, char* argv[]) {
             "\t-c --count \t Returns number of models\n"
             "\t-v --verbose \t Returns the log and all models\n"
             "\t-p --profile \t Returns statistic about where time was spent\n"
+            "\t-f --fixed \t Decision order is 1...n\n"
             "\t-s --shrink \t Performs implicant shrinking on found models\n";
         std::cout << msg;
         return 0;
@@ -498,6 +494,7 @@ int main(int argc, char* argv[]) {
         std::cout << "c Runnning the solver with the following options:" << std::endl;
         if (COUNT) std::cout << "c \tCOUNT" << std::endl;
         if (VERBOSE) std::cout << "c \tVERBOSE" << std::endl;
+        if (FIXED) std::cout << "c \tFIXED" << std::endl;
         if (SHRINK) std::cout << "c \tSHRINK" << std::endl;
         if (PROFILE) std::cout << "c \tPROFILE" << std::endl;
     }
