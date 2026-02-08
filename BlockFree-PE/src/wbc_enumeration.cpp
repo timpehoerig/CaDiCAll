@@ -360,6 +360,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             dl = new_level;
             is_decision = false;
 
+            false_backtrack = false;
+
             // update decision counts
             assert(decisions.size() == decision_counts_per_level.size());
             while ((int)decision_counts_per_level.size() > dl + 2) {
@@ -384,12 +386,21 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 int lit = saved_decision;
                 saved_decision = 0;
 
-                if (values[std::abs(lit)] == -lit) {
-                    false_backtrack = true;
-                    if (VERBOSE) std::cout << "c saved decision already falsified, backtracking to avoid duplication" << std::endl;
+                int val = values[std::abs(lit)];
+
+                // saved decision is assigned
+                if (val != 0) {
+                    // it is fulfilled
+                    if ((val == 1 && lit > 0) || (val == -1 && lit < 0)) {
+                        if (VERBOSE) std::cout << "c saved decision already satisfied, let solver decide next" << std::endl;
+                    } else {
+                        // it is falsified
+                        false_backtrack = true;
+                        if (VERBOSE) std::cout << "c saved decision already falsified, backtracking to avoid duplication" << std::endl;
+                    }
                 } else {
+                    if (VERBOSE) std::cout << "c returning saved decision: " + std::to_string(lit) << std::endl;
                     STOP(wbc_cb_decide);
-                    if (VERBOSE) std::cout << "c returning decision: " + std::to_string(lit) << std::endl;
                     return lit;
                 }
             }
@@ -409,7 +420,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 save_decision = true;
                 solver->force_backtrack(highest_pos_dl - 1);
                 false_backtrack = false;
-                if (VERBOSE) std::cout << "end false_backtrack" << std::endl;
+                STOP (wbc_cb_decide);
+                if (VERBOSE) std::cout << "c end false_backtrack - the next decision will be ignored" << std::endl;
+                return 0;
             }
 
             // check if decisions is already fixed
