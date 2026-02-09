@@ -3,7 +3,7 @@
 verified_count=0
 
 while true; do
-    output="$(./run_checker.sh -s)"
+    output="$(./run_checker.sh)"
 
     # Get last and second-last lines
     last_line="$(printf '%s\n' "$output" | tail -n 1)"
@@ -19,6 +19,7 @@ while true; do
         ((verified_count++))
         echo -ne "VERIFIED: $verified_count \r"
     else
+        echo -ne "VERIFIED: $verified_count \r"
         echo "Last line is not VERIFIED: '$last_line'"
         break
     fi
