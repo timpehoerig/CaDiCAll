@@ -10,18 +10,13 @@ tmp_wbcp_negated_models=./tmp_wbcp_negated_models.txt
 path_fuzzed_cnf=./tmp_fuzzed.cnf
 
 fuzz=true
-# projected=false
 shrink=false
 
-while getopts "c:ps" option; do
+while getopts "c:s" option; do
   case "$option" in
     c)
       path_fuzzed_cnf="$OPTARG"
       fuzz=false
-      ;;
-    p)
-      projected=false
-      echo "Script: Use cnf in projected form"
       ;;
     s)
       shrink=true
@@ -30,14 +25,12 @@ while getopts "c:ps" option; do
     *)
       echo "This is a script for running the checker"
       echo
-      echo "USAGE: ./run_schecker.sh [-c <path_to_cnf>] [-p]"
+      echo "USAGE: ./run_schecker.sh [-c <path_to_cnf>] [-s]"
       echo
       echo "-c <path_to_cnf>    Uses the given cnf"
-      # echo "-p                  Project variables"
       echo "-s                  Allow shrunken models"
       echo
       echo "If no cnf is provided, a random cnf is fuzzed with cnfuzz (--tiny option is on)"
-      # echo "If projected is true but the cnf is not in projected form, random literals are projected" 
       exit 1
       ;;
   esac
@@ -49,36 +42,6 @@ make -C ../
 if $fuzz; then
     echo "Script: fuzz cnf into $path_fuzzed_cnf"
     ../../cnfuzz/cnfuzz --tiny > $path_fuzzed_cnf 
-fi
-
-if $projected; then
-
-    first_line=$(head -n 1 "$path_fuzzed_cnf")
-
-    if [[ $first_line =~ ^c\ ([0-9]+,)*[0-9]+$ ]]; then
-        echo "Script: $path_fuzzed_cnf is already in projected form"
-    else
-        x=$(grep -E "^p cnf [0-9]+ [0-9]+" "$path_fuzzed_cnf" | awk '{print $3}' | head -n1)
-
-        if [ -z "$x" ]; then
-            echo "No 'p cnf X Y' line found."
-            exit 1
-        fi
-
-        newline="c "$(shuf -i 1-"$x" -n $(( RANDOM % $x + 1 )) | paste -sd,)
-
-        tmpfile=$(mktemp)
-        {
-            echo "$newline"
-            cat "$path_fuzzed_cnf"
-        } > "$tmpfile"
-
-        if ! $fuzz; then
-          path_fuzzed_cnf=./tmp_projected_fuzzed.cnf
-        fi
-        mv "$tmpfile" "$path_fuzzed_cnf"
-    echo "Script: added $newline to $path_fuzzed_cnf"
-    fi
 fi
 
 if $shrink; then

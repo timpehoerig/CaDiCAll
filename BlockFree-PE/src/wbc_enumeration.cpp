@@ -32,7 +32,7 @@ const char* NEGATED_MODELS = "tmp_wbcp_negated_models.txt";
 const char* PROOF_OUT = "tmp_wbcp_proof.txt";
 
 
-int check_literal(int e_var, int b, ivec Trail, ivec dls, ivec values, int i, CaDiCaL::Internal *internal) {
+int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, CaDiCaL::Internal *internal) {
     if (VERBOSE) std::cout << "c\nc check_literal:" << std::endl;
     START (wbc_check_literal);
 
@@ -59,7 +59,7 @@ int check_literal(int e_var, int b, ivec Trail, ivec dls, ivec values, int i, Ca
         if (VERBOSE) std::cout << "also by: " << std::to_string(e_other_lit) << " internal: " << std::to_string(i_other_lit) << std::endl;
         // if (!(std::count(Trail.begin(), Trail.end(), e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
         // change search for index comparison (own map lit -> index)
-        if (!(std::count(Trail.begin(), Trail.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
+        if (!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
             if (VERBOSE) std::cout << "c b = max(" << std::to_string(b) << "," << std::to_string(dls[e_var]) << ")" << std::endl;
             b = std::max(b, dls[e_var]);
         }
@@ -70,26 +70,25 @@ int check_literal(int e_var, int b, ivec Trail, ivec dls, ivec values, int i, Ca
 }
 
 
-int implicant_shrinking(ivec T, bvec is_ds, ivec dls, ivec values, ivec dcpl, CaDiCaL::Internal *internal) {
+int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl, CaDiCaL::Internal *internal) {
     if (VERBOSE) std::cout << "c\nc implicant_shrinking:" << std::endl;
     START (wbc_implicant_shrinking);
 
-    if (VERBOSE) std::cout << "c starting implicant shrinking" << std::endl;
     int b = 0;
-    int index = T.size() - 1;
+    int index = stack.size() - 1;
     while (index >= 0) {
-        int v = T[index];
-        index--;
+        int v = stack[index];
         // (is_ds[v] && dcpl[dls[v] - 1] > 1) == values[v] < 0
-        if (!is_ds[v] || (is_ds[v] && dcpl[dls[v] - 1] > 1)) {
+        if (!is_ds[v] || (is_ds[v] && dcpl[dls[v]] != 1)) {
             b = std::max(b, dls[v]);
             if (VERBOSE) std::cout << "c " << std::to_string(v * values[v]) << " is not a decision -> b = max(" << std::to_string(b) << "," << std::to_string(dls[v]) << ")" << std::endl;
         } else if (dls[v] > b) {
-            b = check_literal(v, b, T, dls, values, index, internal);
+            b = check_literal(v, b, stack, dls, values, index, internal);
         } else if (dls[v] == 0 || dls[v] == b) {
             if (VERBOSE) std::cout << "c dl of " << std::to_string(v * values[v]) << " is " << std::to_string(dls[v]) << "(0 or b)" << std::endl;
             break;
         }
+        index--;
     }
     STOP(wbc_implicant_shrinking);
     return b;
@@ -219,6 +218,11 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         bool cb_check_found_model (const tmodel &model) override {
             if (VERBOSE) std::cout << "c\nc cb_check_found_model:" << std::endl;
             START (wbc_cb_check_found_model);
+
+            if (decision_counts_per_level.back() > 2) {
+                false_backtrack = true;
+                if (VERBOSE) std::cout << "c decision count exceeded 2, false_backtrack = true" << std::endl;
+            }
 
             int b = dl;
             bool found_model = false;
@@ -363,6 +367,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         int cb_decide () override {
             if (VERBOSE) std::cout << "c\nc cb_decide:" << std::endl;
             START (wbc_cb_decide);
+
+            // if backtracked decision is not forced negated, TODO: can this also happen when the decisions count was on one? is it then unnoticed?
+            if (decision_counts_per_level.back() > 2) {
+                false_backtrack = true;
+                if (VERBOSE) std::cout << "c decision count exceeded 2, false_backtrack = true" << std::endl;
+            }
 
             if (save_decision) {
                 if (VERBOSE) std::cout << "c found saved decision: " + std::to_string(saved_decision) << std::endl;
