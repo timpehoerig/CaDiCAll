@@ -141,6 +141,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         bvec is_ds;
         ivec values;
 
+        // if a variable is assigned, this maps to its position on the stack, else its -1
+        ivec poss_in_stack;
+
         // decision level
         int dl = 0;
 

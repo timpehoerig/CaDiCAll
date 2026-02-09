@@ -1,9 +1,33 @@
 #!/bin/bash
 
+shrink=false
+
+while getopts "s" option; do
+  case "$option" in
+    s)
+      shrink=true
+      echo "running with -s"
+      ;;
+    *)
+      echo "This is a script for running the checker multiple times"
+      echo
+      echo "USAGE: ./run_schecker_multiple.sh [-s]"
+      echo
+      echo "-s Allow shrunken models"
+      exit 1
+      ;;
+  esac
+done
+
 verified_count=0
 
 while true; do
-    output="$(./run_checker.sh)"
+
+    if $shrink; then
+        output="$(./run_checker.sh -s)"
+    else
+        output="$(./run_checker.sh)"
+    fi
 
     # Get last and second-last lines
     last_line="$(printf '%s\n' "$output" | tail -n 1)"
