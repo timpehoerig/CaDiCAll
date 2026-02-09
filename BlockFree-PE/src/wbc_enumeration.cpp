@@ -246,12 +246,20 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             if (found_model && b < dl) {
                 found_model = false;
+                if (b - 1 < 0) {
+                    if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
+                    solver->terminate();
+                }
                 solver->force_backtrack(b - 1);
             } else {
                 // finding highest decision level with positive decision
                 int highest_pos_dl = highest_dl_to_flip();
 
                 // backtrack to decisionlevel before that, so we can flip the decision
+                if (highest_pos_dl - 1 < 0) {
+                    if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
+                    solver->terminate();
+                }
                 solver->force_backtrack(highest_pos_dl - 1);
             }
 
@@ -412,6 +420,10 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (VERBOSE) std::cout << "c backtracking to: " + std::to_string(highest_pos_dl - 1) + " to avoid duplication" << std::endl;
                 saved_decision = -decisions[highest_pos_dl];
                 save_decision = true;
+                if (highest_pos_dl - 1 < 0) {
+                    if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
+                    solver->terminate();
+                }
                 solver->force_backtrack(highest_pos_dl - 1);
                 false_backtrack = false;
                 STOP (wbc_cb_decide);
