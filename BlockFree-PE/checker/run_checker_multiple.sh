@@ -19,7 +19,7 @@ while true; do
         ((verified_count++))
         echo -ne "VERIFIED: $verified_count \r"
     else
-        echo -ne "VERIFIED: $verified_count \r"
+        echo -ne "VERIFIED: $verified_count\n"
         echo "Last line is not VERIFIED: '$last_line'"
         break
     fi

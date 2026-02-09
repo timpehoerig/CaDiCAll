@@ -163,6 +163,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         tmodels all_models;
 
+        // terminating solver is a problem
+        bool shall_terminate = false;
+
         void push(int lit, int dl, bool is_decision) {
             if (VERBOSE) std::cout << "c push: " << lit << std::endl;
             START (wbc_push);
@@ -201,14 +204,13 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             START (wbc_highest_dl_to_flip);
 
             int highest_dl = -1;
-            for (int i = stack.size() - 1; i >= 0; i--) {
-                int var = stack[i];
-                int dls_var = dls[var];
-                if (is_ds[var] && decision_counts_per_level[dls_var] < 2) {
-                    highest_dl = dls_var;
+            for (int i = dl; i > 0; i--) {
+                if (decision_counts_per_level[i] < 2) {
+                    highest_dl = i;
                     break;
                 }
             }
+
             if (VERBOSE) std::cout << "c highest dl with decision count < 2 : " + std::to_string(highest_dl) << std::endl;
 
             STOP(wbc_highest_dl_to_flip);
@@ -217,6 +219,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         bool cb_check_found_model (const tmodel &model) override {
             if (VERBOSE) std::cout << "c\nc cb_check_found_model:" << std::endl;
+
+            if (shall_terminate) {
+                if (VERBOSE) std::cout << "c terminating because shall_terminate is true" << std::endl;
+                return false;
+            }
+
             START (wbc_cb_check_found_model);
 
             if (decision_counts_per_level.back() > 2) {
@@ -249,6 +257,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (b - 1 < 0) {
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
                     solver->terminate();
+                    shall_terminate = true;
                     STOP (wbc_cb_check_found_model);
                     return false;
                 }
@@ -261,6 +270,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (highest_pos_dl - 1 < 0) {
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
                     solver->terminate();
+                    shall_terminate = true;
                     STOP (wbc_cb_check_found_model);
                     return false;
                 }
@@ -287,6 +297,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         // this function is called when observed variables are assigned (either by BCP, Decide, or Learning a unit clause). It has a single read-only argument containing literals that became satisfied by the new assignment. In case the notification reports more than one literal, it is guaranteed that all of the reported literals were assigned on the same (current) decision level.
         void notify_assignment(const ivec &list) override {
             if (VERBOSE) std::cout << "c\nc notify_assignment:" << std::endl;
+
+            if (shall_terminate) {
+                if (VERBOSE) std::cout << "c terminating because shall_terminate is true" << std::endl;
+                return;
+            }
+
             START (wbc_notify_assignment);
 
             for (auto lit : list) {
@@ -333,6 +349,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         // the call of this function indicates to the user that on the trail a new decision level has started. The function does not report the actual decision that started this new level or the current decision level — it only reports that a decision happened and thus, the decision level is increased.
         void notify_new_decision_level () override {
             if (VERBOSE) std::cout << "c\nc notify_new_decision_level:" << std::endl;
+
+            if (shall_terminate) {
+                if (VERBOSE) std::cout << "c terminating because shall_terminate is true" << std::endl;
+                return;
+            }
+
             if (VERBOSE) std::cout << "c " + std::to_string(dl + 1) << std::endl;
             START (wbc_notify_new_decision_level);
 
@@ -346,6 +368,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         // this function indicates that the solver backtracked to a lower decision level. Its single argument reports the new decision level. All assignments that were made above this target decision level must be considered as unassigned.
         void notify_backtrack (size_t new_level) override {
             if (VERBOSE) std::cout << "c\nc notify_backtrack:" << std::endl;
+
+            if (shall_terminate) {
+                if (VERBOSE) std::cout << "c terminating because shall_terminate is true" << std::endl;
+                return;
+            }
+
             if (VERBOSE) std::cout << "c to level " + std::to_string(new_level) << std::endl;
             START (wbc_notify_backtrack);
 
@@ -378,6 +406,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         // called before the solver makes a decision. Return your decision or 0 (solver makes one).
         int cb_decide () override {
             if (VERBOSE) std::cout << "c\nc cb_decide:" << std::endl;
+
+            if (shall_terminate) {
+                if (VERBOSE) std::cout << "c terminating because shall_terminate is true" << std::endl;
+                return 0;
+            }
+
             START (wbc_cb_decide);
 
             // if backtracked decision is not forced negated, TODO: can this also happen when the decisions count was on one? is it then unnoticed?
@@ -414,9 +448,10 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (false_backtrack) {
                 int highest_pos_dl = highest_dl_to_flip();
 
-                if (highest_pos_dl < 0) {
+                if (highest_pos_dl - 1 < 0) {
                     if (VERBOSE) std::cout << "c no positive decisions to flip - finished" << std::endl;
                     solver->terminate();
+                    shall_terminate = true;
                     STOP(wbc_cb_decide);
                     return 0;
                 }
@@ -424,12 +459,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (VERBOSE) std::cout << "c backtracking to: " + std::to_string(highest_pos_dl - 1) + " to avoid duplication" << std::endl;
                 saved_decision = -decisions[highest_pos_dl];
                 save_decision = true;
-                if (highest_pos_dl - 1 < 0) {
-                    if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
-                    solver->terminate();
-                    STOP (wbc_cb_decide);
-                    return 0;
-                }
                 solver->force_backtrack(highest_pos_dl - 1);
                 false_backtrack = false;
                 STOP (wbc_cb_decide);
@@ -443,11 +472,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 STOP(wbc_cb_decide);
                 return -decisions[dl + 1];
             }
-
-            // if (decision_counts_per_level[dl] == 1 && lit > 0) {
-            //    decision_counts_per_level[dl] = 0;
-            // }
-            // decision_counts_per_level[dl]++;
 
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
 
