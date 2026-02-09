@@ -249,6 +249,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (b - 1 < 0) {
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
                     solver->terminate();
+                    STOP (wbc_cb_check_found_model);
+                    return false;
                 }
                 solver->force_backtrack(b - 1);
             } else {
@@ -259,6 +261,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (highest_pos_dl - 1 < 0) {
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
                     solver->terminate();
+                    STOP (wbc_cb_check_found_model);
+                    return false;
                 }
                 solver->force_backtrack(highest_pos_dl - 1);
             }
@@ -423,6 +427,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (highest_pos_dl - 1 < 0) {
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
                     solver->terminate();
+                    STOP (wbc_cb_decide);
+                    return 0;
                 }
                 solver->force_backtrack(highest_pos_dl - 1);
                 false_backtrack = false;
