@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+TIMEOUT=60  # seconds
+
+
 shrink=false
 dir=""
 
@@ -111,7 +114,14 @@ run_once() {
                 zero_run=0
             fi
         fi
-    done < <("${cmd[@]}")
+    # done < <("${cmd[@]}")
+    done < <(timeout $TIMEOUT "${cmd[@]}")
+    if (( ${PIPESTATUS[0]} == 124 )); then
+        echo "Command timed out after $TIMEOUT seconds"
+        return 1
+    fi
+
+
 
     if (( bad_run )) || (( zero_run )); then
         return 1
