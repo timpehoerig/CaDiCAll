@@ -25,6 +25,8 @@ bool PROFILE = false;
 bool FIXED = false;
 bool HELP = false;
 
+int count = 0;
+
 // cnf must be global so EnumProp can use it
 tcnf cnf;
 
@@ -252,16 +254,17 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             bool found_model = false;
             if (!false_backtrack) {
                 if (SHRINK) b = implicant_shrinking(stack, is_ds, dls, values, decision_counts_per_level, poss_in_stack, internal);
-                tmodel new_model;
-                for (int lit : model) {
-                    if (dls[std::abs(lit)] <= b) new_model.push_back(lit);
+                if (COUNT) {
+                    count++;
+                } else {
+                    tmodel new_model;
+                    for (int lit : model) {
+                        if (dls[std::abs(lit)] <= b) new_model.push_back(lit);
+                    }
+                    all_models.push_back(new_model);
+                    if (VERBOSE) std::cout << "c " + to_string(new_model) + "\nc" << std::endl;
                 }
-
-                all_models.push_back(new_model);
-
                 found_model = true;
-                if (VERBOSE) std::cout << "c " + to_string(new_model) + "\nc" << std::endl;
-
             } else {
                 if (VERBOSE) std::cout << "c ignoring model due to false backtrack\nc" << std::endl;
             }
@@ -651,7 +654,7 @@ int main(int argc, char* argv[]) {
 
     if (COUNT) {
         std::cout << "NUMBER SATISFYING ASSIGNMENTS" << std::endl;
-        std::cout << ep->all_models.size();
+        std::cout << count;
         std::cout << "" << std::endl;
     }
 
