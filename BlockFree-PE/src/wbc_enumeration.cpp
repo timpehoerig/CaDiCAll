@@ -32,7 +32,7 @@ const char* NEGATED_MODELS = "tmp_wbcp_negated_models.txt";
 const char* PROOF_OUT = "tmp_wbcp_proof.txt";
 
 
-int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, CaDiCaL::Internal *internal) {
+int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, ivec poss_in_stack, CaDiCaL::Internal *internal) {
     if (VERBOSE) std::cout << "c\nc check_literal:" << std::endl;
     START (wbc_check_literal);
 
@@ -59,7 +59,9 @@ int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, Ca
         if (VERBOSE) std::cout << "also by: " << std::to_string(e_other_lit) << " internal: " << std::to_string(i_other_lit) << std::endl;
         // if (!(std::count(Trail.begin(), Trail.end(), e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
         // change search for index comparison (own map lit -> index)
-        if (!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
+        // assert(!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0) == !(poss_in_stack[e_other_var] < poss_in_stack[e_var] && values[e_other_var] * e_other_lit > 0));
+        //if (!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
+        if (!(poss_in_stack[e_other_var] < poss_in_stack[e_var] && values[e_other_var] * e_other_lit > 0)) { 
             if (VERBOSE) std::cout << "c b = max(" << std::to_string(b) << "," << std::to_string(dls[e_var]) << ")" << std::endl;
             b = std::max(b, dls[e_var]);
         }
@@ -70,7 +72,7 @@ int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, Ca
 }
 
 
-int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl, CaDiCaL::Internal *internal) {
+int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl, ivec poss_in_stack, CaDiCaL::Internal *internal) {
     if (VERBOSE) std::cout << "c\nc implicant_shrinking:" << std::endl;
     START (wbc_implicant_shrinking);
 
@@ -83,7 +85,7 @@ int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl
             b = std::max(b, dls[v]);
             if (VERBOSE) std::cout << "c " << std::to_string(v * values[v]) << " is not a decision -> b = max(" << std::to_string(b) << "," << std::to_string(dls[v]) << ")" << std::endl;
         } else if (dls[v] > b) {
-            b = check_literal(v, b, stack, dls, values, index, internal);
+            b = check_literal(v, b, stack, dls, values, index, poss_in_stack, internal);
         } else if (dls[v] == 0 || dls[v] == b) {
             if (VERBOSE) std::cout << "c dl of " << std::to_string(v * values[v]) << " is " << std::to_string(dls[v]) << "(0 or b)" << std::endl;
             break;
@@ -180,6 +182,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             values[var] = (lit > 0) ? 1 : -1;
             dls[var] = dl;
             is_ds[var] = is_decision;
+
+            poss_in_stack[var] = stack.size() - 1;
             STOP(wbc_push);
         };
 
@@ -197,6 +201,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             values[var] = 0;
             dls[var] = -1;
             is_ds[var] = false;
+
+            poss_in_stack[var] = -1;
 
             STOP(wbc_pop);
             return {val, level, is_decision};
@@ -238,7 +244,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             int b = dl;
             bool found_model = false;
             if (!false_backtrack) {
-                if (SHRINK) b = implicant_shrinking(stack, is_ds, dls, values, decision_counts_per_level, internal);
+                if (SHRINK) b = implicant_shrinking(stack, is_ds, dls, values, decision_counts_per_level, poss_in_stack, internal);
                 tmodel new_model;
                 for (int lit : model) {
                     if (dls[std::abs(lit)] <= b) new_model.push_back(lit);
@@ -264,7 +270,10 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                     STOP (wbc_cb_check_found_model);
                     return false;
                 }
+                START (wbc_forced_backtrack_model_found);
                 solver->force_backtrack(b - 1);
+                STOP (wbc_forced_backtrack_model_found);
+
             } else {
                 // finding highest decision level with positive decision
                 int highest_pos_dl = highest_dl_to_flip();
@@ -277,7 +286,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                     STOP (wbc_cb_check_found_model);
                     return false;
                 }
+                START (wbc_forced_backtrack_model_found);
                 solver->force_backtrack(highest_pos_dl - 1);
+                STOP (wbc_forced_backtrack_model_found);
             }
 
             STOP (wbc_cb_check_found_model);
@@ -595,6 +606,8 @@ int main(int argc, char* argv[]) {
     ep->decision_counts_per_level.push_back(0);
     ep->decisions.push_back(0);
 
+    ep->poss_in_stack.push_back(-1);
+
     tclause vars;
     // mark all variables as relevant for observing
     for (int var = 1; var <= numVariables; var++) {
@@ -604,6 +617,8 @@ int main(int argc, char* argv[]) {
         ep->values.push_back(0);
         ep->dls.push_back(-1);
         ep->is_ds.push_back(false);
+
+        ep->poss_in_stack.push_back(-1);
     }
 
     ep->max_var = numVariables;

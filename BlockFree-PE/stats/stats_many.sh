@@ -33,6 +33,7 @@ metrics=(
     wbc_notify_backtrack
     wbc_notify_new_decision_level
     wbc_cb_decide
+    wbc_forced_backtrack_model_found
 )
 
 # Metrics allowed to be missing when -s is NOT used

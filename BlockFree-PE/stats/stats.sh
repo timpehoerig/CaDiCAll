@@ -65,6 +65,7 @@ events=(
     wbc_notify_new_decision_level
     wbc_notify_backtrack
     wbc_cb_decide
+    wbc_forced_backtrack_model_found
 )
 
 # Associative arrays to store results
