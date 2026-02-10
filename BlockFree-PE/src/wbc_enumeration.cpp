@@ -19,6 +19,7 @@
 // global meta variables
 bool COUNT = false;
 bool VERBOSE = false;
+bool VERBOSE_DC = false;
 bool SHRINK = false;
 bool PROFILE = false;
 bool FIXED = false;
@@ -125,6 +126,12 @@ void print_all(ivec stack, ivec values, ivec dls, bvec is_ds, ivec decisions, iv
     std::cout << "c\nc decision counts:" << std::endl;
     std::cout << to_string(decisions, decision_counts_per_level, dl);
     std::cout << "c" << std::endl;
+}
+
+
+void print_dc(ivec decisions, ivec decision_counts_per_level, int dl) {
+    std::cout << "\033[H\033[J";
+    std::cout << to_string(decisions, decision_counts_per_level, dl);
 }
 
 
@@ -358,6 +365,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             STOP (wbc_notify_assignment);
 
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
+            if (VERBOSE_DC) print_dc(decisions, decision_counts_per_level, dl);
         };
 
         // the call of this function indicates to the user that on the trail a new decision level has started. The function does not report the actual decision that started this new level or the current decision level — it only reports that a decision happened and thus, the decision level is increased.
@@ -413,6 +421,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             }
 
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
+            if (VERBOSE_DC) print_dc(decisions, decision_counts_per_level, dl);
 
             STOP (wbc_notify_backtrack);
         };
@@ -489,6 +498,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             }
 
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
+            if (VERBOSE_DC) print_dc(decisions, decision_counts_per_level, dl);
 
             if (FIXED) {
                 for (int var = 1; var <= max_var; var++) {
@@ -522,10 +532,11 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 };
 
 
-void arg_parser(int argc, char* argv[], bool& count, bool& verbose, bool& profile, bool& fixed, bool& shrink, bool& help) {
+void arg_parser(int argc, char* argv[], bool& count, bool& verbose, bool& verbose_dc, bool& profile, bool& fixed, bool& shrink, bool& help) {
     std::map<std::string, std::string> parsedArgs = parseArgs(argc, argv);
     count = parsedArgs.count("count") || parsedArgs.count("c");
     verbose = parsedArgs.count("verbose") || parsedArgs.count("v");
+    verbose_dc = parsedArgs.count("verbose_dc") || parsedArgs.count("d");
     profile = parsedArgs.count("profile") || parsedArgs.count("p");
     shrink = parsedArgs.count("shrink") || parsedArgs.count("s");
     fixed = parsedArgs.count("fixed") || parsedArgs.count("f");
@@ -535,7 +546,7 @@ void arg_parser(int argc, char* argv[], bool& count, bool& verbose, bool& profil
 
 int main(int argc, char* argv[]) {
     // arg parser
-    arg_parser(argc, argv, COUNT, VERBOSE, PROFILE, FIXED, SHRINK, HELP);
+    arg_parser(argc, argv, COUNT, VERBOSE, VERBOSE_DC, PROFILE, FIXED, SHRINK, HELP);
 
     if (HELP) {
         std::string msg =
@@ -550,6 +561,7 @@ int main(int argc, char* argv[]) {
             "\t-h --help \t Show this menu\n"
             "\t-c --count \t Returns number of models\n"
             "\t-v --verbose \t Returns the log and all models\n"
+            "\t-d --verbose_dc \t Returns the logs only for decision counts\n"
             "\t-p --profile \t Returns statistic about where time was spent\n"
             "\t-f --fixed \t Decision order is 1...n\n"
             "\t-s --shrink \t Performs implicant shrinking on found models\n";
@@ -561,6 +573,7 @@ int main(int argc, char* argv[]) {
         std::cout << "c Runnning the solver with the following options:" << std::endl;
         if (COUNT) std::cout << "c \tCOUNT" << std::endl;
         if (VERBOSE) std::cout << "c \tVERBOSE" << std::endl;
+        if (VERBOSE_DC) std::cout << "c \tVERBOSE_DC" << std::endl;
         if (FIXED) std::cout << "c \tFIXED" << std::endl;
         if (SHRINK) std::cout << "c \tSHRINK" << std::endl;
         if (PROFILE) std::cout << "c \tPROFILE" << std::endl;

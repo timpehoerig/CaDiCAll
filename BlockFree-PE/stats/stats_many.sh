@@ -1,24 +1,46 @@
 #!/usr/bin/env bash
 
 shrink=false
+dir=""
 
-while getopts "s" option; do
+while getopts "sd:" option; do
   case "$option" in
-    s) shrink=true ;;
+    s)
+      shrink=true
+      ;;
+    d)
+      dir="$OPTARG"
+      ;;
     *)
-      echo "USAGE: ./stats_avg.sh [-s]"
+      echo "USAGE: ./stats_avg.sh [-s] [-d <cnf_dir>]"
       exit 1
       ;;
   esac
 done
 
-SCRIPT=(./stats.sh)
+# Base command
+BASE_SCRIPT=(./stats_one.sh)
 
 if $shrink; then
-    echo "stats.sh -s"
-    SCRIPT+=( -s )
+    echo "stats_one.sh -s"
+    BASE_SCRIPT+=( -s )
 fi
 
+# Validate directory if given
+if [[ -n $dir ]]; then
+    if [[ ! -d $dir ]]; then
+        echo "Error: '$dir' is not a directory"
+        exit 1
+    fi
+    shopt -s nullglob
+    cnf_files=( "$dir"/*.cnf )
+    shopt -u nullglob
+
+    if (( ${#cnf_files[@]} == 0 )); then
+        echo "Error: no .cnf files found in '$dir'"
+        exit 1
+    fi
+fi
 
 declare -A sum_time sum_pct cur_time cur_pct
 
@@ -36,7 +58,6 @@ metrics=(
     wbc_forced_backtrack_model_found
 )
 
-# Metrics allowed to be missing when -s is NOT used
 optional_metrics=(
     wbc_check_literal
     wbc_implicant_shrinking
@@ -44,7 +65,9 @@ optional_metrics=(
 
 runs=0
 
-while true; do
+run_once() {
+    local cmd=("$@")
+
     bad_run=0
     zero_run=1
     started=0
@@ -55,7 +78,7 @@ while true; do
     done
 
     while read -r line; do
-        # Wait until first empty line
+        # Wait for first empty line
         if (( ! started )); then
             [[ -z $line ]] && started=1
             continue
@@ -88,10 +111,10 @@ while true; do
                 zero_run=0
             fi
         fi
-    done < <("${SCRIPT[@]}")
+    done < <("${cmd[@]}")
 
     if (( bad_run )) || (( zero_run )); then
-        continue
+        return 1
     fi
 
     ((runs++))
@@ -101,7 +124,8 @@ while true; do
         sum_pct[$m]=$(awk "BEGIN {print ${sum_pct[$m]:-0} + ${cur_pct[$m]:-0}}")
     done
 
-    printf "\033[H\033[J"
+    # printf "\033[H\033[J"
+    echo
     echo "--- running average after $runs runs ---"
 
     for m in "${metrics[@]}"; do
@@ -113,4 +137,23 @@ while true; do
             "$avg_time" \
             "$avg_pct"
     done
-done
+
+    return 0
+}
+
+# =========================
+# Main control flow
+# =========================
+
+if [[ -n $dir ]]; then
+    # Run once per CNF file
+    for cnf in "${cnf_files[@]}"; do
+        echo "Processing: $cnf"
+        run_once "${BASE_SCRIPT[@]}" -c "$cnf"
+    done
+else
+    # Infinite loop (original behavior)
+    while true; do
+        run_once "${BASE_SCRIPT[@]}"
+    done
+fi
