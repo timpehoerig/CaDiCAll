@@ -418,6 +418,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             START (wbc_cb_decide);
 
             // if backtracked decision is not forced negated, TODO: can this also happen when the decisions count was on one? is it then unnoticed?
+            // should not be a problem, if this would happen, the decision count was one, so the next decision is fixed.
             if (decision_counts_per_level.back() > 2) {
                 false_backtrack = true;
                 if (VERBOSE) std::cout << "c decision count exceeded 2, false_backtrack = true" << std::endl;

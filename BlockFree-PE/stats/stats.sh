@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 tmp_wbcp_negated_models=./tmp_wbcp_negated_models.txt
 
@@ -7,41 +7,88 @@ path_out_wbc=./tmp/tmp_terminal_out.txt
 
 mkdir -p ./tmp/
 
-echo "fuzz > $path_fuzzed_cnf"
-../../cnfuzz/cnfuzz --tiny > $path_fuzzed_cnf
 
-echo "wbcp_enum > $path_out_wbc"
-../src/wbcp_enum -p -s $path_fuzzed_cnf > $path_out_wbc
+fuzz=true
+shrink=false
 
-mv $tmp_wbcp_negated_models ./tmp/
+while getopts "sc:" option; do
+  case "$option" in
+    c)
+      path_fuzzed_cnf="$OPTARG"
+      fuzz=false
+      ;;
+    s)
+      shrink=true
+      ;;
+    *)
+      echo "This is a script for running the stats"
+      echo
+      echo "USAGE: ./stats.sh [-s] [-c <path_to_cnf>]"
+      echo
+      echo "-c <path_to_cnf>    Uses the given cnf"
+      echo "-s                  Allow shrunken models"
+      echo
+      echo "If no cnf is provided, a random cnf is fuzzed with cnfuzz (--tiny option is on)"
+      exit 1
+      ;;
+  esac
+done
 
-read check_found_model_time check_found_model_percent < <(
-    awk '$NF=="check_found_model" {gsub(/%/,"",$3); print $2, $3}' "$path_out_wbc"
+
+if $fuzz; then
+    echo "Script: fuzz cnf into $path_fuzzed_cnf"
+    ../../cnfuzz/cnfuzz --tiny > $path_fuzzed_cnf 
+fi
+
+if $shrink; then
+  echo "Script: run wbcp_enum -s"
+  ../src/wbcp_enum -p -s $path_fuzzed_cnf > $path_out_wbc
+else
+  echo "Script: run wbcp_enum"
+  ../src/wbcp_enum -p $path_fuzzed_cnf > $path_out_wbc
+fi
+
+mv "$tmp_wbcp_negated_models" ./tmp/ 2>/dev/null
+
+echo
+
+# List of event names
+events=(
+    wbc_check_literal
+    wbc_implicant_shrinking
+    wbc_push
+    wbc_pop
+    wbc_highest_dl_to_flip
+    wbc_cb_check_found_model
+    wbc_notify_assignment
+    wbc_notify_backtrack
+    wbc_notify_new_decision_level
+    wbc_notify_backtrack
+    wbc_cb_decide
 )
 
-read notify_assignment_time notify_assignment_percent < <(
-    awk '$NF=="notify_assignment" {gsub(/%/,"",$3); print $2, $3}' "$path_out_wbc"
-)
+# Associative arrays to store results
+declare -A time
+declare -A percent
 
-read notify_backtrack_time notify_backtrack_percent < <(
-    awk '$NF=="notify_backtrack" {gsub(/%/,"",$3); print $2, $3}' "$path_out_wbc"
-)
+# Extract data
 
-read cb_decide_time cb_decide_percent < <(
-    awk '$NF=="cb_decide" {gsub(/%/,"",$3); print $2, $3}' "$path_out_wbc"
-)
+for event in "${events[@]}"; do
+    read time[$event] percent[$event] < <(
+        awk -v e="$event" '
+            $NF == e {
+                gsub(/%/, "", $(NF-1))
+                print $(NF-2), $(NF-1)
+            }
+        ' "$path_out_wbc"
+    )
+done
 
-read notify_new_decision_level_time notify_new_decision_level_percent < <(
-    awk '$NF=="notify_new_decision_level" {gsub(/%/,"",$3); print $2, $3}' "$path_out_wbc"
-)
+# Print results
+for event in "${events[@]}"; do
+    printf "%-30s %8s %8s\n" \
+        "$event:" \
+        "${time[$event]}" \
+        "${percent[$event]}"
+done
 
-read shrinking_time shrinking_percent < <(
-    awk '$NF=="shrinking" {gsub(/%/,"",$3); print $2, $3}' "$path_out_wbc"
-)
-
-echo "check_found_model: $check_found_model_time $check_found_model_percent"
-echo "notify_assignment: $notify_assignment_time $notify_assignment_percent"
-echo "notify_backtrack: $notify_backtrack_time $notify_backtrack_percent"
-echo "cb_decide: $cb_decide_time $cb_decide_percent"
-echo "notify_new_decision_level: $notify_new_decision_level_time $notify_new_decision_level_percent"
-echo "shrinking: $shrinking_time $shrinking_percent"
