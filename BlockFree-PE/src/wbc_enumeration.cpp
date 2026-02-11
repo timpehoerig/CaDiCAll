@@ -562,7 +562,7 @@ int main(int argc, char* argv[]) {
             "OPTIONS:\n"
             "\n"
             "\t-h --help \t Show this menu\n"
-            "\t-c --count \t Returns number of models\n"
+            "\t-c --count \t Returns number of models (does not store the models - no exp memory usage)\n"
             "\t-v --verbose \t Returns the log and all models\n"
             "\t-d --verbose_dc \t Returns the logs only for decision counts\n"
             "\t-p --profile \t Returns statistic about where time was spent\n"
