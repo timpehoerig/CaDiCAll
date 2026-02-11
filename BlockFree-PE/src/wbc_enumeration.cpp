@@ -23,6 +23,7 @@ bool VERBOSE_DC = false;
 bool SHRINK = false;
 bool PROFILE = false;
 bool FIXED = false;
+bool REASON = false;
 bool HELP = false;
 
 int count = 0;
@@ -175,6 +176,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         ivec decisions;
         bool is_decision = false;
 
+        bool add_reason_clause = false;
+        tmodels reason_clauses;
+
         tmodels all_models;
 
         // terminating solver is a problem
@@ -299,6 +303,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 START (wbc_forced_backtrack_model_found);
                 solver->force_backtrack(highest_pos_dl - 1);
                 STOP (wbc_forced_backtrack_model_found);
+                add_reason_clause = true;
             }
 
             STOP (wbc_cb_check_found_model);
@@ -521,11 +526,52 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         int cb_propagate () override {
             if (VERBOSE) std::cout << "c\nc cb_propagate:" << std::endl;
-            return 0;
+            if (!REASON) return 0;
+
+            START (wbc_cb_propagate);
+            if (!add_reason_clause) {
+                STOP (wbc_cb_propagate);
+                return 0;
+            }
+
+            add_reason_clause = false;
+
+            int propagated_lit = -decisions.back();
+            int propagated_var = std::abs(propagated_lit);
+
+            reason_clauses[propagated_var] = ivec();
+
+            // build reason clause
+            reason_clauses[propagated_var].push_back(-decisions.back());
+            for (auto var : stack) {
+                if (is_ds[var]) {
+                    int lit = values[var] * var;
+                    reason_clauses[propagated_var].push_back(-lit);
+                    if (VERBOSE) std::cout << "c adding lit: " << std::to_string(-lit) << std::endl;
+                }
+            }
+
+            if (VERBOSE) std::cout << "c propagated: " << std::to_string(propagated_lit) << std::endl;
+            STOP (wbc_cb_propagate);
+            return propagated_lit;
         };
 
         int cb_add_reason_clause_lit (int propagated_lit) override {
             if (VERBOSE) std::cout << "c\nc cb_add_reason_clause_lit:" << std::endl;
+            if (!REASON) return 0;
+
+            START (wbc_cb_add_reason_clause_lit);
+            if (VERBOSE) std::cout << "c for: " << std::to_string(propagated_lit) << std::endl;
+            int var = std::abs(propagated_lit);
+            if (reason_clauses[var].size()) {
+                int lit = reason_clauses[var].back();
+                reason_clauses[var].pop_back();
+                STOP (wbc_cb_add_reason_clause_lit);
+                if (VERBOSE) std::cout << "c adding: " << std::to_string(lit) << std::endl;
+                return lit;
+            }
+            STOP (wbc_cb_add_reason_clause_lit);
+            if (VERBOSE) std::cout << "c finished returning 0" << std::endl;
             return 0;
         };
 
@@ -535,21 +581,22 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 };
 
 
-void arg_parser(int argc, char* argv[], bool& count, bool& verbose, bool& verbose_dc, bool& profile, bool& fixed, bool& shrink, bool& help) {
+void arg_parser(int argc, char* argv[], bool& count, bool& verbose, bool& verbose_dc, bool& profile, bool& fixed, bool& shrink, bool& reason, bool& help) {
     std::map<std::string, std::string> parsedArgs = parseArgs(argc, argv);
     count = parsedArgs.count("count") || parsedArgs.count("c");
     verbose = parsedArgs.count("verbose") || parsedArgs.count("v");
     verbose_dc = parsedArgs.count("verbose_dc") || parsedArgs.count("d");
     profile = parsedArgs.count("profile") || parsedArgs.count("p");
-    shrink = parsedArgs.count("shrink") || parsedArgs.count("s");
     fixed = parsedArgs.count("fixed") || parsedArgs.count("f");
+    shrink = parsedArgs.count("shrink") || parsedArgs.count("s");
+    reason = parsedArgs.count("reason") || parsedArgs.count("r");
     help = parsedArgs.count("help") || parsedArgs.count("h");
 }
 
 
 int main(int argc, char* argv[]) {
     // arg parser
-    arg_parser(argc, argv, COUNT, VERBOSE, VERBOSE_DC, PROFILE, FIXED, SHRINK, HELP);
+    arg_parser(argc, argv, COUNT, VERBOSE, VERBOSE_DC, PROFILE, FIXED, SHRINK, REASON, HELP);
 
     if (HELP) {
         std::string msg =
@@ -567,20 +614,20 @@ int main(int argc, char* argv[]) {
             "\t-d --verbose_dc \t Returns the logs only for decision counts\n"
             "\t-p --profile \t Returns statistic about where time was spent\n"
             "\t-f --fixed \t Decision order is 1...n\n"
-            "\t-s --shrink \t Performs implicant shrinking on found models\n";
+            "\t-s --shrink \t Performs implicant shrinking on found models\n"
+            "\t-r --reason \t Uses propagation and reasons for backtracking after found model\n";
         std::cout << msg;
         return 0;
     }
 
-    if (VERBOSE) {
-        std::cout << "c Runnning the solver with the following options:" << std::endl;
-        if (COUNT) std::cout << "c \tCOUNT" << std::endl;
-        if (VERBOSE) std::cout << "c \tVERBOSE" << std::endl;
-        if (VERBOSE_DC) std::cout << "c \tVERBOSE_DC" << std::endl;
-        if (FIXED) std::cout << "c \tFIXED" << std::endl;
-        if (SHRINK) std::cout << "c \tSHRINK" << std::endl;
-        if (PROFILE) std::cout << "c \tPROFILE" << std::endl;
-    }
+    std::cout << "c Runnning the solver with the following options:" << std::endl;
+    if (COUNT) std::cout << "c \tCOUNT" << std::endl;
+    if (VERBOSE) std::cout << "c \tVERBOSE" << std::endl;
+    if (VERBOSE_DC) std::cout << "c \tVERBOSE_DC" << std::endl;
+    if (FIXED) std::cout << "c \tFIXED" << std::endl;
+    if (SHRINK) std::cout << "c \tSHRINK" << std::endl;
+    if (PROFILE) std::cout << "c \tPROFILE" << std::endl;
+    if (REASON) std::cout << "c \tREASON" << std::endl;
 
     // create a new solver instance
     CaDiCaL::Solver *solver = new CaDiCaL::Solver;
@@ -624,6 +671,8 @@ int main(int argc, char* argv[]) {
 
     ep->poss_in_stack.push_back(-1);
 
+    ep->reason_clauses.push_back(ivec());
+
     tclause vars;
     // mark all variables as relevant for observing
     for (int var = 1; var <= numVariables; var++) {
@@ -635,6 +684,8 @@ int main(int argc, char* argv[]) {
         ep->is_ds.push_back(false);
 
         ep->poss_in_stack.push_back(-1);
+
+        ep->reason_clauses.push_back(ivec());
     }
 
     ep->max_var = numVariables;

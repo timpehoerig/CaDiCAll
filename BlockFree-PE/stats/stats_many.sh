@@ -59,6 +59,8 @@ metrics=(
     wbc_notify_new_decision_level
     wbc_cb_decide
     wbc_forced_backtrack_model_found
+    wbc_cb_propagate
+    wbc_cb_add_reason_clause_lit
 )
 
 optional_metrics=(
