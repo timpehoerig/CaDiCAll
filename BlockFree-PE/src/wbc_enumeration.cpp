@@ -657,6 +657,8 @@ int main(int argc, char* argv[]) {
     delete ep->internal->proof;
     ep->internal->proof = nullptr;
 
+    ep->are_reasons_forgettable = true;
+
     // extract num of variables from dimacs file
     int numVariables = 0;
 
