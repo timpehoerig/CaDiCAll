@@ -87,7 +87,6 @@ struct Internal;
   PROFILE (wbc_notify_assignment, 2) \
   PROFILE (wbc_notify_backtrack, 2) \
   PROFILE (wbc_notify_new_decision_level, 2) \
-  PROFILE (wbc_notify_backtrack, 2) \
   PROFILE (wbc_cb_decide, 2) \
   PROFILE (wbc_forced_backtrack_model_found, 2) \
   PROFILE (wbc_cb_propagate, 2) \

@@ -641,7 +641,11 @@ int main(int argc, char* argv[]) {
     solver->set("log", true);
 
     // default is 2
-    // solver->set("profile", 2);
+    if (PROFILE) {
+        solver->set("profile", 2);
+    } else {
+        solver->set("profile", 0);
+    }
 
     // create a new EnumProp instance
     EnumProp *ep = new EnumProp;
@@ -710,7 +714,7 @@ int main(int argc, char* argv[]) {
         std::cout << count;
         std::cout << "" << std::endl;
     }
-
+    return 0;
     // write negated models to file
     std::ofstream file(NEGATED_MODELS);
 

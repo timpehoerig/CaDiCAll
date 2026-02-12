@@ -1,6 +1,0 @@
-#define VERSION "2.1.3"
-#define IDENTIFIER "f13d74439a5b5c963ac5b02d05ce93a8098018b8"
-#define SHORTID "f13d744"
-#define COMPILER "g++ (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
-#define FLAGS "-Wall -Wextra -O3 -DNDEBUG"
-#define DATE "Mon Dec 8 20:11:07 CET 2025 Linux timpe-nb 6.14.0-35-generic x86_64"
