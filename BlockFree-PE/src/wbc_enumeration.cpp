@@ -140,27 +140,23 @@ void print_dc(ivec decisions, ivec decision_counts_per_level, int dl) {
 
 class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTracer {
 
-    public:
-
-        CaDiCaL::Solver *solver;
-        CaDiCaL::Internal *internal;
-
+    private:
         // stack of assigned variables
         ivec stack;
 
         // arrays where index == var
+        ivec values;
         ivec dls;
         bvec is_ds;
-        ivec values;
+
+        // biggest variable (inclusive)
+        int max_var;
 
         // if a variable is assigned, this maps to its position on the stack, else its -1
         ivec poss_in_stack;
 
         // decision level
         int dl = 0;
-
-        // biggest variable (inclusive)
-        int max_var;
 
         // flag if solver is doing stuff that is redundant and needs to be undone (with a backtrack)
         bool false_backtrack = false;
@@ -178,6 +174,30 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         bool add_reason_clause = false;
         tmodels reason_clauses;
+
+    public:
+
+        void init(int n) {
+            int size = n + 1;
+            max_var = n;
+
+            values.assign(size, 0);
+            dls.assign(size, -1);
+            is_ds.assign(size, false);
+            poss_in_stack.assign(size, -1);
+            reason_clauses.assign(size, ivec());
+
+            decision_counts_per_level.reserve(size);
+            decisions.reserve(size);
+
+            decision_counts_per_level.push_back(0);
+            decisions.push_back(0);
+
+            stack.reserve(size);
+        }
+
+        CaDiCaL::Solver *solver;
+        CaDiCaL::Internal *internal;
 
         tmodels all_models;
 
@@ -668,33 +688,13 @@ int main(int argc, char* argv[]) {
 
     solver->read_dimacs(argv[argc - 1], numVariables);
 
-    // add dummy at index 0 so indices match variable numbers
-    ep->values.push_back(0);
-    ep->dls.push_back(-1);
-    ep->is_ds.push_back(false);
-    ep->decision_counts_per_level.push_back(0);
-    ep->decisions.push_back(0);
+    // initialise all vectors
+    ep->init(numVariables);
 
-    ep->poss_in_stack.push_back(-1);
-
-    ep->reason_clauses.push_back(ivec());
-
-    tclause vars;
     // mark all variables as relevant for observing
     for (int var = 1; var <= numVariables; var++) {
         solver->add_observed_var(var);
-
-        // initialize all values, dls and is_ds
-        ep->values.push_back(0);
-        ep->dls.push_back(-1);
-        ep->is_ds.push_back(false);
-
-        ep->poss_in_stack.push_back(-1);
-
-        ep->reason_clauses.push_back(ivec());
     }
-
-    ep->max_var = numVariables;
 
     // run solver
     if (VERBOSE) std::cout << "c start solving\nc" << std::endl;
@@ -714,7 +714,7 @@ int main(int argc, char* argv[]) {
         std::cout << count;
         std::cout << "" << std::endl;
     }
-    return 0;
+
     // write negated models to file
     std::ofstream file(NEGATED_MODELS);
 
