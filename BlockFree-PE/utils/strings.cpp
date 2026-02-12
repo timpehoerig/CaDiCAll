@@ -1,22 +1,26 @@
 #include <vector>
 #include <string>
+#include <charconv>
 #include "strings.hpp"
 
 
 // to_string(model) == "x y -z"
 std::string to_string(ivec model, bool neg) {
+    if (model.empty()) return "";
+
     std::string str;
+    str.reserve(model.size() * 12);
 
-    for (int lit : model) {
-        if (neg) {
-            lit = -lit;
-        }
+    char buffer[32];
 
-        str += std::to_string(lit) + ' ';
-    }
+    auto [ptr, ec] = std::to_chars(buffer, buffer + 32, model[0]);
+    str.append(buffer, ptr);
+    str.push_back(' ');
 
-    if (str.size() > 1 && str[str.size()-1] == ' ') {
-        str.resize(str.size()-1);
+    for (size_t i = 1; i < model.size(); i++) {
+        str.push_back(' ');
+        auto [ptr, ec] = std::to_chars(buffer, buffer + 32, model[i]);
+        str.append(buffer, ptr);
     }
 
     return str;

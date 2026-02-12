@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <cassert>
+#include <charconv>
 
 
 // global meta variables
@@ -137,6 +138,24 @@ void print_dc(ivec decisions, ivec decision_counts_per_level, int dl) {
     std::cout << to_string(decisions, decision_counts_per_level, dl);
 }
 
+
+void write_models(const char* name, tmodels models) {
+    std::ofstream file(NEGATED_MODELS);
+    char buffer[32];
+    for (const auto& model : models) {
+        if (model.empty()) continue;
+
+        auto [ptr, ec] = std::to_chars(buffer, buffer+32, model[0]);
+        file.write(buffer, ptr - buffer);
+
+        for (size_t i = 1; i < model.size(); i++) {
+            file.put(' ');
+            auto [ptr, ec] = std::to_chars(buffer, buffer+32, model[i]);
+            file.write(buffer, ptr - buffer);
+        }
+        file.put('\n');
+    }
+}
 
 class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTracer {
 
@@ -282,6 +301,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                     count++;
                 } else {
                     tmodel new_model;
+                    new_model.reserve(model.size());
                     for (int lit : model) {
                         if (dls[std::abs(lit)] <= b) new_model.push_back(lit);
                     }
@@ -716,18 +736,7 @@ int main(int argc, char* argv[]) {
     }
 
     // write negated models to file
-    std::ofstream file(NEGATED_MODELS);
-
-    if (file.is_open()) {
-        int i = 1;
-        for (auto model : ep->all_models) {
-            file << "i " << i << " " << to_string(model, true) << " 0" << std::endl;
-            i++;
-        }
-        file.close();
-    } else {
-        std::cerr << "Unable to open " << NEGATED_MODELS << "." << std::endl;
-    }
+    write_models(NEGATED_MODELS, ep->all_models);
 
     // disconnect EnumProp
     solver->disconnect_external_propagator();
