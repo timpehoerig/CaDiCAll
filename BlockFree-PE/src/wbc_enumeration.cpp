@@ -142,20 +142,36 @@ void print_dc(ivec decisions, ivec decision_counts_per_level, int dl) {
 void write_models(const char* name, tmodels models) {
     std::ofstream file(NEGATED_MODELS);
     char buffer[32];
+
+    std::size_t counter = 1;
+
     for (const auto& model : models) {
         if (model.empty()) continue;
 
-        auto [ptr, ec] = std::to_chars(buffer, buffer+32, model[0]);
+        // Write prefix: "i <counter> "
+        file.put('i');
+        file.put(' ');
+        auto [cptr, cec] = std::to_chars(buffer, buffer + 32, counter++);
+        file.write(buffer, cptr - buffer);
+        file.put(' ');
+
+        // Write first literal
+        auto [ptr, ec] = std::to_chars(buffer, buffer + 32, -model[0]);
         file.write(buffer, ptr - buffer);
 
+        // Write remaining literals
         for (size_t i = 1; i < model.size(); i++) {
             file.put(' ');
-            auto [ptr, ec] = std::to_chars(buffer, buffer+32, model[i]);
-            file.write(buffer, ptr - buffer);
+            auto [ptr2, ec2] = std::to_chars(buffer, buffer + 32, -model[i]);
+            file.write(buffer, ptr2 - buffer);
         }
+
+        file.put(' ');
+        file.put('0');
         file.put('\n');
     }
 }
+
 
 class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTracer {
 
@@ -674,7 +690,7 @@ int main(int argc, char* argv[]) {
 
     // setting options for chronological backtracking
     // how to disable preprocessing?
-    solver->set("chronoalways", true);
+    solver->set("chronoalways", false);
     solver->set("restart", false);
     solver->set("inprocessing", false);
     solver->set("rephase", false);

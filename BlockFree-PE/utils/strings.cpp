@@ -13,12 +13,16 @@ std::string to_string(ivec model, bool neg) {
 
     char buffer[32];
 
-    auto [ptr, ec] = std::to_chars(buffer, buffer + 32, model[0]);
+    int lit = model[0];
+    if (neg) lit = -lit;
+    auto [ptr, ec] = std::to_chars(buffer, buffer + 32, lit);
     str.append(buffer, ptr);
     str.push_back(' ');
 
     for (size_t i = 1; i < model.size(); i++) {
         str.push_back(' ');
+        int lit = model[i];
+        if (neg) lit = -lit;
         auto [ptr, ec] = std::to_chars(buffer, buffer + 32, model[i]);
         str.append(buffer, ptr);
     }

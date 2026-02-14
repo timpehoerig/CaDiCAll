@@ -1,0 +1,145 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Pakete ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}  % Saubere Schrift
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\usepackage{csquotes}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage[numbers,sort&compress]{natbib}
+
+
+
+% --- Seitenlayout ---
+\geometry{left=3cm,right=3cm,top=2cm,bottom=2cm,footskip=\footskip}
+
+\onehalfspacing
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % alles löschen
+\fancyfoot[R]{\thepage} % zentriert, unabhängig vom Rand
+
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\makeatletter
+\renewcommand{\headrule}{}
+\makeatother
+
+
+% --- Metadaten ---
+
+\title{Model Enumeration using IPASIR-UP}
+\author{Timpe Hörig}
+\newcommand{\thedate}{Feb 13, 2026}
+
+% --- Dokumentbeginn ---
+\begin{document}
+
+\pagestyle{empty} % entfernt die Seitenzahl
+
+
+%%% TitlePage.tex
+
+\newgeometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2cm}
+\begin{titlepage}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{ufr_logo_neu}\\
+\vspace{0.5cm}
+\footnotesize\sffamily\bfseries A L B E R T - L U D W I G S - U N I V E R S I T \"A T \ F R E I B U R G \ I M \ B R E I S G A U\\
+\vspace{1cm}
+\large\sffamily\bfseries Chair of Computer Architecture (M.\,Sc.)\\  
+\vspace{0.4cm}
+\noindent\hrulefill\\
+
+\vspace{1.5cm}
+\Large\sffamily Model Enumeration using IPASIR-UP\\
+\vspace{1cm}
+\large\sffamily\bfseries Master's Thesis\\  
+\end{center}
+
+\vspace{2.5cm}
+\flushright
+\sffamily\textbf{First Examiner}\\
+\sffamily Prof. Dr. Armin Biere\\
+\vspace{0.5cm}
+\sffamily\textbf{Second Examiner}\\
+\sffamily Prof. Dr. xyz\\
+\vspace{0.5cm}
+\sffamily\textbf{Author}\\
+\sffamily Timpe Hörig\\
+\sffamily Matrikelnummer: 5108196\\
+\sffamily Geburtsort: Neustadt, Deutschland\\
+\vspace{0.5cm}
+\sffamily\textbf{Working Period}\\
+\sffamily start date - end date\\
+\end{titlepage}
+
+
+\clearpage
+
+
+
+\restoregeometry
+\pagenumbering{roman}
+\pagestyle{fancy} 
+
+
+% --- Abstract ---
+\section*{Abstract}
+
+% --- Inhaltsverzeichnis ---
+\newpage
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+
+% --- Hauptinhalt ---
+\section{Introduction}
+Satisfiability (SAT) solving is one of the most influential developments in modern automated reasoning. The Boolean Satisfiability Problem asks whether a propositional formula admits a satisfying assignment. Despite being the first problem proven NP-complete by Cook and Levin, practical SAT solving has evolved into a cornerstone technology with remarkable efficiency in real-world applications. Modern Conflict-Driven Clause Learning (CDCL) solvers are capable of handling formulas with millions of variables and clauses. As a result, SAT solving plays a central role in hardware and software verification, automated reasoning, planning, scheduling, model checking, and cryptanalysis.
+
+State-of-the-art solvers such as CaDiCal, Glucose, and Kissat demonstrate how theoretical advances combined with low level optimizations can transform an intractable worst-case problem into a powerful practical tool. These solvers typically focus on the decision problem: determining whether at least one satisfying assignment exists. If the formula is satisfiable, the solver returns a single model.
+
+However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments or a specific subset of them. This task, known as model enumeration (or All-SAT), generalizes the classical SAT problem from computing a single satisfying assignment to systematically exploring the entire solution space. While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
+
+A common technique for model enumeration is the iterative use of a SAT solver combined with blocking clauses. After each model is found, a clause composed of the negation of every literal in that model is added to the CNF formula, ensuring that the solver does not rediscover the same assignment.
+With the introduction of standardized interfaces such as IPASIR, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator, that benefits from the underlying solver CaDiCaL while CaDiCal itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
+
+In 2024 \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art solvers. This was achieved by "combining the best of current All- SAT state-of-the-art literature": (i) Conflict Driven Clause Learning short CDCL, (ii) chronological backtracking to avoid blocking clauses and (iii) implicant shrinking to minimize models. 
+
+Besides adding clauses iteratively, IPASIR-UP also allows to interfere with decision making, backtracking and the found models. This raises the question whether it is possible to use the techniques from TabularAllSat to create model enumerator through IPASIR-UP without blocking clauses.
+
+This thesis introduces a model enumerator which is almost entirely implemented through the IPASIR-UP interface and does not need any blocking clauses. "Almost" because there are two minor additions that need to be added to IPASIR-UP: One is already added to the newest version of CaDiCaL's IPASIR-UP interface and the other is fixing a bug introduced by the former. As IPASIR-UP is an interface for CaDiCaL and CaDiCaL being a CDCL-based solver, technique (i) from TabularAllSat is naturally covered. Also technique (ii) chronological backtracking is fully possible through the IPASIR-UP interface and thus also used in this model enumerator. Using (iii) the implicant shrinking algorithm proposed by TabularAllSat requires access to the watch-lists of literals. This is not supported by the IPASIR-UP interface. However, it is still implemented in the model enumerator and section ... discusses which additional functionality is needed and how it could be added to the IPASIR-UP interface.
+
+The model enumerator supports a fixed variable order. However, per default CaDiCaL decides. It also can be used as a simple model counter, which makes it possible to count models for formulas with exponential many models while keeping memory consumption very little. Furthermore, as IPASIR-UP also introduces the possibility to propagate literals. It is also possible to backtrack non-chronological through adding reason clauses if necessary.
+
+\section{Methodology}
+...
+
+\section{Results}
+...
+
+\section{Conclusion}
+...
+
+% --- Literaturverzeichnis ---
+\bibliographystyle{plainnat}  % oder andere: see below
+\bibliography{literature}
+
+\section*{Erklärung}
+
+\bigskip
+
+Hiermit versichere ich, die vorliegende Arbeit ohne unerlaubte Hilfe und ohne Benutzung anderer als der angegebenen Hilfsmittel angefertigt zu haben. Alle Stellen, die wörtlich oder sinngemäß aus Veröffentlichungen entnommen sind, habe ich als solche kenntlich gemacht. Die eingereichte Masterarbeit wurde weder vollständig noch in wesentlichen Teilen Gegenstand eines anderen Prüfungsverfahrens. Die elektronische Version der eingereichten Masterarbeit stimmt in Inhalt und Formatierung mit den auf Papier ausgedruckten Exemplaren überein.\bigskip\\
+Freiburg im Breisgau, den 01.01.2016.\bigskip\\
+
+\end{document}
