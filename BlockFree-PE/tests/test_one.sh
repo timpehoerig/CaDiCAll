@@ -13,7 +13,7 @@ echo "fuzz > $path_fuzzed_cnf"
 
 echo "wbcp_enum > $path_out_bc"
 # running bcp_enum with --shrink may lead to a different count of models
-../src/wbcp_enum -c $path_fuzzed_cnf > $path_out_bc
+../src/wbcp_enum -c -r $path_fuzzed_cnf > $path_out_bc
 
 mv $tmp_wbcp_negated_models ./tmp/
 

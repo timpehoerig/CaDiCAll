@@ -404,6 +404,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
                     if (decision_counts_per_level[dl - 1] > 2) {
                         false_backtrack = true;
+                        assert(false);
                         if (VERBOSE) std::cout << "c decision was already made twice on that level, false_backtrack = true" << std::endl;
                     }
 
@@ -690,7 +691,7 @@ int main(int argc, char* argv[]) {
 
     // setting options for chronological backtracking
     // how to disable preprocessing?
-    solver->set("chronoalways", false);
+    solver->set("chronoalways", true);
     solver->set("restart", false);
     solver->set("inprocessing", false);
     solver->set("rephase", false);

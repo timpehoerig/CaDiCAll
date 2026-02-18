@@ -15,6 +15,23 @@
 \usepackage{geometry}
 \usepackage[numbers,sort&compress]{natbib}
 
+\usepackage{listings}
+\usepackage{xcolor}  % optional, for colors
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=5pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single
+}
 
 
 % --- Seitenlayout ---
@@ -105,11 +122,18 @@
 
 % --- Hauptinhalt ---
 \section{Introduction}
-Satisfiability (SAT) solving is one of the most influential developments in modern automated reasoning. The Boolean Satisfiability Problem asks whether a propositional formula admits a satisfying assignment. Despite being the first problem proven NP-complete by Cook and Levin, practical SAT solving has evolved into a cornerstone technology with remarkable efficiency in real-world applications. Modern Conflict-Driven Clause Learning (CDCL) solvers are capable of handling formulas with millions of variables and clauses. As a result, SAT solving plays a central role in hardware and software verification, automated reasoning, planning, scheduling, model checking, and cryptanalysis.
+The Boolean satisfiability problem (SAT) is defined as follows:
+
+Given a propositional formula \( F \) over variables 
+\( V = \{v_1, \dots, v_n\} \), decide whether there exists an assignment 
+\( \alpha : V \to \{0,1\} \) such that \( \alpha \models F \).
+
+This problem was the first to be proven NP-complete by \citet{Cook1971} in 1971 and independently by \citet{Levin1973} in 1973. As a result, finding efficient algorithms for the SAT problem quickly became one of the most important and influential challenges in computer science. Modern Conflict-Driven Clause Learning (CDCL) solvers are capable of handling formulas with millions of variables and clauses. As a result, SAT solving plays a central role in hardware and software verification, automated reasoning, planning, scheduling, model checking, and cryptanalysis.
 
 State-of-the-art solvers such as CaDiCal, Glucose, and Kissat demonstrate how theoretical advances combined with low level optimizations can transform an intractable worst-case problem into a powerful practical tool. These solvers typically focus on the decision problem: determining whether at least one satisfying assignment exists. If the formula is satisfiable, the solver returns a single model.
 
-However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments or a specific subset of them. This task, known as model enumeration (or All-SAT), generalizes the classical SAT problem from computing a single satisfying assignment to systematically exploring the entire solution space. While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
+However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments or a specific subset of them. This task, known as model enumeration (or All-SAT), generalizes the classical SAT problem from computing a single satisfying assignment to computing the whole set \(\{\alpha : V \to {0,1} \mid \alpha \models F\}\)
+While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
 
 A common technique for model enumeration is the iterative use of a SAT solver combined with blocking clauses. After each model is found, a clause composed of the negation of every literal in that model is added to the CNF formula, ensuring that the solver does not rediscover the same assignment.
 With the introduction of standardized interfaces such as IPASIR, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator, that benefits from the underlying solver CaDiCaL while CaDiCal itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
@@ -120,9 +144,69 @@ Besides adding clauses iteratively, IPASIR-UP also allows to interfere with deci
 
 This thesis introduces a model enumerator which is almost entirely implemented through the IPASIR-UP interface and does not need any blocking clauses. "Almost" because there are two minor additions that need to be added to IPASIR-UP: One is already added to the newest version of CaDiCaL's IPASIR-UP interface and the other is fixing a bug introduced by the former. As IPASIR-UP is an interface for CaDiCaL and CaDiCaL being a CDCL-based solver, technique (i) from TabularAllSat is naturally covered. Also technique (ii) chronological backtracking is fully possible through the IPASIR-UP interface and thus also used in this model enumerator. Using (iii) the implicant shrinking algorithm proposed by TabularAllSat requires access to the watch-lists of literals. This is not supported by the IPASIR-UP interface. However, it is still implemented in the model enumerator and section ... discusses which additional functionality is needed and how it could be added to the IPASIR-UP interface.
 
-The model enumerator supports a fixed variable order. However, per default CaDiCaL decides. It also can be used as a simple model counter, which makes it possible to count models for formulas with exponential many models while keeping memory consumption very little. Furthermore, as IPASIR-UP also introduces the possibility to propagate literals. It is also possible to backtrack non-chronological through adding reason clauses if necessary.
+The model enumerator supports a fixed variable order. However, per default CaDiCaL decides. It also can be used as a simple model counter, which makes it possible to count models for formulas with exponential many models while keeping memory consumption very little. Furthermore, as IPASIR-UP also introduces the possibility to propagate literals. It is also possible to backtrack through adding reason clauses if necessary.
 
-\section{Methodology}
+\section{IPASIR-UP}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{ipasir.jpg}
+    \caption{The four possible states of SAT solvers according to the IPASIR interface (see \citep{...}).}
+    \label{fig:ipasir}
+\end{figure}
+
+Figure~\ref{fig:ipasir}
+
+\begin{lstlisting}
+bool cb_check_found_model(const tmodel &model) override { return true; }
+
+bool cb_has_external_clause(bool &is_forgettable) override { return false; }
+
+int cb_add_external_clause_lit() override { return 0; }
+
+void notify_assignment(const ivec &list) override {}
+
+void notify_new_decision_level() override {}
+
+void notify_backtrack(size_t new_level) override {}
+
+int cb_decide() override { return 0; }
+
+int cb_propagate() override { return 0; }
+
+int cb_add_reason_clause_lit(int propagated_lit) override { return 0; }
+\end{lstlisting}
+
+
+The IPASIR interface defines a set of functions through which a user can interact with the SAT solver. Interaction occurs exclusively via callback functions such as \verb|add| for clause construction, \verb|assume| for temporary assumptions, \verb|solve| to trigger the solving process, and \verb|val| or \verb|failed| that are called on either sat or unsat solver results. However, all solver intern information is lost between solver calls and there is no communication with decision making, backtracking or propagation. This makes IPASIR sub-optimal for model enumeration with blocking clauses and impossible for model enumeration without blocking clauses.
+
+With IPASIR-UP both points are addressed: With the callback function \verb|cb_check_found_model| it is possible to flag found models with \verb|false| and continue the search without restarting the solver. Thus, all internal states and learned information is preserved. With the callback functions \verb|cb_decide| and \verb|cb_propagate| it also allows to interfere with decision making and propagation.
+
+\section{Deciding}
+
+The order in which decisions are made can heavily impact the performance of sat solvers. The right decision can lead the solver into early conflicts, pruning big parts of the search space completely or skipping long nested parts. While in model enumeration the later benefit is lost as all models must be found, it still profits from early conflicts.
+
+In order to search systematically through the whole search tree, a fixed variable order is the easiest. On each \verb|cb_decide| call, the next undecided variable is returned. Thus, assigning this variable positiv. Backtracking also becomes trivial, always backtrack to the last positive decision. However, this constraint can be weakened while still preserving a systematically order. First, the phase of a decided variable can be chosen freely, while keeping backtracking still simple enough. Instead of backtracking to the last positive decision, simply backtrack to the last decision that has a decision count of 1. Meaning it has been decided exactly once. Second, the order in which variables are decided can also be chosen complete free, as long as after a backtracking the decision is just flipped.
+This actually becomes non trivial as discussed in the section Chronological Backtracking. However, enables the solver to profit from dynamic decision heuristics such as Variable State Independent Decaying Sum (VISIDS) which is known to improve solver performance significantly and thus is a commonly used decision heuristic in modern sat solvers. The performance difference between fixed and dynamic decision orders can be seen in ....
+
+\section{Chronological Backtracking}
+
+Chronological backtracking can be set as an option in CaDiCaL. Thus, backtracking as a result of running into a conflict is handled by the solver itself. However, if the formula has at least one model backtracking becomes non trivial, as the path to this model must be excluded from future exploration. This can be achieved through two different methods: (i) Undo the last decision and decide its negation. (ii) When a model is found, undo the last decision and propagate its negation. While the later does not require book keeping of the decisions themselves, it may require a reason clause for that propagation if it is involved in an other backtracking. Hence introducing, even if smaller and not always, blocking clauses. Thus this thesis focuses on the former method and fully avoiding adding clauses. Still, the first method is available as a command line option (--reason) and also part of the benchmarks in section X.
+
+\subsection{(i) Backtracking through book keeping}
+
+In order to know wich decision was made on which decision level, two information are relevant: (i) the phase of the decided variable and (ii) how often this variable has been decided. A count of 1 meaning, this decision has been made exactly once. A count of two indicating that this decision already has been flipped. Thus, finding the right decision level to backtrack to, simply becomes finding the highest decision level with a variable count of 1.
+
+\subsubsection{Backtracking after a model was found}
+After a model is found, either there is no decision with a decision count 1 and thus, all paths have been discovered. Then, the solver can terminate. Otherwise, there exists a decision level with a decision count of 1 that the solver can backtrack to. Let that level be \verb|l|. Then the solver must backtrack to the decision level \verb|l - 1|. However, before \verb|cb_decide| is called and the decision can be flipped, the solver propagates. This can lead to four different outcomes: (i) The solver only propagates variables that are different to the decision or none at all. In that case in \verb|cd_decide| the decision can be flipped and returned. (ii) The solver propagates the negation of the decision itself. Then the solver can chose the next decision itself, \verb|cb_decide| returns 0. (iii) While propagating the solver runs into a conflict and backtracks again. This case is equivalent to a normal backtrack. (iv) Due to propagation of literals the old decision itself is implied again. The solver starts to rediscover the old path. This is detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. Then the solver is forced to backtrack further.
+
+\subsubsection{Conflict induced backtracking}
+If a conflict occurs the solver automatically backtracks one decision level. However, as the solver does this on its own, it backtracks to the last decision, no matter what decision count it has. If the decision count is 1, the same four outcomes as above can occur. However, if the decision count is 2 the solver wants to flip the decision again. From this moment on, everything the solver does, must be undone again. Again this is detected and handled by the user propagator. Unfortunately, this can lead to an overhead as the solver may spend some time propagating.
+
+\subsubsection{Allowing force\_backtrack in cb\_check\_found\_model}
+IPASIR-UP does not allows invoking \verb|force_backtrack| only in \verb|cb_decide| and not in \verb|cb_check_found_model|. However, as backtracking is needed in both cases: First, when a model was found and the user propagator returns \verb|false|. The solver terminates instantly as no other clauses where added and thus, the found models is still valid. Second, as describe above, after backtracking the solver may rediscover old paths. This is directly detected by \verb|notify_assignment|. Normally \verb|cb_decide| is called after propagation and can handle that, as calling \verb|force_backtrack| is allowed in \verb|cb_decide|. However, if the solver propagates all remaining variables, \verb|cb_check_found_models| is called and must handle it.
+
+As allowing \verb|force_backtrack| to be called inside \verb|cb_check_found_model| does not induce any bad behavior, it was officially added to IPASIR-UP by Kataling ... .
+\section{Implicant Shrinking}
 ...
 
 \section{Results}
