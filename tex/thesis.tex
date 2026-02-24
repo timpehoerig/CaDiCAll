@@ -147,6 +147,38 @@ This thesis introduces a model enumerator which is almost entirely implemented t
 The model enumerator supports a fixed variable order. However, per default CaDiCaL decides. It also can be used as a simple model counter, which makes it possible to count models for formulas with exponential many models while keeping memory consumption very little. Furthermore, as IPASIR-UP also introduces the possibility to propagate literals. It is also possible to backtrack through adding reason clauses if necessary.
 
 \section{IPASIR-UP}
+TODO (where belongs force\_backtrack)
+The IPASIR interface standardizes incremental interaction with CDCL-based SAT solvers by defining a minimal set of functions through which the user can call the solver and use it in bigger contexts without interacting with the solver directly and thus, making the program Independent of the solver. A solver instance is created and subsequently manipulated only via functions such as \verb|ipasir_add| to add literals to the current clause, terminated by 0. \verb|ipasir_assume| to add temporary assumption literals for the next call to \verb|ipasir_solve|, and \verb|ipasir_solve| to start or resume the search. After \verb|ipasir_solve| returns \verb|SAT| or \verb|UNSAT|, the user may query models with \verb|ipasir_val| or inspect a failed core via \verb|ipasir_failed|. The interface deliberately abstracts from internal solver mechanisms: There is no access to decision levels, propagation events, learned clauses, or backtracking. Although learned clauses are preserved across calls in incremental mode, the user cannot intervene during the search itself. Consequently, model enumeration requires blocking clauses: After finding a model, add its negation as a new clause to the cnf (via \verb|ipasir_add|) and restart the solver. If the solver returns UNSAT, all models are found. However, this approach is sub-optimal as each new blocking clause increases the cnf. This makes it infeasible for big CNFs with many models. Model enumeration without blocking clauses through IPASIR is impossible since the solver terminates immediately upon finding a satisfying assignment.
+
+To overcome these limitations, Katalin Fazekas et al. introduced IPASIR-UP in 2023 as an extension of IPASIR that introduces \verb|user propagator|s (UP). IPASIR-UP augments the classical interface with a bidirectional communication layer between the solver's CDCL loop and user-defined callbacks. Instead of restricting interaction to clause addition and top-level solve calls, IPASIR-UP enables controlled intervention during propagation, decision making, backtracking, and model detection.
+
+\begin{itemize}
+\item Model validation
+  \verb|bool cb_check_found_model(const tmodel &model)|
+  This function is called whenever the solver derives a total satisfying assignment. If the user propagator returns \verb|true|, the solver reports \verb|SAT| as usual. If it returns \verb|false|, the model is rejected and the solver continues the search without restarting. Crucially, the internal trail, learned clauses, and heuristic state remain intact.
+
+\item External clause injection
+  \verb|bool cb_has_external_clause(bool &is_forgettable)| and \verb|int cb_add_external_clause_lit()|
+  These functions allow the user propagator to provide clauses to the solver right after \verb|cb_check_found_model| was called. When \verb|cb_has_external_clause| returns \verb|true|, the solver repeatedly calls \verb|cb_add_external_clause_lit| to obtain the literals of the clause (terminated by 0).
+
+\item Propagation and assignment notifications
+ \verb|void notify_assignment(const ivec &list)|, \verb|void notify_new_decision_level()| and \verb|void notify_backtrack(size_t new_level)|
+  These notification callbacks inform the user propagator about changes to the assignment trail. \verb|notify_assignment| communicates newly assigned literals, \verb|notify_new_decision_level| signals that a decision was made and thus the decision level increased, and\verb|notify_backtrack| reports to which level the solver backtracked.
+
+\item Decision making
+  \verb|int cb_decide()|
+  This callback is invoked when the solver requests the next decision literal. If it returns a non-zero literal, the solver uses it as the next decision. If 0 is returned, the solver makes its own decision, based on its internal decision heuristic.
+
+\item User propagation
+  \verb|int cb_propagate()| and \verb|cb_add_reason_clause_lit|
+  \verb|cb_propagate| enables the user propagator to return implied literals under the current partial assignment. If a conflict is detected in which the propagated literal was involved, the solver asks for a reason clause through repeatedly calling \verb|cb_add_reason_clause_lit| (terminated by 0). This enables steering through the decision space while adding the reason clauses only if really necessary.
+\end{itemize}
+
+Once a user defined an user propagator which implements all of the methods above, it can simply be connected and disconnected to the solver by calling \verb|void connect_external_propagator (ExternalPropagator* propagator)| and \verb|void disconnect_external_propagator ()|. The notification callback functions are only called for variables marked as \verb|observed|. The user can mark and unmark variables thorugh the functions \verb|void add_observed_var (int var)| and \verb|void remove_observed_var (int var)|.
+
+
+
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{ipasir.jpg}
@@ -176,11 +208,6 @@ int cb_propagate() override { return 0; }
 int cb_add_reason_clause_lit(int propagated_lit) override { return 0; }
 \end{lstlisting}
 
-
-The IPASIR interface defines a set of functions through which a user can interact with the SAT solver. Interaction occurs exclusively via callback functions such as \verb|add| for clause construction, \verb|assume| for temporary assumptions, \verb|solve| to trigger the solving process, and \verb|val| or \verb|failed| that are called on either sat or unsat solver results. However, all solver intern information is lost between solver calls and there is no communication with decision making, backtracking or propagation. This makes IPASIR sub-optimal for model enumeration with blocking clauses and impossible for model enumeration without blocking clauses.
-
-With IPASIR-UP both points are addressed: With the callback function \verb|cb_check_found_model| it is possible to flag found models with \verb|false| and continue the search without restarting the solver. Thus, all internal states and learned information is preserved. With the callback functions \verb|cb_decide| and \verb|cb_propagate| it also allows to interfere with decision making and propagation.
-
 \section{Deciding}
 
 The order in which decisions are made can heavily impact the performance of sat solvers. The right decision can lead the solver into early conflicts, pruning big parts of the search space completely or skipping long nested parts. While in model enumeration the later benefit is lost as all models must be found, it still profits from early conflicts.
@@ -192,6 +219,11 @@ This actually becomes non trivial as discussed in the section Chronological Back
 
 Chronological backtracking can be set as an option in CaDiCaL. Thus, backtracking as a result of running into a conflict is handled by the solver itself. However, if the formula has at least one model backtracking becomes non trivial, as the path to this model must be excluded from future exploration. This can be achieved through two different methods: (i) Undo the last decision and decide its negation. (ii) When a model is found, undo the last decision and propagate its negation. While the later does not require book keeping of the decisions themselves, it may require a reason clause for that propagation if it is involved in an other backtracking. Hence introducing, even if smaller and not always, blocking clauses. Thus this thesis focuses on the former method and fully avoiding adding clauses. Still, the first method is available as a command line option (--reason) and also part of the benchmarks in section X.
 
+\subsection{Allowing force\_backtrack in cb\_check\_found\_model}
+IPASIR-UP does not allow invoking \verb|force_backtrack| only in \verb|cb_decide| and not in \verb|cb_check_found_model|. However, as backtracking is needed in both cases: First, when a model was found and the user propagator returns \verb|false|. The solver would terminates instantly as no other clauses where added and thus, the found model is still valid. Second, as describe above, after backtracking the solver may rediscover old paths. This is directly detected by \verb|notify_assignment|. Normally \verb|cb_decide| is called after propagation and can handle that, as calling \verb|force_backtrack| is allowed in \verb|cb_decide|. However, if the solver propagates all remaining variables, \verb|cb_check_found_models| is called and it must be handled there.
+
+As allowing \verb|force_backtrack| to be called inside \verb|cb_check_found_model| does not induce any bad behavior, it was officially added to IPASIR-UP by Kataling ... .
+
 \subsection{(i) Backtracking through book keeping}
 
 In order to know wich decision was made on which decision level, two information are relevant: (i) the phase of the decided variable and (ii) how often this variable has been decided. A count of 1 meaning, this decision has been made exactly once. A count of two indicating that this decision already has been flipped. Thus, finding the right decision level to backtrack to, simply becomes finding the highest decision level with a variable count of 1.
@@ -202,12 +234,24 @@ After a model is found, either there is no decision with a decision count 1 and 
 \subsubsection{Conflict induced backtracking}
 If a conflict occurs the solver automatically backtracks one decision level. However, as the solver does this on its own, it backtracks to the last decision, no matter what decision count it has. If the decision count is 1, the same four outcomes as above can occur. However, if the decision count is 2 the solver wants to flip the decision again. From this moment on, everything the solver does, must be undone again. Again this is detected and handled by the user propagator. Unfortunately, this can lead to an overhead as the solver may spend some time propagating.
 
-\subsubsection{Allowing force\_backtrack in cb\_check\_found\_model}
-IPASIR-UP does not allows invoking \verb|force_backtrack| only in \verb|cb_decide| and not in \verb|cb_check_found_model|. However, as backtracking is needed in both cases: First, when a model was found and the user propagator returns \verb|false|. The solver terminates instantly as no other clauses where added and thus, the found models is still valid. Second, as describe above, after backtracking the solver may rediscover old paths. This is directly detected by \verb|notify_assignment|. Normally \verb|cb_decide| is called after propagation and can handle that, as calling \verb|force_backtrack| is allowed in \verb|cb_decide|. However, if the solver propagates all remaining variables, \verb|cb_check_found_models| is called and must handle it.
+\subsection{(ii) Backtracking through propagation}
 
-As allowing \verb|force_backtrack| to be called inside \verb|cb_check_found_model| does not induce any bad behavior, it was officially added to IPASIR-UP by Kataling ... .
+An other approach is not to decide the negation of the last made decision but to propagate it. Thus, if the solver backtrack again, it simply backtracks over it, as it is not a decision anymore. However, if the propagated literal is inspected while conflict analysis, the solver needs a reason clause for it. The reason clause for this literal is just the negation of all decisions made on a lower level and thus can be constructed on the fly and does not need to be stored. This fits perfect with the design of IPASIR-UP as it asks for reason clauses only if necessary. Thus, adding reason clauses has two advantages to adding blocking clauses: (i) the size can be smaller as it only contains decisions on a lower level. (ii) they are only added if necessary. 
+
 \section{Implicant Shrinking}
 ...
+
+\section{Extending IPASIR-UP}
+There are three different proposals to IPASIR-UP: (i) Additional features that are needed in order two make model enumeration using IPASIR-UP possible. (ii) Additional features to make the optimization implicant shrinking possible and (iii) Additional features to avoid duplications and thus make model enumeration faster using IPASIR-UP.
+
+\subsection{Making IPASIR-UP the only interface needed}
+There are two minor changes need to be done. First, allowing \verb|force_backtrack| during model checking in \verb|cb_check_found_model|. This is already added to the newest version of CaDiCaL's IPASIR-UP interface. Second, in \verb|ask_decision| when the solver calls the user propagator. If the user propagator backtracks during \verb|cb_decide| the solver ignores the decision made. Thus \verb|cb_decide| must be called again. This can be achieved by tail recursively calling \verb|ask_decision|.
+
+\subsection{Implicant Shrinking}
+The implicant shrinking algorithm described in section X needs access to the all watch lists of a given literal. However, the implicant shrinking algorithm uses them read only. Thus, exposing a read only reference to them is unproblematic and could be integrated into IPASIR-UP without any changes to CaDiCaL itself. Here it is important to note that literals can be named differently external and internal. However, there already exist functions to translate from and to and thus the internal representation can be completely hidden through the IPASIR-UP interface.
+
+\subsection{Optimization}
+Although the IPASIR-UP interface provides enough information to build an external copy of variable assignments and stack state, maintaining them takes in average XX percent of the total running time of this model enumerator. Allowing read only access to CaDiCaLs variable assignment and stack would make all external representation redundant.
 
 \section{Results}
 ...
