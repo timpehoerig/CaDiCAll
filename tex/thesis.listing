@@ -1,0 +1,17 @@
+bool cb_check_found_model(const tmodel &model) override { return true; }
+
+bool cb_has_external_clause(bool &is_forgettable) override { return false; }
+
+int cb_add_external_clause_lit() override { return 0; }
+
+void notify_assignment(const ivec &list) override {}
+
+void notify_new_decision_level() override {}
+
+void notify_backtrack(size_t new_level) override {}
+
+int cb_decide() override { return 0; }
+
+int cb_propagate() override { return 0; }
+
+int cb_add_reason_clause_lit(int propagated_lit) override { return 0; }

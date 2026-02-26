@@ -9,28 +9,48 @@
 \citation{Levin1973}
 \citation{Spallitta_Sebastiani_Biere_2024}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2}IPASIR-UP}{2}{section.2}\protected@file@percent }
-\citation{...}
-\citation{...}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The four possible states of SAT solvers according to the IPASIR interface (see \citep  {...}).}}{4}{figure.1}\protected@file@percent }
-\newlabel{fig:ipasir}{{1}{4}{The four possible states of SAT solvers according to the IPASIR interface (see \citep {...})}{figure.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Deciding}{5}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Chronological Backtracking}{6}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Allowing force\_backtrack in cb\_check\_found\_model}{6}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}(i) Backtracking through book keeping}{6}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Backtracking after a model was found}{6}{subsubsection.4.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.2}Conflict induced backtracking}{7}{subsubsection.4.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}(ii) Backtracking through propagation}{7}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Implicant Shrinking}{7}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}IPASIR}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}IPASIR-UP}{3}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Model Enumerator}{5}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Deciding}{5}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.1}Conflict Driven Clause Learning}{5}{subsubsection.4.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Chronological Backtracking}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Allowing force\_backtrack in cb\_check\_found\_model}{6}{subsubsection.4.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.2}(i) Backtracking through book keeping}{6}{subsubsection.4.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.3}Backtracking after a model was found}{6}{subsubsection.4.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.4}Conflict induced backtracking}{7}{subsubsection.4.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.5}(ii) Backtracking through propagation}{7}{subsubsection.4.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Implicant Shrinking}{7}{subsection.4.3}\protected@file@percent }
+\citation{Spallitta_Sebastiani_Biere_2024}
+\citation{Spallitta_Sebastiani_Biere_2024}
+\citation{Spallitta_Sebastiani_Biere_2024}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces IMPLICANT-SHRINKING($T$)}}{8}{algorithm.1}\protected@file@percent }
+\newlabel{alg:implicant-shrinking}{{1}{8}{Implicant Shrinking}{algorithm.1}{}}
+\newlabel{alg:implicant-shrinking@cref}{{[algorithm][1][]1}{[1][8][]8}}
+\citation{Spallitta_Sebastiani_Biere_2024}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces CHECK-LITERAL($\ell $, $b$, $T'$) (faster but more conservative)}}{9}{algorithm.2}\protected@file@percent }
+\newlabel{alg:check-literal}{{2}{9}{Implicant Shrinking}{algorithm.2}{}}
+\newlabel{alg:check-literal@cref}{{[algorithm][2][]2}{[1][9][]9}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {3}{\ignorespaces IMPLICANT-SHRINKING($T$)}}{10}{algorithm.3}\protected@file@percent }
+\newlabel{alg:implicant-shrinking-fix}{{3}{10}{Implicant Shrinking}{algorithm.3}{}}
+\newlabel{alg:implicant-shrinking-fix@cref}{{[algorithm][3][]3}{[1][10][]10}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Extending IPASIR-UP}{10}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Making IPASIR-UP the only interface needed}{10}{subsection.5.1}\protected@file@percent }
 \bibstyle{plainnat}
 \bibdata{literature}
 \bibcite{Cook1971}{{1}{1971}{{Cook}}{{}}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Extending IPASIR-UP}{8}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Making IPASIR-UP the only interface needed}{8}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Implicant Shrinking}{8}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Optimization}{8}{subsection.6.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Results}{8}{section.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion}{8}{section.8}\protected@file@percent }
 \bibcite{Levin1973}{{2}{1973}{{Levin}}{{}}}
 \bibcite{Spallitta_Sebastiani_Biere_2024}{{3}{2024}{{Spallitta et~al.}}{{Spallitta, Sebastiani, and Biere}}}
-\gdef \@abspage@last{12}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Implicant Shrinking}{11}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Optimization}{11}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Results}{11}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{11}{section.7}\protected@file@percent }
+\gdef\minted@oldcachelist{,
+  default.pygstyle,
+  D2990679703E3E915EFCDFE523CC132046469861090FAE98F0071D715319AC19.pygtex,
+  0345F8497392A2F86DFE4133857FFDA846469861090FAE98F0071D715319AC19.pygtex,
+  8AFCAD3693734892437D8F800D37914246469861090FAE98F0071D715319AC19.pygtex,
+  4AB437AEF23B3912306FA9F761A3EEA846469861090FAE98F0071D715319AC19.pygtex,
+  F64516E03A5E0A1F942C3D6C2B39C92E46469861090FAE98F0071D715319AC19.pygtex,
+  59A40CF682414EFFFF406B1313AC58A446469861090FAE98F0071D715319AC19.pygtex}
+\gdef \@abspage@last{15}

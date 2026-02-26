@@ -1,0 +1,6 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{void}\PYG{+w}{ }\PYG{n+nf}{connect\PYGZus{}external\PYGZus{}propagator}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{ExternalPropagator}\PYG{o}{*}\PYG{+w}{ }\PYG{n}{propagator}\PYG{p}{);}
+\PYG{k+kt}{void}\PYG{+w}{ }\PYG{n+nf}{disconnect\PYGZus{}external\PYGZus{}propagator}\PYG{+w}{ }\PYG{p}{();}
+\PYG{k+kt}{void}\PYG{+w}{ }\PYG{n+nf}{add\PYGZus{}observed\PYGZus{}var}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{var}\PYG{p}{);}
+\PYG{k+kt}{void}\PYG{+w}{ }\PYG{n+nf}{remove\PYGZus{}observed\PYGZus{}var}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{var}\PYG{p}{);}
+\end{Verbatim}

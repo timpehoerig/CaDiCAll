@@ -14,23 +14,19 @@
 \usepackage{setspace}
 \usepackage{geometry}
 \usepackage[numbers,sort&compress]{natbib}
+\usepackage{xcolor}
+\usepackage{minted}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{cleveref}
 
-\usepackage{listings}
-\usepackage{xcolor}  % optional, for colors
+\definecolor{codegray}{rgb}{0.97,0.97,0.97}
 
-\lstset{
-    language=C++,
-    basicstyle=\ttfamily\small,
-    keywordstyle=\color{blue}\bfseries,
-    commentstyle=\color{green},
-    stringstyle=\color{red},
-    numbers=left,
-    numberstyle=\tiny,
-    stepnumber=1,
-    numbersep=5pt,
-    showstringspaces=false,
-    breaklines=true,
-    frame=single
+\setminted{
+  fontsize=\small,
+  breaklines=true,
+  autogobble=true,
+  bgcolor=codegray
 }
 
 
@@ -138,7 +134,7 @@ While conceptually straightforward, model enumeration introduces significant alg
 A common technique for model enumeration is the iterative use of a SAT solver combined with blocking clauses. After each model is found, a clause composed of the negation of every literal in that model is added to the CNF formula, ensuring that the solver does not rediscover the same assignment.
 With the introduction of standardized interfaces such as IPASIR, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator, that benefits from the underlying solver CaDiCaL while CaDiCal itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
 
-In 2024 \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art solvers. This was achieved by "combining the best of current All- SAT state-of-the-art literature": (i) Conflict Driven Clause Learning short CDCL, (ii) chronological backtracking to avoid blocking clauses and (iii) implicant shrinking to minimize models. 
+In 2024 \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art solvers. This was achieved by "combining the best of current All- SAT state-of-the-art literature": (i) Conflict Driven Clause Learning short CDCL, (ii) Chronological backtracking to avoid blocking clauses and (iii) Implicant shrinking to minimize models. 
 
 Besides adding clauses iteratively, IPASIR-UP also allows to interfere with decision making, backtracking and the found models. This raises the question whether it is possible to use the techniques from TabularAllSat to create model enumerator through IPASIR-UP without blocking clauses.
 
@@ -146,85 +142,88 @@ This thesis introduces a model enumerator which is almost entirely implemented t
 
 The model enumerator supports a fixed variable order. However, per default CaDiCaL decides. It also can be used as a simple model counter, which makes it possible to count models for formulas with exponential many models while keeping memory consumption very little. Furthermore, as IPASIR-UP also introduces the possibility to propagate literals. It is also possible to backtrack through adding reason clauses if necessary.
 
-\section{IPASIR-UP}
+\section{IPASIR}
 TODO (where belongs force\_backtrack)
 The IPASIR interface standardizes incremental interaction with CDCL-based SAT solvers by defining a minimal set of functions through which the user can call the solver and use it in bigger contexts without interacting with the solver directly and thus, making the program Independent of the solver. A solver instance is created and subsequently manipulated only via functions such as \verb|ipasir_add| to add literals to the current clause, terminated by 0. \verb|ipasir_assume| to add temporary assumption literals for the next call to \verb|ipasir_solve|, and \verb|ipasir_solve| to start or resume the search. After \verb|ipasir_solve| returns \verb|SAT| or \verb|UNSAT|, the user may query models with \verb|ipasir_val| or inspect a failed core via \verb|ipasir_failed|. The interface deliberately abstracts from internal solver mechanisms: There is no access to decision levels, propagation events, learned clauses, or backtracking. Although learned clauses are preserved across calls in incremental mode, the user cannot intervene during the search itself. Consequently, model enumeration requires blocking clauses: After finding a model, add its negation as a new clause to the cnf (via \verb|ipasir_add|) and restart the solver. If the solver returns UNSAT, all models are found. However, this approach is sub-optimal as each new blocking clause increases the cnf. This makes it infeasible for big CNFs with many models. Model enumeration without blocking clauses through IPASIR is impossible since the solver terminates immediately upon finding a satisfying assignment.
 
-To overcome these limitations, Katalin Fazekas et al. introduced IPASIR-UP in 2023 as an extension of IPASIR that introduces \verb|user propagator|s (UP). IPASIR-UP augments the classical interface with a bidirectional communication layer between the solver's CDCL loop and user-defined callbacks. Instead of restricting interaction to clause addition and top-level solve calls, IPASIR-UP enables controlled intervention during propagation, decision making, backtracking, and model detection.
+\section{IPASIR-UP}
+To overcome the limitations from IPASIR, Katalin Fazekas et al. introduced IPASIR-UP in 2023 as an extension of IPASIR that introduces \verb|user propagator|s (UP). IPASIR-UP augments the classical interface with a bidirectional communication layer between the solver's CDCL loop and user-defined callbacks. Instead of restricting interaction to clause addition and top-level solve calls, IPASIR-UP enables controlled intervention during propagation, decision making, backtracking, and model detection.
 
 \begin{itemize}
 \item Model validation
-  \verb|bool cb_check_found_model(const tmodel &model)|
+\begin{minted}{cpp}
+bool cb_check_found_model(const tmodel &model) override {
+  return true;
+}
+\end{minted}
   This function is called whenever the solver derives a total satisfying assignment. If the user propagator returns \verb|true|, the solver reports \verb|SAT| as usual. If it returns \verb|false|, the model is rejected and the solver continues the search without restarting. Crucially, the internal trail, learned clauses, and heuristic state remain intact.
 
 \item External clause injection
-  \verb|bool cb_has_external_clause(bool &is_forgettable)| and \verb|int cb_add_external_clause_lit()|
+\begin{minted}{cpp}
+bool cb_has_external_clause(bool &is_forgettable) override {
+  return false;
+}
+int cb_add_external_clause_lit() override { return 0; }
+\end{minted}
   These functions allow the user propagator to provide clauses to the solver right after \verb|cb_check_found_model| was called. When \verb|cb_has_external_clause| returns \verb|true|, the solver repeatedly calls \verb|cb_add_external_clause_lit| to obtain the literals of the clause (terminated by 0).
 
-\item Propagation and assignment notifications
- \verb|void notify_assignment(const ivec &list)|, \verb|void notify_new_decision_level()| and \verb|void notify_backtrack(size_t new_level)|
+\item Notifications
+\begin{minted}{cpp}
+void notify_assignment(const ivec &list) override {}
+void notify_new_decision_level() override {}
+void notify_backtrack(size_t new_level) override {}
+\end{minted}
   These notification callbacks inform the user propagator about changes to the assignment trail. \verb|notify_assignment| communicates newly assigned literals, \verb|notify_new_decision_level| signals that a decision was made and thus the decision level increased, and\verb|notify_backtrack| reports to which level the solver backtracked.
 
 \item Decision making
-  \verb|int cb_decide()|
+\begin{minted}{cpp}
+int cb_decide() override { return 0; }
+\end{minted}
   This callback is invoked when the solver requests the next decision literal. If it returns a non-zero literal, the solver uses it as the next decision. If 0 is returned, the solver makes its own decision, based on its internal decision heuristic.
 
 \item User propagation
-  \verb|int cb_propagate()| and \verb|cb_add_reason_clause_lit|
+\begin{minted}{cpp}
+int cb_propagate() override { return 0; }
+int cb_add_reason_clause_lit(int propagated_lit) override {
+  return 0;
+}
+\end{minted}
   \verb|cb_propagate| enables the user propagator to return implied literals under the current partial assignment. If a conflict is detected in which the propagated literal was involved, the solver asks for a reason clause through repeatedly calling \verb|cb_add_reason_clause_lit| (terminated by 0). This enables steering through the decision space while adding the reason clauses only if really necessary.
 \end{itemize}
 
-Once a user defined an user propagator which implements all of the methods above, it can simply be connected and disconnected to the solver by calling \verb|void connect_external_propagator (ExternalPropagator* propagator)| and \verb|void disconnect_external_propagator ()|. The notification callback functions are only called for variables marked as \verb|observed|. The user can mark and unmark variables thorugh the functions \verb|void add_observed_var (int var)| and \verb|void remove_observed_var (int var)|.
+\begin{minted}{cpp}
+void connect_external_propagator (ExternalPropagator* propagator);
+void disconnect_external_propagator ();
+void add_observed_var (int var);
+void remove_observed_var (int var);
+\end{minted}
+
+Once a user defined an user propagator which implements all of the methods above, it can simply be connected and disconnected to the solver by calling \verb|connect_external_propagator| and \verb|disconnect_external_propagator|. The notification callback functions are only called for variables marked as \verb|observed|. The user can mark and unmark variables thorugh the functions \verb|add_observed_var| and \verb|remove_observed_var|.
+
+\section{Model Enumerator}
 
 
 
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.8\textwidth]{ipasir.jpg}
-    \caption{The four possible states of SAT solvers according to the IPASIR interface (see \citep{...}).}
-    \label{fig:ipasir}
-\end{figure}
-
-Figure~\ref{fig:ipasir}
-
-\begin{lstlisting}
-bool cb_check_found_model(const tmodel &model) override { return true; }
-
-bool cb_has_external_clause(bool &is_forgettable) override { return false; }
-
-int cb_add_external_clause_lit() override { return 0; }
-
-void notify_assignment(const ivec &list) override {}
-
-void notify_new_decision_level() override {}
-
-void notify_backtrack(size_t new_level) override {}
-
-int cb_decide() override { return 0; }
-
-int cb_propagate() override { return 0; }
-
-int cb_add_reason_clause_lit(int propagated_lit) override { return 0; }
-\end{lstlisting}
-
-\section{Deciding}
+\subsection{Deciding}
 
 The order in which decisions are made can heavily impact the performance of sat solvers. The right decision can lead the solver into early conflicts, pruning big parts of the search space completely or skipping long nested parts. While in model enumeration the later benefit is lost as all models must be found, it still profits from early conflicts.
 
 In order to search systematically through the whole search tree, a fixed variable order is the easiest. On each \verb|cb_decide| call, the next undecided variable is returned. Thus, assigning this variable positiv. Backtracking also becomes trivial, always backtrack to the last positive decision. However, this constraint can be weakened while still preserving a systematically order. First, the phase of a decided variable can be chosen freely, while keeping backtracking still simple enough. Instead of backtracking to the last positive decision, simply backtrack to the last decision that has a decision count of 1. Meaning it has been decided exactly once. Second, the order in which variables are decided can also be chosen complete free, as long as after a backtracking the decision is just flipped.
 This actually becomes non trivial as discussed in the section Chronological Backtracking. However, enables the solver to profit from dynamic decision heuristics such as Variable State Independent Decaying Sum (VISIDS) which is known to improve solver performance significantly and thus is a commonly used decision heuristic in modern sat solvers. The performance difference between fixed and dynamic decision orders can be seen in ....
 
-\section{Chronological Backtracking}
+\subsubsection{Conflict Driven Clause Learning}
+Conflict Driven Clause Learning (CDCL) is used in almost every modern SAT solver. It prevents running into the same mistake multiple times and does unit propagation very efficiently. CaDiCaL is a CDCL base solver. So by using IPASIR-UP, the model enumerator benefits from CDCL.
+
+\subsection{Chronological Backtracking}
 
 Chronological backtracking can be set as an option in CaDiCaL. Thus, backtracking as a result of running into a conflict is handled by the solver itself. However, if the formula has at least one model backtracking becomes non trivial, as the path to this model must be excluded from future exploration. This can be achieved through two different methods: (i) Undo the last decision and decide its negation. (ii) When a model is found, undo the last decision and propagate its negation. While the later does not require book keeping of the decisions themselves, it may require a reason clause for that propagation if it is involved in an other backtracking. Hence introducing, even if smaller and not always, blocking clauses. Thus this thesis focuses on the former method and fully avoiding adding clauses. Still, the first method is available as a command line option (--reason) and also part of the benchmarks in section X.
 
-\subsection{Allowing force\_backtrack in cb\_check\_found\_model}
+\subsubsection{Allowing force\_backtrack in cb\_check\_found\_model}
 IPASIR-UP does not allow invoking \verb|force_backtrack| only in \verb|cb_decide| and not in \verb|cb_check_found_model|. However, as backtracking is needed in both cases: First, when a model was found and the user propagator returns \verb|false|. The solver would terminates instantly as no other clauses where added and thus, the found model is still valid. Second, as describe above, after backtracking the solver may rediscover old paths. This is directly detected by \verb|notify_assignment|. Normally \verb|cb_decide| is called after propagation and can handle that, as calling \verb|force_backtrack| is allowed in \verb|cb_decide|. However, if the solver propagates all remaining variables, \verb|cb_check_found_models| is called and it must be handled there.
 
 As allowing \verb|force_backtrack| to be called inside \verb|cb_check_found_model| does not induce any bad behavior, it was officially added to IPASIR-UP by Kataling ... .
 
-\subsection{(i) Backtracking through book keeping}
+\subsubsection{(i) Backtracking through book keeping}
 
 In order to know wich decision was made on which decision level, two information are relevant: (i) the phase of the decided variable and (ii) how often this variable has been decided. A count of 1 meaning, this decision has been made exactly once. A count of two indicating that this decision already has been flipped. Thus, finding the right decision level to backtrack to, simply becomes finding the highest decision level with a variable count of 1.
 
@@ -234,12 +233,85 @@ After a model is found, either there is no decision with a decision count 1 and 
 \subsubsection{Conflict induced backtracking}
 If a conflict occurs the solver automatically backtracks one decision level. However, as the solver does this on its own, it backtracks to the last decision, no matter what decision count it has. If the decision count is 1, the same four outcomes as above can occur. However, if the decision count is 2 the solver wants to flip the decision again. From this moment on, everything the solver does, must be undone again. Again this is detected and handled by the user propagator. Unfortunately, this can lead to an overhead as the solver may spend some time propagating.
 
-\subsection{(ii) Backtracking through propagation}
+\subsubsection{(ii) Backtracking through propagation}
 
 An other approach is not to decide the negation of the last made decision but to propagate it. Thus, if the solver backtrack again, it simply backtracks over it, as it is not a decision anymore. However, if the propagated literal is inspected while conflict analysis, the solver needs a reason clause for it. The reason clause for this literal is just the negation of all decisions made on a lower level and thus can be constructed on the fly and does not need to be stored. This fits perfect with the design of IPASIR-UP as it asks for reason clauses only if necessary. Thus, adding reason clauses has two advantages to adding blocking clauses: (i) the size can be smaller as it only contains decisions on a lower level. (ii) they are only added if necessary. 
 
-\section{Implicant Shrinking}
-...
+\subsection{Implicant Shrinking}
+Models (also called implicants) found by the solver are total. Models are total if they contain every variable. For a CNF \((x_1 \lor x_2) \land (x_1 \lor \lnot x_2) \) the model enumerator returns two total models: \(x_1 \land x_2\) and \(x_1 \land \lnot x_2\). As \(x_1\) occurs in both models positively, the only difference lays in \(x_2\) which occurs once positively and once negatively. In other words, if \(x_1\) is positiv, it does not matter what the value of \(x_2\) is, it is always a model for the CNF. Thus, the models can be merged into on model by dropping \(x_2\), resulting in one partial model \(x_1\). This reduces both, the amount of models in total and the size of models. It also may fasten the solving itself. Normally, after finding the first model \(x_1 \land x_2\) the model enumerator backtracks to the last decision that can be flipped. Assuming the decisions where \(x_1\) at decision level 1 and \(x_2\) at decision level 2, the model enumerator would backtrack to decision level one and then continue with \(\lnot x_2\). However, if the model enumerator shrinks the model \(x_1 \land x_2\) to \(x_1\) the last decision that can be flipped is \(x_1\). Thus, the model enumerator backtracks to decision level 0 and can continue with \(\lnot x_1\), skipping the branch with \(\lnot x_2\) completely. As the branch containing \(x_2\) could be arbitrary large, this may reduce the search space significantly.
+
+Finding out which literals can be dropped is non trivial. Implicant shrinking algorithms from non chronological backtracking based model enumerators do not guarantee mutual exclusiveness between different assignments\cite{Spallitta_Sebastiani_Biere_2024}. Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} introduces their own shrinking algorithm that is (i) compatible with chronological backtracking and (ii) tries to cut the highest amount of literals while still ensuring mutual exclusivity. This algorithm starts with the last literal on the Trail and tries to drop as many literals as possible. A literal \(\ell\) can be dropped if \(\ell\) is a decision and all watched clauses of \(\ell\) contain another literal \(\ell'\) that satisfies the clause. In order to maintain a correct solver state if the literal \(\ell\) is dropped, all watched clauses must be updated such that they are watched by the literal \(\ell'\) instead.
+
+\begin{algorithm}[htbp]
+\caption{IMPLICANT-SHRINKING($T$)}
+\label{alg:implicant-shrinking}
+\begin{algorithmic}[1]
+\STATE $b \gets 0$
+\STATE $T' \gets T$
+\WHILE{$T' \neq \epsilon$}
+    \STATE $\ell \gets T'.\text{pop()}$
+    \IF{$\rho(\ell) \neq \text{DECISION}$}
+        \STATE $b \gets \max(b, \delta(\ell))$
+    \ELSIF{$\delta(\ell) > b$}
+        \STATE $b \gets \text{CHECK-LITERAL}(\ell, b, T')$
+    \ELSIF{$\delta(\ell) = 0 \ \text{or}\ (\delta(\ell) = b \ \text{and}\ \rho(\ell) = \text{DECISION})$}
+        \STATE \textbf{break}
+    \ENDIF
+\ENDWHILE
+\RETURN $b$
+\end{algorithmic}
+\end{algorithm}
+
+Going through all literals in all clauses watched by \(\ell\) may introduce a bottleneck. Thus Spallitta et al \citep{Spallitta_Sebastiani_Biere_2024} introduced a faster but more conservative algorithm exploiting the 2-watched-literal scheme. Conservative meaning it may not drop all literals that could be dropped.
+
+In CaDiCaL the 2-watched-literal scheme is used. This allows the solver not tho constantly update all literals if their assignment changes. Instead every clause of the CNF is only watched by two literals \(\ell_1 \ell_2\). This is enough to track the status of the clause if the following invariant holds: At least one literal is not falsified. In order to keep the invariant alive, if one watched literal \(\ell_1\) becomes falsified the solver tries to find a replacement. If there is another literal \(\ell'\) in that clause that is neither false nor \(\ell_2\), it replaces \(\ell_1\) as the watching literal. If there exists no such literal \(\ell'\) the solver nows that \(\ell_2\) is the only literal left that could satisfy the clause and forces \(\ell_2\). If both literals \(\ell_1\) and \(\ell_2\) are falsified, the clause is falsified, yielding UNSAT.
+
+The faster approach proposed from Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} is shown in \cref{alg:check-literal}.
+
+\begin{algorithm}[htbp]
+\caption{CHECK-LITERAL($\ell$, $b$, $T'$) (faster but more conservative)}
+\label{alg:check-literal}
+\begin{algorithmic}[1]
+\FORALL{$c \in \omega(\ell)$}
+    \IF{$\exists \ell' \text{ such that } c \in \omega(\ell') \text{ and } \ell' \neq \ell \text{ and } \ell' \in T'$}
+        \STATE Continue
+    \ELSE
+        \STATE $b \gets \max(b, \delta(\ell))$
+    \ENDIF
+\ENDFOR
+\RETURN $b$
+\end{algorithmic}
+\end{algorithm}
+
+Instead of checking all other literals in the watched clause, simply check the other literal \(\ell'\) that watches that clause. If it satisfies the clause as well, the literal \(\ell\) can be dropped and the solver state stay correct as \(\ell'\) already watches the clause. This is more conservative as it may not drop literals that could be dropped. However, as it does not need to traverse the clause and check each literal, it is much faster. As IPASIR-UP does not allow any access to the watches, this is implemented by using a backdoor to CaDiCaL directly. Section XX discussed what is needed and how it could be added to the IPASIR-UP interface.
+
+Adapting this to the model enumerator using IPASIr-UP may introduce a fault. As stated in Section 5.1 and 5.2 there are two different ways to flip a decision. If the decision is flipped by deciding its negation, \cref{alg:implicant-shrinking} must be adapted.
+
+Consider the CNF \((x_1 \lor x_2 \lor x_3)\). Let \(x_2\) and \(x_3\) be the watched literals at the start and the decision order be \(x_1 \to x_2 \to x_3\). The first model to be found will be \(x_1 \land x_2 \land x_3\). Implicant shrinking will first remove \(x_3\) as the other watched literal (\(x_2\)) still satisfies the clause. Then it will try to remove \(x_2\). However, as the other watched literal is \(x_3\) which is no longer on the trail, it cannot continue. Thus, discovering the model \(x_1 \land x_2\). Then the solver backtracks and flips \(x_2\) by deciding its negation \(\lnot x_2\). Remind that \(\lnot x_2\) is still a decision. As \(x_2\) is one of the watched literals but is now falsified, \(x_1\) becomes the new watched literal, as it is the only literal in the clause that is neither false nor already watched. Then the solver decides \(x_3\) resulting in the model \(x_1 \land \lnot x_2 \land x_3\). Now implicant shrinking starts again. First removing \(x_3\) as the otcher watched literal (\(x_1\)) still satisfied the clause. Next it tries to remove \(\lnot x_2\) as it is the next highest decision. As \(\lnot x_2\) does not occur in any clauses, it cannot be a watched literal. Thus removing it does not falsify any clause. Then, it tries to remove \(x_1\). However, as the other watched literal is \(x_3\) which was already removed, \(x_1\) can not be removed. Hence, yielding the model \(x_1\).
+
+The implicant shrinking algorithm yielded both models \(x_1 \land x_2\) and \(x_1\). These models are not distinct, as setting \(x_2\) in the later generates the former.
+
+This can be fixed by allowing implicant shrinking only to remove literals with a decision count of 1 (line 5 in \cref{alg:implicant-shrinking-fix}). Consider a variable with decision count 2 to be checked by implicant shrinking. There are two possibilities: (i) The variable could not be removed when it's decision count was 1. Removing it now could trigger exactly a case like the example above. (ii) The variable was removed when it's decision count was 1. In that case the model enumerator would have backtracked over the variable and thus resetting the decision count, which makes this case impossible to reach.
+
+\begin{algorithm}[htbp]
+\caption{IMPLICANT-SHRINKING($T$)}
+\label{alg:implicant-shrinking-fix}
+\begin{algorithmic}[1]
+\STATE $b \gets 0$
+\STATE $T' \gets T$
+\WHILE{$T' \neq \epsilon$}
+    \STATE $\ell \gets T'.\text{pop()}$
+    \IF{$\rho(\ell) \neq \text{DECISION} \text{ and } decision\_count(\ell) = 1$}
+        \STATE $b \gets \max(b, \delta(\ell))$
+    \ELSIF{$\delta(\ell) > b$}
+        \STATE $b \gets \text{CHECK-LITERAL}(\ell, b, T')$
+    \ELSIF{$\delta(\ell) = 0 \ \text{or}\ (\delta(\ell) = b \ \text{and}\ \rho(\ell) = \text{DECISION})$}
+        \STATE \textbf{break}
+    \ENDIF
+\ENDWHILE
+\RETURN $b$
+\end{algorithmic}
+\end{algorithm}
 
 \section{Extending IPASIR-UP}
 There are three different proposals to IPASIR-UP: (i) Additional features that are needed in order two make model enumeration using IPASIR-UP possible. (ii) Additional features to make the optimization implicant shrinking possible and (iii) Additional features to avoid duplications and thus make model enumeration faster using IPASIR-UP.
