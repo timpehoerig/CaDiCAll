@@ -207,8 +207,10 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         ivec decisions;
         bool is_decision = false;
 
-        bool add_reason_clause = false;
-        tmodels reason_clauses;
+        bool propagate_lit = false;
+
+        int reason_clause_idx = 0;
+        bool reason_clause_flag = true;
 
     public:
 
@@ -220,7 +222,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             dls.assign(size, -1);
             is_ds.assign(size, false);
             poss_in_stack.assign(size, -1);
-            reason_clauses.assign(size, ivec());
 
             decision_counts_per_level.reserve(size);
             decisions.reserve(size);
@@ -359,7 +360,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 START (wbc_forced_backtrack_model_found);
                 solver->force_backtrack(highest_pos_dl - 1);
                 STOP (wbc_forced_backtrack_model_found);
-                add_reason_clause = true;
+                propagate_lit = true;
             }
 
             STOP (wbc_cb_check_found_model);
@@ -584,49 +585,44 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         int cb_propagate () override {
             if (VERBOSE) std::cout << "c\nc cb_propagate:" << std::endl;
             if (!REASON) return 0;
+            if (!propagate_lit) return 0;
+            if (false_backtrack) return 0;
 
             START (wbc_cb_propagate);
-            if (!add_reason_clause) {
-                STOP (wbc_cb_propagate);
-                return 0;
-            }
 
-            add_reason_clause = false;
+            propagate_lit = false;
 
-            int propagated_lit = -decisions.back();
-            int propagated_var = std::abs(propagated_lit);
-
-            reason_clauses[propagated_var] = ivec();
-
-            // build reason clause
-            reason_clauses[propagated_var].push_back(-decisions.back());
-            for (auto var : stack) {
-                if (is_ds[var]) {
-                    int lit = values[var] * var;
-                    reason_clauses[propagated_var].push_back(-lit);
-                    if (VERBOSE) std::cout << "c adding lit: " << std::to_string(-lit) << std::endl;
-                }
-            }
-
-            if (VERBOSE) std::cout << "c propagated: " << std::to_string(propagated_lit) << std::endl;
+            if (VERBOSE) std::cout << "c propagated: " << std::to_string(-decisions.back()) << std::endl;
             STOP (wbc_cb_propagate);
-            return propagated_lit;
+            return -decisions.back();
         };
 
         int cb_add_reason_clause_lit (int propagated_lit) override {
             if (VERBOSE) std::cout << "c\nc cb_add_reason_clause_lit:" << std::endl;
             if (!REASON) return 0;
+            if (false_backtrack) return 0;
 
             START (wbc_cb_add_reason_clause_lit);
             if (VERBOSE) std::cout << "c for: " << std::to_string(propagated_lit) << std::endl;
             int var = std::abs(propagated_lit);
-            if (reason_clauses[var].size()) {
-                int lit = reason_clauses[var].back();
-                reason_clauses[var].pop_back();
+
+            if (reason_clause_flag) {
+                reason_clause_idx = dls[var];
+                reason_clause_flag = false;
+                STOP (wbc_cb_add_reason_clause_lit);
+                if (VERBOSE) std::cout << "c adding: " << std::to_string(propagated_lit) << std::endl;
+                return propagated_lit;
+            }
+
+            if (0 < reason_clause_idx) {
+                int lit = -decisions[reason_clause_idx];
+                reason_clause_idx--;
                 STOP (wbc_cb_add_reason_clause_lit);
                 if (VERBOSE) std::cout << "c adding: " << std::to_string(lit) << std::endl;
                 return lit;
             }
+
+            reason_clause_flag = true;
             STOP (wbc_cb_add_reason_clause_lit);
             if (VERBOSE) std::cout << "c finished returning 0" << std::endl;
             return 0;

@@ -17,7 +17,6 @@ std::string to_string(ivec model, bool neg) {
     if (neg) lit = -lit;
     auto [ptr, ec] = std::to_chars(buffer, buffer + 32, lit);
     str.append(buffer, ptr);
-    str.push_back(' ');
 
     for (size_t i = 1; i < model.size(); i++) {
         str.push_back(' ');
