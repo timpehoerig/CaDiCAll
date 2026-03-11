@@ -8,12 +8,12 @@
 \contentsline {subsubsection}{\numberline {4.2.1}Backtracking after a model is found}{6}{subsubsection.4.2.1}%
 \contentsline {subsubsection}{\numberline {4.2.2}Conflict induced backtracking}{8}{subsubsection.4.2.2}%
 \contentsline {subsection}{\numberline {4.3}Deciding}{9}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Implicant Shrinking}{9}{subsection.4.4}%
-\contentsline {section}{\numberline {5}Extending IPASIR-UP}{12}{section.5}%
+\contentsline {subsection}{\numberline {4.4}Implicant Shrinking}{10}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Extending IPASIR-UP}{13}{section.5}%
 \contentsline {subsection}{\numberline {5.1}Making IPASIR-UP the only interface needed}{13}{subsection.5.1}%
 \contentsline {subsubsection}{\numberline {5.1.1}Backtracking after a model was found}{13}{subsubsection.5.1.1}%
 \contentsline {subsubsection}{\numberline {5.1.2}Maintaining chronlogical backtracking}{14}{subsubsection.5.1.2}%
-\contentsline {subsection}{\numberline {5.2}Implicant Shrinking}{14}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Optimization}{14}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.2}Implicant Shrinking}{15}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Optimization}{15}{subsection.5.3}%
 \contentsline {section}{\numberline {6}Results}{15}{section.6}%
 \contentsline {section}{\numberline {7}Conclusion}{15}{section.7}%
