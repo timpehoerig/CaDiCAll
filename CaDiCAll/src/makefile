@@ -3,10 +3,10 @@ CXX = g++
 CXXFLAGS = -Wall -std=c++17
 
 # Target executable
-TARGET = wbcp_enum
+TARGET = cadicall
 
 # Source files
-SRCS = wbc_enumeration.cpp ../utils/argparser.cpp ../utils/strings.cpp ../utils/parser.cpp ../../cadical/build/libcadical.a
+SRCS = cadicall.cpp ../utils/argparser.cpp ../utils/strings.cpp ../utils/parser.cpp ../../cadical/build/libcadical.a
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)

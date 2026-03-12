@@ -48,24 +48,24 @@ fi
 declare -A sum_time sum_pct cur_time cur_pct
 
 metrics=(
-    wbc_check_literal
-    wbc_implicant_shrinking
-    wbc_push
-    wbc_pop
-    wbc_highest_dl_to_flip
-    wbc_cb_check_found_model
-    wbc_notify_assignment
-    wbc_notify_backtrack
-    wbc_notify_new_decision_level
-    wbc_cb_decide
-    wbc_forced_backtrack_model_found
-    wbc_cb_propagate
-    wbc_cb_add_reason_clause_lit
+    cadicall_check_literal
+    cadicall_implicant_shrinking
+    cadicall_push
+    cadicall_pop
+    cadicall_highest_dl_to_flip
+    cadicall_cb_check_found_model
+    cadicall_notify_assignment
+    cadicall_notify_backtrack
+    cadicall_notify_new_decision_level
+    cadicall_cb_decide
+    cadicall_forced_backtrack_model_found
+    cadicall_cb_propagate
+    cadicall_cb_add_reason_clause_lit
 )
 
 optional_metrics=(
-    wbc_check_literal
-    wbc_implicant_shrinking
+    cadicall_check_literal
+    cadicall_implicant_shrinking
 )
 
 runs=0

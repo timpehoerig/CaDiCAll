@@ -2,6 +2,6 @@
 
 Use `make` to compile.
 
-Run `./wbcp_enum --help`.
+Run `./cadicall --help`.
 
 Use `make clean` to clean up.

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-tmp_wbcp_negated_models=./tmp_wbcp_negated_models.txt
+tmp_cadicall_negated_models=./tmp_cadicall_negated_models.txt
 
 path_fuzzed_cnf=./tmp/tmp_fuzzed.cnf
-path_out_wbc=./tmp/tmp_terminal_out.txt
+path_out_cadicall=./tmp/tmp_terminal_out.txt
 
 mkdir -p ./tmp/
 
@@ -41,33 +41,33 @@ if $fuzz; then
 fi
 
 if $shrink; then
-  echo "Script: run wbcp_enum -s"
-  ../src/wbcp_enum -p -s $path_fuzzed_cnf > $path_out_wbc
+  echo "Script: run cadicall -s"
+  ../src/cadicall -p -s $path_fuzzed_cnf > $path_out_cadicall
 else
-  echo "Script: run wbcp_enum"
-  ../src/wbcp_enum -p $path_fuzzed_cnf > $path_out_wbc
+  echo "Script: run cadicall"
+  ../src/cadicall -p $path_fuzzed_cnf > $path_out_cadicall
 fi
 
-mv "$tmp_wbcp_negated_models" ./tmp/ 2>/dev/null
+mv "$tmp_cadicall_negated_models" ./tmp/ 2>/dev/null
 
 echo
 
 # List of event names
 events=(
-    wbc_check_literal
-    wbc_implicant_shrinking
-    wbc_push
-    wbc_pop
-    wbc_highest_dl_to_flip
-    wbc_cb_check_found_model
-    wbc_notify_assignment
-    wbc_notify_backtrack
-    wbc_notify_new_decision_level
-    wbc_notify_backtrack
-    wbc_cb_decide
-    wbc_forced_backtrack_model_found
-    wbc_cb_propagate
-    wbc_cb_add_reason_clause_lit
+    cadicall_check_literal
+    cadicall_implicant_shrinking
+    cadicall_push
+    cadicall_pop
+    cadicall_highest_dl_to_flip
+    cadicall_cb_check_found_model
+    cadicall_notify_assignment
+    cadicall_notify_backtrack
+    cadicall_notify_new_decision_level
+    cadicall_notify_backtrack
+    cadicall_cb_decide
+    cadicall_forced_backtrack_model_found
+    cadicall_cb_propagate
+    cadicall_cb_add_reason_clause_lit
 )
 
 # Associative arrays to store results
@@ -83,7 +83,7 @@ for event in "${events[@]}"; do
                 gsub(/%/, "", $(NF-1))
                 print $(NF-2), $(NF-1)
             }
-        ' "$path_out_wbc"
+        ' "$path_out_cadicall"
     )
 done
 

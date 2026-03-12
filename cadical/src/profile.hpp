@@ -78,19 +78,19 @@ struct Internal;
   PROFILE (unstable, 2) \
   PROFILE (vivify, 2) \
   PROFILE (walk, 2) \
-  PROFILE (wbc_check_literal, 2) \
-  PROFILE (wbc_implicant_shrinking, 2) \
-  PROFILE (wbc_push, 2) \
-  PROFILE (wbc_pop, 2) \
-  PROFILE (wbc_highest_dl_to_flip, 2) \
-  PROFILE (wbc_cb_check_found_model, 2) \
-  PROFILE (wbc_notify_assignment, 2) \
-  PROFILE (wbc_notify_backtrack, 2) \
-  PROFILE (wbc_notify_new_decision_level, 2) \
-  PROFILE (wbc_cb_decide, 2) \
-  PROFILE (wbc_forced_backtrack_model_found, 2) \
-  PROFILE (wbc_cb_propagate, 2) \
-  PROFILE (wbc_cb_add_reason_clause_lit, 2)
+  PROFILE (cadicall_check_literal, 2) \
+  PROFILE (cadicall_implicant_shrinking, 2) \
+  PROFILE (cadicall_push, 2) \
+  PROFILE (cadicall_pop, 2) \
+  PROFILE (cadicall_highest_dl_to_flip, 2) \
+  PROFILE (cadicall_cb_check_found_model, 2) \
+  PROFILE (cadicall_notify_assignment, 2) \
+  PROFILE (cadicall_notify_backtrack, 2) \
+  PROFILE (cadicall_notify_new_decision_level, 2) \
+  PROFILE (cadicall_cb_decide, 2) \
+  PROFILE (cadicall_forced_backtrack_model_found, 2) \
+  PROFILE (cadicall_cb_propagate, 2) \
+  PROFILE (cadicall_cb_add_reason_clause_lit, 2)
 
 /*------------------------------------------------------------------------*/
 

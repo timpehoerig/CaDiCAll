@@ -18,22 +18,6 @@ using tcnf = std::vector<tclause>;
 bool HELP = false;
 bool SHRINK = false;
 
-
-// create plane external propagater
-// class EnumProp : public CaDiCaL::ExternalPropagator {
-//     public:
-//         bool cb_check_found_model (const tclause &model) override {return true;};
-//         bool cb_has_external_clause (bool &is_forgettable) override {return 0;};
-//         int cb_add_external_clause_lit () override {return 0;};
-//         void notify_assignment(const std::vector<int> &list) override {};
-//         void notify_new_decision_level () override {};
-//         void notify_backtrack (size_t new_level) override {};
-//         int cb_decide () override { return 0; };
-//         int cb_propagate () override { return 0; };
-//         int cb_add_reason_clause_lit (int propagated_lit) override { return 0; };
-// };
-
-
 // check sat:clause by index
 bool sat_clause(tclause clause, tclause model) {
     for (int l : clause) {
@@ -195,8 +179,6 @@ void arg_parser(int argc, char* argv[], bool& shrink, bool& help) {
     help = parsedArgs.count("help") || parsedArgs.count("h");
 }
 
-
-// checker <cnf> <enum_out> <proof>
 int main(int argc, char* argv[]) {
 
     arg_parser(argc, argv, SHRINK, HELP);
@@ -204,10 +186,10 @@ int main(int argc, char* argv[]) {
     if (HELP) {
         std::string msg =
             "\n\n"
-            "Welcome to the Checker for BlockFree-PE using IPASIR-UP\n"
+            "Welcome to the Checker for CaDiCAll using IPASIR-UP\n"
             "\n"
             "USAGE:\n"
-            "\tchecker [--Option (-o)] <cnf> <enum_out>\n"
+            "\tchecker [--Option (-o)] <cnf> <CaDiCAll_out>\n"
             "\n"
             "OPTIONS:\n"
             "\n"
@@ -226,25 +208,25 @@ int main(int argc, char* argv[]) {
     get_projected_vars(argv[argc - 2], projected_vars);
     sort(cnf);
 
-    // parse enum_terminal_out and store it in 'enum_terminal_out'
-    tcnf enum_terminal_out;
-    parse_icnf(argv[argc - 1], enum_terminal_out);
-    sort(enum_terminal_out);
+    // parse CaDiCAll_terminal_out and store it in 'CaDiCAll_terminal_out'
+    tcnf CaDiCAll_terminal_out;
+    parse_icnf(argv[argc - 1], CaDiCAll_terminal_out);
+    sort(CaDiCAll_terminal_out);
 
     std::cout << "c cnf:\nc ";
     std::cout << to_string(cnf) + "\n";
-    std::cout << "c enum_terminal_out:\nc ";
-    std::cout << to_string(enum_terminal_out) + "\n";
+    std::cout << "c CaDiCAll_terminal_out:\nc ";
+    std::cout << to_string(CaDiCAll_terminal_out) + "\n";
 
     // exit if cnf has no models
-    if (enum_terminal_out.size() == 0) {
+    if (CaDiCAll_terminal_out.size() == 0) {
         std::cout << "c cnf has no models\n";
         std::cout << "s VERIFIED\n";
         exit(1);
     }
 
     // check that no models occur twice
-    if (!unique_models(enum_terminal_out)) {
+    if (!unique_models(CaDiCAll_terminal_out)) {
         std::cout << "c MODELS ARE NOT UNIQUE\n";
         verified = false;
     } else {
@@ -253,7 +235,7 @@ int main(int argc, char* argv[]) {
 
     // check that models differ in at least one literal
     if (SHRINK) {
-        if (check_unique_minimized_models(enum_terminal_out)) {
+        if (check_unique_minimized_models(CaDiCAll_terminal_out)) {
             std::cout << "c unique minimized models\n";
         } else {
             std::cout << "c minimized models are not unique\n";
@@ -266,7 +248,7 @@ int main(int argc, char* argv[]) {
         // check that models are total
         bool total = true;
         if (projected_vars.size()) size = projected_vars.size();
-        for (tclause model : enum_terminal_out) {
+        for (tclause model : CaDiCAll_terminal_out) {
             if (model.size() != size) {
                 std::cout << "c " << to_string(model) << " is not total\n";
                 verified = false;
@@ -280,7 +262,7 @@ int main(int argc, char* argv[]) {
     if (projected_vars.size() == 0 and !SHRINK) {
         std::cout << "c No projected variables found, running in NORMALE MODE\n";
         // check that all found models are actually models
-        for (tclause model : enum_terminal_out) {
+        for (tclause model : CaDiCAll_terminal_out) {
             if (!sat(cnf, model)) {
                 std::cout << "c NOT A MODEL: " << to_string(model) << "\n";
                 verified = false;
@@ -293,7 +275,7 @@ int main(int argc, char* argv[]) {
         CaDiCaL::Solver *solver = new CaDiCaL::Solver;
         int numVariables;
         solver->read_dimacs(argv[argc - 3], numVariables);
-        for (tclause model : enum_terminal_out) {
+        for (tclause model : CaDiCAll_terminal_out) {
             // projected case
             for (int lit : model) {
                 solver->assume(lit);

@@ -4,7 +4,7 @@ echo "clean all tmps"
 rm -f tmp*
 
 # paths
-tmp_wbcp_negated_models=./tmp_wbcp_negated_models.txt
+tmp_cadicall_negated_models=./tmp_cadicall_negated_models.txt
 
 # default path for cnf
 path_fuzzed_cnf=./tmp_fuzzed.cnf
@@ -54,8 +54,8 @@ fi
 
 if $shrink; then
   echo "Script: run checker -s"
-  ./checker -s $path_fuzzed_cnf $tmp_wbcp_negated_models
+  ./checker -s $path_fuzzed_cnf $tmp_cadicall_negated_models
 else
   echo "Script: run checker"
-  ./checker $path_fuzzed_cnf $tmp_wbcp_negated_models
+  ./checker $path_fuzzed_cnf $tmp_cadicall_negated_models
 fi

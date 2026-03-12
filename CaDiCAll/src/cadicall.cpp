@@ -33,13 +33,12 @@ int count = 0;
 tcnf cnf;
 
 // paths
-const char* NEGATED_MODELS = "tmp_wbcp_negated_models.txt";
-const char* PROOF_OUT = "tmp_wbcp_proof.txt";
+const char* NEGATED_MODELS = "tmp_cadicall_negated_models.txt";
 
 
 int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, ivec poss_in_stack, CaDiCaL::Internal *internal) {
     if (VERBOSE) std::cout << "c\nc check_literal:" << std::endl;
-    START (wbc_check_literal);
+    START (cadicall_check_literal);
 
     int e_lit = e_var * values[e_var];
     int i_var = internal->external->e2i[e_var];
@@ -71,7 +70,7 @@ int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, iv
             b = std::max(b, dls[e_var]);
         }
     }
-    STOP(wbc_check_literal);
+    STOP(cadicall_check_literal);
     if (VERBOSE) std::cout << "c returning b = " << std::to_string(b) << std::endl;
     return b;
 }
@@ -79,7 +78,7 @@ int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, iv
 
 int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl, ivec poss_in_stack, CaDiCaL::Internal *internal) {
     if (VERBOSE) std::cout << "c\nc implicant_shrinking:" << std::endl;
-    START (wbc_implicant_shrinking);
+    START (cadicall_implicant_shrinking);
 
     int b = 0;
     int index = stack.size() - 1;
@@ -97,7 +96,7 @@ int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl
         }
         index--;
     }
-    STOP(wbc_implicant_shrinking);
+    STOP(cadicall_implicant_shrinking);
     return b;
 }
 
@@ -242,7 +241,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         void push(int lit, int dl, bool is_decision) {
             if (VERBOSE) std::cout << "c push: " << lit << std::endl;
-            START (wbc_push);
+            START (cadicall_push);
 
             int var = std::abs(lit);
 
@@ -253,12 +252,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             is_ds[var] = is_decision;
 
             poss_in_stack[var] = stack.size() - 1;
-            STOP(wbc_push);
+            STOP(cadicall_push);
         };
 
         std::tuple<int, int, bool> pop() {
             if (VERBOSE) std::cout << "c pop:" << std::endl;
-            START (wbc_pop);
+            START (cadicall_pop);
 
             int var = stack.back();
             stack.pop_back();
@@ -273,13 +272,13 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             poss_in_stack[var] = -1;
 
-            STOP(wbc_pop);
+            STOP(cadicall_pop);
             return {val, level, is_decision};
         }
 
         int highest_dl_to_flip() {
             if (VERBOSE) std::cout << "c\nc highest_dl_to_flip:" << std::endl;
-            START (wbc_highest_dl_to_flip);
+            START (cadicall_highest_dl_to_flip);
 
             int highest_dl = -1;
             for (int i = dl; i > 0; i--) {
@@ -291,7 +290,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             if (VERBOSE) std::cout << "c highest dl with decision count < 2 : " + std::to_string(highest_dl) << std::endl;
 
-            STOP(wbc_highest_dl_to_flip);
+            STOP(cadicall_highest_dl_to_flip);
             return highest_dl;
         };
 
@@ -303,7 +302,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 return false;
             }
 
-            START (wbc_cb_check_found_model);
+            START (cadicall_cb_check_found_model);
 
             if (decision_counts_per_level.back() > 2) {
                 false_backtrack = true;
@@ -338,12 +337,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
                     solver->terminate();
                     shall_terminate = true;
-                    STOP (wbc_cb_check_found_model);
+                    STOP (cadicall_cb_check_found_model);
                     return false;
                 }
-                START (wbc_forced_backtrack_model_found);
+                START (cadicall_forced_backtrack_model_found);
                 solver->force_backtrack(b - 1);
-                STOP (wbc_forced_backtrack_model_found);
+                STOP (cadicall_forced_backtrack_model_found);
 
             } else {
                 // finding highest decision level with positive decision
@@ -354,16 +353,16 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
                     solver->terminate();
                     shall_terminate = true;
-                    STOP (wbc_cb_check_found_model);
+                    STOP (cadicall_cb_check_found_model);
                     return false;
                 }
-                START (wbc_forced_backtrack_model_found);
+                START (cadicall_forced_backtrack_model_found);
                 solver->force_backtrack(highest_pos_dl - 1);
-                STOP (wbc_forced_backtrack_model_found);
+                STOP (cadicall_forced_backtrack_model_found);
                 propagate_lit = true;
             }
 
-            STOP (wbc_cb_check_found_model);
+            STOP (cadicall_cb_check_found_model);
 
             // always return false -> solver can only terminate with UNSAT: no more solutions
             return false;
@@ -389,7 +388,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 return;
             }
 
-            START (wbc_notify_assignment);
+            START (cadicall_notify_assignment);
 
             for (auto lit : list) {
 
@@ -428,7 +427,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 }
             }
 
-            STOP (wbc_notify_assignment);
+            STOP (cadicall_notify_assignment);
 
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
             if (VERBOSE_DC) print_dc(decisions, decision_counts_per_level, dl);
@@ -444,13 +443,13 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             }
 
             if (VERBOSE) std::cout << "c " + std::to_string(dl + 1) << std::endl;
-            START (wbc_notify_new_decision_level);
+            START (cadicall_notify_new_decision_level);
 
             dl++;
 
             is_decision = true;
 
-            STOP (wbc_notify_new_decision_level);
+            STOP (cadicall_notify_new_decision_level);
         };
 
         // this function indicates that the solver backtracked to a lower decision level. Its single argument reports the new decision level. All assignments that were made above this target decision level must be considered as unassigned.
@@ -463,7 +462,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             }
 
             if (VERBOSE) std::cout << "c to level " + std::to_string(new_level) << std::endl;
-            START (wbc_notify_backtrack);
+            START (cadicall_notify_backtrack);
 
             // update stack
             while (stack.size() > 0 && dls[stack.back()] > (int)new_level) {
@@ -489,7 +488,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
             if (VERBOSE_DC) print_dc(decisions, decision_counts_per_level, dl);
 
-            STOP (wbc_notify_backtrack);
+            STOP (cadicall_notify_backtrack);
         };
 
         // called before the solver makes a decision. Return your decision or 0 (solver makes one).
@@ -501,7 +500,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 return 0;
             }
 
-            START (wbc_cb_decide);
+            START (cadicall_cb_decide);
 
             // if backtracked decision is not forced negated, TODO: can this also happen when the decisions count was on one? is it then unnoticed?
             // should not be a problem, if this would happen, the decision count was one, so the next decision is fixed.
@@ -530,7 +529,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                     }
                 } else {
                     if (VERBOSE) std::cout << "c returning saved decision: " + std::to_string(lit) << std::endl;
-                    STOP(wbc_cb_decide);
+                    STOP(cadicall_cb_decide);
                     return lit;
                 }
             }
@@ -542,7 +541,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                     if (VERBOSE) std::cout << "c no positive decisions to flip - finished" << std::endl;
                     solver->terminate();
                     shall_terminate = true;
-                    STOP(wbc_cb_decide);
+                    STOP(cadicall_cb_decide);
                     return 0;
                 }
 
@@ -551,7 +550,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 save_decision = true;
                 solver->force_backtrack(highest_pos_dl - 1);
                 false_backtrack = false;
-                STOP (wbc_cb_decide);
+                STOP (cadicall_cb_decide);
                 if (VERBOSE) std::cout << "c end false_backtrack - the next decision will be ignored" << std::endl;
                 return 0;
             }
@@ -559,7 +558,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             // check if decisions is already fixed
             if (dl + 1 < (int)decisions.size() && decision_counts_per_level[dl + 1] < 2) {
                 if (VERBOSE) std::cout << "c decision is already fixed: " + std::to_string(-decisions[dl + 1]) << std::endl;
-                STOP(wbc_cb_decide);
+                STOP(cadicall_cb_decide);
                 return -decisions[dl + 1];
             }
 
@@ -570,13 +569,13 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 for (int var = 1; var <= max_var; var++) {
                     if (values[var] == 0) {
                         if (VERBOSE) std::cout << "c returning decision: " + std::to_string(var) << std::endl;
-                        STOP(wbc_cb_decide);
+                        STOP(cadicall_cb_decide);
                         return var;
                     }
                 }
             }
 
-            STOP (wbc_cb_decide);
+            STOP (cadicall_cb_decide);
 
             if (VERBOSE) std::cout << "c let the solver decide" << std::endl;
             return 0;
@@ -588,12 +587,12 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (!propagate_lit) return 0;
             if (false_backtrack) return 0;
 
-            START (wbc_cb_propagate);
+            START (cadicall_cb_propagate);
 
             propagate_lit = false;
 
             if (VERBOSE) std::cout << "c propagated: " << std::to_string(-decisions.back()) << std::endl;
-            STOP (wbc_cb_propagate);
+            STOP (cadicall_cb_propagate);
             return -decisions.back();
         };
 
@@ -602,14 +601,14 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (!REASON) return 0;
             if (false_backtrack) return 0;
 
-            START (wbc_cb_add_reason_clause_lit);
+            START (cadicall_cb_add_reason_clause_lit);
             if (VERBOSE) std::cout << "c for: " << std::to_string(propagated_lit) << std::endl;
             int var = std::abs(propagated_lit);
 
             if (reason_clause_flag) {
                 reason_clause_idx = dls[var];
                 reason_clause_flag = false;
-                STOP (wbc_cb_add_reason_clause_lit);
+                STOP (cadicall_cb_add_reason_clause_lit);
                 if (VERBOSE) std::cout << "c adding: " << std::to_string(propagated_lit) << std::endl;
                 return propagated_lit;
             }
@@ -617,13 +616,13 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (0 < reason_clause_idx) {
                 int lit = -decisions[reason_clause_idx];
                 reason_clause_idx--;
-                STOP (wbc_cb_add_reason_clause_lit);
+                STOP (cadicall_cb_add_reason_clause_lit);
                 if (VERBOSE) std::cout << "c adding: " << std::to_string(lit) << std::endl;
                 return lit;
             }
 
             reason_clause_flag = true;
-            STOP (wbc_cb_add_reason_clause_lit);
+            STOP (cadicall_cb_add_reason_clause_lit);
             if (VERBOSE) std::cout << "c finished returning 0" << std::endl;
             return 0;
         };
@@ -654,10 +653,10 @@ int main(int argc, char* argv[]) {
     if (HELP) {
         std::string msg =
             "\n\n"
-            "Welcome to Projected Enumeration using IPASIR-UP without Blocking Clauses\n"
+            "Welcome to CaDiCAll a model enumerator using IPASIR-UP without Blocking Clauses\n"
             "\n"
             "USAGE:\n"
-            "\twbcp_enum [--Option (-o)] <path to cnf>\n"
+            "\tcadicall [--Option (-o)] <path to cnf>\n"
             "\n"
             "OPTIONS:\n"
             "\n"
