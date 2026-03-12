@@ -1,0 +1,5 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{esc}{\textcolor{red}{forced_backt\_allowed = true;}}
+\PYG{k+kt}{bool}\PYG{+w}{ }\PYG{n}{is\PYGZus{}consistent}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{external}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{propagator}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{cb\PYGZus{}check\PYGZus{}found\PYGZus{}model}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{etrail}\PYG{p}{)}\PYG{p}{;}
+\PYG{esc}{\textcolor{red}{forced_backt\_allowed = false;}}
+\end{Verbatim}

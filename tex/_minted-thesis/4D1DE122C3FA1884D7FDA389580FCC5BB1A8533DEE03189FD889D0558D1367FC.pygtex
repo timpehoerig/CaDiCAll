@@ -1,0 +1,17 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{n}{std}\PYG{o}{:}\PYG{o}{:}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{int}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{other\PYGZus{}watching\PYGZus{}literals}\PYG{p}{(}\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{external\PYGZus{}variable}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{internal\PYGZus{}variable}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{internal}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{external}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{e2i}\PYG{p}{[}\PYG{n}{external\PYGZus{}variable}\PYG{p}{]}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{internal\PYGZus{}literal}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{internal}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{external}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{vals}\PYG{p}{[}\PYG{n}{internal\PYGZus{}variable}\PYG{p}{]}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{n}{internal\PYGZus{}variable}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{n}{internal\PYGZus{}variable}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{n}{std}\PYG{o}{:}\PYG{o}{:}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{int}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{other\PYGZus{}watching\PYGZus{}literals}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{CaDiCaL}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Watch}\PYG{+w}{ }\PYG{n}{watch}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{internal}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{watches}\PYG{p}{(}\PYG{n}{internal\PYGZus{}literal}\PYG{p}{)}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{i\PYGZus{}wl1}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{watch}\PYG{p}{.}\PYG{n}{clause}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{literals}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{i\PYGZus{}wl2}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{watch}\PYG{p}{.}\PYG{n}{clause}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{literals}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{i\PYGZus{}other\PYGZus{}lit}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{internal\PYGZus{}literal}\PYG{+w}{ }\PYG{o}{=}\PYG{o}{=}\PYG{+w}{ }\PYG{n}{i\PYGZus{}wl1}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{n}{i\PYGZus{}wl2}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{i\PYGZus{}wl1}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{e\PYGZus{}other\PYGZus{}lit}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{internal}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}}\PYG{n}{externalize}\PYG{p}{(}\PYG{n}{i\PYGZus{}other\PYGZus{}lit}\PYG{p}{)}\PYG{p}{;}
+\PYG{+w}{        }\PYG{n}{other\PYGZus{}watching\PYGZus{}literals}\PYG{p}{.}\PYG{n}{push\PYGZus{}back}\PYG{p}{(}\PYG{n}{e\PYGZus{}other\PYGZus{}lit}\PYG{p}{)}\PYG{p}{;}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{other\PYGZus{}watching\PYGZus{}literals}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

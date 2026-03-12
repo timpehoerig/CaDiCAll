@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{(}\PYG{k+kt}{size\PYGZus{}t}\PYG{p}{)}\PYG{+w}{ }\PYG{n}{level}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{assumptions}\PYG{p}{.}\PYG{n}{size}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }
+\PYG{+w}{    }\PYG{p}{(}\PYG{p}{(}\PYG{k+kt}{size\PYGZus{}t}\PYG{p}{)}\PYG{+w}{ }\PYG{n}{level}\PYG{+w}{ }\PYG{o}{=}\PYG{o}{=}\PYG{+w}{ }\PYG{n}{assumptions}\PYG{p}{.}\PYG{n}{size}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{o}{\PYGZam{}}\PYG{+w}{ }\PYG{n}{constraint}\PYG{p}{.}\PYG{n}{size}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{k}{return}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{esc}{\textcolor{red}{else \{}}
+\PYG{+w}{  }\PYG{esc}{\textcolor{red}{return ask\_decision();}}
+\PYG{esc}{\textcolor}\PYG{p}{\PYGZob{}}\PYG{n}{red}\PYG{p}{\PYGZcb{}}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{err}{\PYGZbs{}}\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{err}{|}\PYG{p}{;}
+\end{Verbatim}
