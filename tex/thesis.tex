@@ -329,7 +329,9 @@ The 2-watched-literal scheme is used in the the faster approach proposed from Sp
 \label{alg:check-literal}
 \begin{algorithmic}[1]
 \FORALL{$c \in \omega(\ell)$}
-    \IF{$\exists \ell' \text{ such that } c \in \omega(\ell') \text{ and } \ell' \neq \ell \text{ and } \ell' \in T'$}
+    \STATE $\ell' \gets$ the other watched literal in $c$
+    %\IF{$\exists \ell' \text{ such that } c \in \omega(\ell') \text{ and } \ell' \neq \ell \text{ and } \ell' \in T'$}
+    \IF{$ \ell' \in T'$}
         \STATE Continue
     \ELSE
         \STATE $b \gets \max(b, \delta(\ell))$
@@ -361,7 +363,7 @@ Flipping decisions by propagation their negations (Section 5.2) is not affected 
 \STATE $T' \gets T$
 \WHILE{$T' \neq \epsilon$}
     \STATE $\ell \gets T'.\text{pop()}$
-    \IF{$\rho(\ell) \neq \text{DECISION} \text{ and } decision\_count(\ell) = 1$}
+    \IF{$\rho(\ell) \neq \text{DECISION}$ \textcolor{red}{and $decision\_count(\ell) = 1$}}
         \STATE $b \gets \max(b, \delta(\ell))$
     \ELSIF{$\delta(\ell) > b$}
         \STATE $b \gets \text{CHECK-LITERAL}(\ell, b, T')$
@@ -447,10 +449,12 @@ std::vector<int> other_watching_literals(int external_variable) {
 
 The user propagator can then checker wether all other waching literals are satisfied by the remaining trail. If so, the literal can be dropped without falsifying any clause. If not, the literal cannot be dropped as it is still needed to satisfy at least one clause.
 
+If the sole purpose of this function is to be used by the implicant shrinking algorithm implemented from CaDiCAll, it could be optimized by checking if the other watching literal satisfies the clause instead of appending it to the list of other watching literals. This way, the function can return a boolean value indicating whether the literal can be dropped or not, without the need to return all other watching literals. This also allows early breaks, as the function can return false as soon as it finds a clause that is not satisfied by the other watching literal. However, the function would also need either access to the internal stack and position of literals, as the user propagator needs to check if the other watching literal is satisfied by the remaining trail, or it would need to be passed the current trail as an argument.
+
 With this minor addition to the IPASIR-UP interface, the implicant shrinking algorithm can be implemented entirely through IPASIR-UP.
 
 \subsection{Optimization}
-In order to check where to backtrack to, if the solver recovers paths that have already been explored, or to check which literals can be dropped during implicant shrinking, the user propagator needs to maintain the values of variables, their decision levels and wether they are decisions or propagations. Although the IPASIR-UP interface provides enough information to build external data structures that keep all these information, maintaining them takes in average XX percent of the total running time of CaDiCAll. Allowing read only access to CaDiCaLs variable assignment and stack would make all external representation redundant.
+In order to check where to backtrack to, if the solver recovers paths that have already been explored, or to check which literals can be dropped during implicant shrinking, CaDiCAll needs to maintain the values of variables, their decision levels and wether they are decisions or propagations. IPASIR-UP provides through the notification callback functions \verb|notify_assignment|, \verb|notify_new_decision_level| and \verb|notify_backtrack| enough information to maintain these values external from the solver itself. However, this means that every time a variable is assigned, it is not only stored internally by CaDiCaL but also externally by CaDiCAll. This does not only double the expenses but introduces an even bigger overhead as the information must also be passed from the solver to the user propagator through the callback functions.  Thus, allowing read only access to CaDiCaLs variable assignment and stack would make most external representation redundant.
 
 \section{Results}
 ...
