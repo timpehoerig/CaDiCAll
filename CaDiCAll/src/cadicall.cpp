@@ -591,7 +591,14 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             propagate_lit = false;
 
+            if (decision_counts_per_level.back() >= 2) {
+                if (VERBOSE) std::cout << "c decision count == 2 - thus " << std::to_string(decisions.back()) << " was already flipped" << std::endl;
+                STOP (cadicall_cb_propagate);
+                return 0;
+            }
+
             if (VERBOSE) std::cout << "c propagated: " << std::to_string(-decisions.back()) << std::endl;
+
             STOP (cadicall_cb_propagate);
             return -decisions.back();
         };
@@ -735,7 +742,7 @@ int main(int argc, char* argv[]) {
     if (PROFILE) solver->statistics();
 
     if (VERBOSE) {
-        std::cout << "c all models: " + to_string(ep->all_models) << std::endl;
+        std::cout << "c all models:\n" + to_string(ep->all_models) << std::endl;
 
         std::cout << res;
         std::cout << "" << std::endl;

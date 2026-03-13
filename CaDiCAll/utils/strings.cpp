@@ -36,7 +36,7 @@ std::string to_string(ivvec models, bool neg) {
     std::string str;
 
     for (ivec model : models) {
-        str += to_string(model, neg) + " | ";
+        str += "c " + to_string(model, neg) + "\n";
     }
 
     if (str.size() > 2 && str[str.size()-2] == '|') {
