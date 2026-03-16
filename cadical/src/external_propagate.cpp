@@ -840,7 +840,7 @@ bool Internal::external_check_solution () {
     external->reset_extended ();
     external->extend ();
 
-    std::vector<int> etrail;
+    // std::vector<int> etrail;
 
     // Here the variables must be filtered by external->is_observed,
     // because fixed variables are internally not necessarily observed
@@ -918,7 +918,7 @@ bool Internal::external_check_solution () {
       backtrack (conflict_level);
     }
   }
-
+  etrail.clear();
   return !conflict;
 }
 
@@ -936,7 +936,7 @@ void Internal::notify_assignments () {
     return;
 
   LOG ("notify external propagator about new assignments");
-  std::vector<int> assigned;
+  // std::vector<int> assigned;
 
   while (notified < end_of_trail) {
     int ilit = trail[notified++];
@@ -954,6 +954,7 @@ void Internal::notify_assignments () {
   }
 
   external->propagator->notify_assignment (assigned);
+  assigned.clear();
   return;
 }
 

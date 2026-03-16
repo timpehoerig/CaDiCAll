@@ -1,0 +1,49 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			p06n20
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		-r
+[runlim] argv[3]:		/tmp/local-unzipped-12156038-7-442-BMS_k3_n100_m429_205.cnf
+[runlim] start:			Sat Mar 14 10:40:10 2026
+[runlim] child:			1596070
+[runlim] sample:		9.94 time, 10.01 real, 3 MB, 6.16 load
+[runlim] sample:		19.88 time, 20.01 real, 3 MB, 6.67 load
+[runlim] sample:		29.82 time, 30.01 real, 3 MB, 7.11 load
+[runlim] sample:		39.76 time, 40.01 real, 3 MB, 7.40 load
+[runlim] sample:		49.70 time, 50.01 real, 3 MB, 7.64 load
+[runlim] sample:		59.64 time, 60.01 real, 3 MB, 7.85 load
+[runlim] sample:		69.59 time, 70.01 real, 3 MB, 7.88 load
+[runlim] sample:		79.52 time, 80.01 real, 3 MB, 7.90 load
+[runlim] sample:		89.46 time, 90.01 real, 3 MB, 7.99 load
+[runlim] sample:		99.40 time, 100.01 real, 3 MB, 7.83 load
+[runlim] sample:		109.34 time, 110.01 real, 3 MB, 7.55 load
+[runlim] sample:		119.27 time, 120.01 real, 3 MB, 7.31 load
+[runlim] sample:		129.21 time, 130.01 real, 3 MB, 7.11 load
+[runlim] sample:		139.16 time, 140.01 real, 3 MB, 6.94 load
+[runlim] sample:		149.10 time, 150.01 real, 3 MB, 6.87 load
+[runlim] sample:		159.04 time, 160.01 real, 3 MB, 6.73 load
+[runlim] sample:		168.97 time, 170.01 real, 3 MB, 6.62 load
+[runlim] sample:		178.91 time, 180.01 real, 3 MB, 6.53 load
+[runlim] sample:		188.85 time, 190.01 real, 3 MB, 6.44 load
+[runlim] sample:		198.79 time, 200.01 real, 3 MB, 6.38 load
+[runlim] sample:		208.73 time, 210.01 real, 3 MB, 6.32 load
+[runlim] sample:		218.67 time, 220.01 real, 3 MB, 6.27 load
+[runlim] sample:		228.61 time, 230.01 real, 3 MB, 6.23 load
+[runlim] sample:		238.55 time, 240.01 real, 3 MB, 6.27 load
+[runlim] sample:		248.49 time, 250.01 real, 3 MB, 6.23 load
+[runlim] sample:		258.43 time, 260.01 real, 3 MB, 6.19 load
+[runlim] sample:		268.37 time, 270.01 real, 3 MB, 6.16 load
+[runlim] sample:		278.31 time, 280.01 real, 3 MB, 6.14 load
+[runlim] end:			Sat Mar 14 10:44:54 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			284.18 seconds
+[runlim] time:			282.38 seconds
+[runlim] space:			3 MB
+[runlim] load:			7.99 maximum
+[runlim] samples:		2841

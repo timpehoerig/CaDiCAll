@@ -159,6 +159,11 @@ struct Internal {
 
   /*----------------------------------------------------------------------*/
 
+  std::vector<int> etrail;
+  std::vector<int> assigned;
+
+  /*----------------------------------------------------------------------*/
+
   int mode;                    // current internal state
   bool unsat;                  // empty clause found or learned
   bool iterating;              // report learned unit ('i' line)

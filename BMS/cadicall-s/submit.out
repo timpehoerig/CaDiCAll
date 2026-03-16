@@ -1,0 +1,14 @@
+version    cadicall
+binary     /home/fr/fr_fr/fr_fp1060/src/cadicall/master_thesis/CaDiCAll/src/cadicall
+directory  cadicall-s
+benchmarks 501
+delta      64
+jobs       8
+name       BMScadicall
+options    -c -s
+slurmspace 236G
+slurmtime  99
+sockets    2
+threads    1
+space      7000
+time       5000

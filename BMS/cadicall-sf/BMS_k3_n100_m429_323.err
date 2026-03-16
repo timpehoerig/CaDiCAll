@@ -1,0 +1,45 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			p05n22
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		-s
+[runlim] argv[3]:		-f
+[runlim] argv[4]:		/tmp/local-unzipped-12158367-3-192-BMS_k3_n100_m429_323.cnf
+[runlim] start:			Sun Mar 15 00:07:29 2026
+[runlim] child:			1613941
+[runlim] sample:		9.96 time, 10.01 real, 4 MB, 6.10 load
+[runlim] sample:		19.91 time, 20.01 real, 4 MB, 6.55 load
+[runlim] sample:		29.87 time, 30.01 real, 4 MB, 6.93 load
+[runlim] sample:		39.82 time, 40.01 real, 4 MB, 7.32 load
+[runlim] sample:		49.78 time, 50.01 real, 4 MB, 7.58 load
+[runlim] sample:		59.73 time, 60.01 real, 4 MB, 7.72 load
+[runlim] sample:		69.69 time, 70.01 real, 4 MB, 7.76 load
+[runlim] sample:		79.65 time, 80.01 real, 4 MB, 7.80 load
+[runlim] sample:		89.60 time, 90.01 real, 4 MB, 7.83 load
+[runlim] sample:		99.55 time, 100.01 real, 4 MB, 7.86 load
+[runlim] sample:		109.51 time, 110.01 real, 4 MB, 7.88 load
+[runlim] sample:		119.46 time, 120.01 real, 4 MB, 7.90 load
+[runlim] sample:		129.42 time, 130.01 real, 4 MB, 7.91 load
+[runlim] sample:		139.38 time, 140.01 real, 4 MB, 7.93 load
+[runlim] sample:		149.33 time, 150.01 real, 4 MB, 8.02 load
+[runlim] sample:		159.29 time, 160.01 real, 4 MB, 8.39 load
+[runlim] sample:		169.24 time, 170.01 real, 4 MB, 8.56 load
+[runlim] sample:		179.20 time, 180.01 real, 4 MB, 8.63 load
+[runlim] sample:		189.15 time, 190.01 real, 4 MB, 8.69 load
+[runlim] sample:		199.11 time, 200.01 real, 4 MB, 8.74 load
+[runlim] sample:		209.06 time, 210.01 real, 4 MB, 8.78 load
+[runlim] sample:		219.02 time, 220.01 real, 4 MB, 8.89 load
+[runlim] sample:		228.98 time, 230.01 real, 4 MB, 8.91 load
+[runlim] end:			Sun Mar 15 00:11:25 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			235.55 seconds
+[runlim] time:			234.45 seconds
+[runlim] space:			4 MB
+[runlim] load:			8.92 maximum
+[runlim] samples:		2355
