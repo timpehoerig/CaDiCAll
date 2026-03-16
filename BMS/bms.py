@@ -18,7 +18,7 @@ def check(d: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
         for solver, count in solvers.items():
             if "-s" in solver:
                 continue
-            if count != solvers["tabularallsat"] and count != -1:
+            if count != solvers["tabularallsat"]:
                 if bm_name not in out:
                     out[bm_name] = {"tabularallsat": solvers["tabularallsat"]}
                 out[bm_name][solver] = count
@@ -82,5 +82,6 @@ def plot_all_solvers(data: dict[str, BMS]):
 
 if __name__ == "__main__":
     all_bms = read_all_BMS("./")
-
-    plot_all_solvers(all_bms)
+    for name, bms in check(inverse(all_bms)).items():
+        print(name, bms)
+    # plot_all_solvers(all_bms)

@@ -166,7 +166,7 @@ void Internal::mark_useless_redundant_clauses_as_garbage () {
 // 'flush_watches' are messed up and assertion 'FW1' fails.
 
 bool Internal::propagate_out_of_order_units () {
-  if (!level)
+  if (!level || true)
     return true;
   int oou = 0;
   for (size_t i = control[1].trail; !oou && i < trail.size (); i++) {

@@ -1,7 +1,7 @@
 #include "../../cadical/src/cadical.hpp"
 #include "../../cadical/src/tracer.hpp"
 #include "../../cadical/src/internal.hpp"
-#include "../../cadical/src/external.hpp"
+// #include "../../cadical/src/external.hpp"
 #include "../utils/argparser.hpp"
 #include "../utils/strings.hpp"
 #include "../utils/parser.hpp"
@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <cassert>
 #include <charconv>
+#include <cmath>
 
 
 // global meta variables
@@ -314,7 +315,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (!false_backtrack) {
                 if (SHRINK) b = implicant_shrinking(stack, is_ds, dls, values, decision_counts_per_level, poss_in_stack, internal);
                 if (COUNT) {
-                    count++;
+                    count += pow(2, dl - b);
+                    // count++;
                 } else {
                     tmodel new_model;
                     new_model.reserve(model.size());
