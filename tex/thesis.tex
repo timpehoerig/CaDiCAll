@@ -411,14 +411,22 @@ When the solver is about to make the next decision, the solver internally calls 
 
 An important note is that, if the user propagator backtracks below the pseudo decision level of the solver. The solver goes back to the CDCL loop instead of making a decision. In that case the solver ignores the decision made by the user propagator, continues with the CDCL loop and calls \verb|ask_decision| again when it is about to make the next decision. However, the CDCL loop may propagate literals that lead to paths that have already been explored. Thus, the user propagator must check wether the work done by the CDCL loop has led to such a path and if so, backtrack further. If not, the user propagator can either return the original decision or make a new one if the CDCL loop already propagated it.
 
-(TODO: reicht es ask\_decision nur in dem fall aufzurufen, wenn decision propagiert wurde)
-
 \begin{minted}[escapeinside=||]{cpp}
 if ((size_t) level < assumptions.size () ||
     ((size_t) level == assumptions.size () && constraint.size ())) {
   return 0;
 |\textcolor{red}{\} else \{}|
   |\textcolor{red}{return ask\_decision();}|
+};
+\end{minted}
+
+\subsubsection{Out of order propagations}
+
+In order to keep blocking literals correct, CaDiCaL propagates units at the root level to derive all implied units. However, this allows the solver to backtrack multiple levels and thus, skipping branches that potentially lead to models. 
+
+\begin{minted}[escapeinside=<>]{cpp}
+bool Internal::propagate_out_of_order_units () {
+  <\textcolor{red}{return true}>;
 };
 \end{minted}
 
@@ -445,8 +453,6 @@ std::vector<int> other_watching_literals(int external_variable) {
 }
 \end{minted}
 
-(TODO: internal->external durch was anderes ersetzen?)
-
 The user propagator can then checker wether all other waching literals are satisfied by the remaining trail. If so, the literal can be dropped without falsifying any clause. If not, the literal cannot be dropped as it is still needed to satisfy at least one clause.
 
 If the sole purpose of this function is to be used by the implicant shrinking algorithm implemented from CaDiCAll, it could be optimized by checking if the other watching literal satisfies the clause instead of appending it to the list of other watching literals. This way, the function can return a boolean value indicating whether the literal can be dropped or not, without the need to return all other watching literals. This also allows early breaks, as the function can return false as soon as it finds a clause that is not satisfied by the other watching literal. However, the function would also need either access to the internal stack and position of literals, as the user propagator needs to check if the other watching literal is satisfied by the remaining trail, or it would need to be passed the current trail as an argument.
@@ -454,6 +460,15 @@ If the sole purpose of this function is to be used by the implicant shrinking al
 With this minor addition to the IPASIR-UP interface, the implicant shrinking algorithm can be implemented entirely through IPASIR-UP.
 
 \subsection{Optimization}
+
+This thesis aimed to show if and how a model enumerator using IPASIR-UP is possible. How CaDiCAll and the IPASIR-UP interface can be optimized to reduce CaDiCAll's runtime was explicitly looked at. However, there are some obvious optimizations worth mentioning.
+
+\subsubsection{Interacting with the solver}
+
+When the solver calls the functions \verb|notify_assignments| and \verb|cb_check_found_models| it creates a vector containing assigned literals. When we timed CaDiCAll, in CNFs with many models, CaDiCAll spend around 40 percent of its total time with vector operations. When passing these vectors from the solver to the user propagator, the solver always allocates memory for the vectors and frees it afterwords again. By making these vectors persistent, the total running time of CaDiCAll on CNFs with many models was cut in half.
+
+\subsubsection{Duplicating Datastructures}
+
 In order to check where to backtrack to, if the solver recovers paths that have already been explored, or to check which literals can be dropped during implicant shrinking, CaDiCAll needs to maintain the values of variables, their decision levels and wether they are decisions or propagations. IPASIR-UP provides through the notification callback functions \verb|notify_assignment|, \verb|notify_new_decision_level| and \verb|notify_backtrack| enough information to maintain these values external from the solver itself. However, this means that every time a variable is assigned, it is not only stored internally by CaDiCaL but also externally by CaDiCAll. This does not only double the expenses but introduces an even bigger overhead as the information must also be passed from the solver to the user propagator through the callback functions.  Thus, allowing read only access to CaDiCaLs variable assignment and stack would make most external representation redundant.
 
 \section{Results}
