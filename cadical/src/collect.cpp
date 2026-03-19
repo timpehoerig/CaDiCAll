@@ -13,18 +13,23 @@ int Internal::clause_contains_fixed_literal (Clause *c) {
   int satisfied = 0, falsified = 0;
   for (const auto &lit : *c) {
     const int tmp = fixed (lit);
+    const bool propagated = !level || var(lit).trail < control[0].trail;
     if (tmp > 0) {
       LOG (c, "root level satisfied literal %d in", lit);
       satisfied++;
     }
-    if (tmp < 0) {
+    if (tmp < 0 && propagated) {
       LOG (c, "root level falsified literal %d in", lit);
       falsified++;
+    }
+    if (tmp < 0 && !propagated) {
+      LOG (c, "not simplifying root level falsified but not propagated literal %d in", lit);
+      falsified = INT_MIN;
     }
   }
   if (satisfied)
     return 1;
-  else if (falsified)
+  else if (falsified > 0)
     return -1;
   else
     return 0;

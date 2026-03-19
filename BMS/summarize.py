@@ -3,14 +3,14 @@ import os
 
 
 BENCHMARKS = [
-    "cadicall",
-    "cadicall-f",
-    "cadicall-fr",
-    "cadicall-r",
-    "cadicall-s",
-    "cadicall-sf",
-    "cadicall-sfr",
-    "cadicall-sr",
+    "cadicall-fix",
+    "cadicall-fix-f",
+    "cadicall-fix-fr",
+    "cadicall-fix-r",
+    "cadicall-fix-s",
+    "cadicall-fix-sf",
+    "cadicall-fix-sfr",
+    "cadicall-fix-sr",
     "tabularallsat",
 ]
 
@@ -37,6 +37,8 @@ def read_err(path: str) -> dict[str, float]:
         out["rlim"] = get_one(lines, "real time limit:")
         out["slim"] = get_one(lines, "space limit:")
 
+        out["status"] = float("segmentation fault" in content)
+
     return out
 
 
@@ -54,6 +56,8 @@ def read_BM(name: str) -> BM:
     stats = read_err(f"{name}.err")
     if stats["time"] >= stats["tlim"] or stats["real"] >= stats["rlim"] or stats["space"] >= stats["slim"]:
         count = -1
+    elif stats["status"] == 1:  # segmentation fault
+        count = -2
     else:
         count = read_log(f"{name}.log")
     return BM(count, *stats.values())

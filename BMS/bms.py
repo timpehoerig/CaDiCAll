@@ -16,7 +16,7 @@ def check(d: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
     out: dict[str, dict[str, int]] = dict()
     for bm_name, solvers in d.items():
         for solver, count in solvers.items():
-            if "-s" in solver:
+            if count == -1:  # or "-s" in solver:
                 continue
             if count != solvers["tabularallsat"]:
                 if bm_name not in out:

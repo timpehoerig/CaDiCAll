@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <cnf>"
-    exit 1
-fi
-
 cnf="$1"
 
-last_line=$(./cadicall -c "$cnf" | tail -n 1 | tr -d '[:space:]')
 
-if [ "$last_line" = "0" ]; then
-    echo "0"
-    exit 0
-else
-    echo "1"
+# run CaDiCAll
+out=$(./cadicall -s "$cnf")
+
+last_line=$(../checker/checker -s "$cnf" tmp_cadicall_negated_models.txt | tail -n 1)
+
+if [ "$last_line" = "s PROBLEM" ]; then
     exit 1
+else
+    exit 0
 fi

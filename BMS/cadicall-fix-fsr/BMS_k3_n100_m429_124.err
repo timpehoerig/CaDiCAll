@@ -1,0 +1,47 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			p06n21
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		-f
+[runlim] argv[3]:		-s
+[runlim] argv[4]:		-r
+[runlim] argv[5]:		/tmp/local-unzipped-12181346-7-419-BMS_k3_n100_m429_124.cnf
+[runlim] start:			Mon Mar 16 16:49:35 2026
+[runlim] child:			2849168
+[runlim] sample:		9.96 time, 10.01 real, 4 MB, 4.03 load
+[runlim] sample:		19.91 time, 20.01 real, 4 MB, 5.58 load
+[runlim] sample:		29.86 time, 30.01 real, 4 MB, 7.19 load
+[runlim] sample:		39.81 time, 40.01 real, 4 MB, 8.39 load
+[runlim] sample:		49.77 time, 50.01 real, 4 MB, 9.33 load
+[runlim] sample:		59.72 time, 60.01 real, 4 MB, 9.81 load
+[runlim] sample:		69.68 time, 70.01 real, 4 MB, 10.07 load
+[runlim] sample:		79.63 time, 80.01 real, 4 MB, 10.21 load
+[runlim] sample:		89.59 time, 90.01 real, 4 MB, 10.17 load
+[runlim] sample:		99.54 time, 100.01 real, 4 MB, 10.15 load
+[runlim] sample:		109.50 time, 110.01 real, 4 MB, 9.97 load
+[runlim] sample:		119.46 time, 120.01 real, 4 MB, 9.82 load
+[runlim] sample:		129.41 time, 130.01 real, 4 MB, 9.69 load
+[runlim] sample:		139.36 time, 140.01 real, 4 MB, 9.59 load
+[runlim] sample:		149.32 time, 150.01 real, 4 MB, 9.57 load
+[runlim] sample:		159.27 time, 160.01 real, 4 MB, 9.48 load
+[runlim] sample:		169.23 time, 170.01 real, 4 MB, 9.41 load
+[runlim] sample:		179.18 time, 180.01 real, 4 MB, 9.26 load
+[runlim] sample:		189.15 time, 190.01 real, 4 MB, 9.07 load
+[runlim] sample:		199.11 time, 200.01 real, 4 MB, 8.90 load
+[runlim] sample:		209.07 time, 210.01 real, 4 MB, 8.76 load
+[runlim] sample:		219.03 time, 220.01 real, 4 MB, 8.65 load
+[runlim] sample:		229.00 time, 230.01 real, 4 MB, 8.55 load
+[runlim] sample:		238.96 time, 240.01 real, 4 MB, 8.46 load
+[runlim] end:			Mon Mar 16 16:53:39 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			243.83 seconds
+[runlim] time:			242.75 seconds
+[runlim] space:			4 MB
+[runlim] load:			10.22 maximum
+[runlim] samples:		2438

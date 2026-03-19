@@ -4,6 +4,10 @@
 #include <sstream>
 #include <algorithm>
 #include <set>
+#include <fstream>
+#include <cstdio>
+#include <cmath>
+
 #include "../utils/strings.hpp"
 #include "../utils/parser.hpp"
 #include "../../cadical/src/cadical.hpp"
@@ -167,9 +171,138 @@ bool check_unique_minimized_models(tcnf models) {
 
 
 
+#include <vector>
+#include <unordered_map>
+
+using Model = std::vector<int>;
+
+bool models_overlap(const Model& m1, const Model& m2) {
+    std::unordered_map<int, int> assignment;
+
+    // store assignments from m1
+    for (int lit : m1) {
+        int var = std::abs(lit);
+        assignment[var] = lit;
+    }
+
+    // check m2 against m1
+    for (int lit : m2) {
+        int var = std::abs(lit);
+
+        if (assignment.count(var)) {
+            if (assignment[var] == -lit) {
+                return false; // conflict → no overlap
+            }
+        }
+    }
+
+    return true; // no conflicts → overlap
+}
+
+
+bool all_models_disjoint(const std::vector<Model>& models) {
+    for (size_t i = 0; i < models.size(); i++) {
+        for (size_t j = i + 1; j < models.size(); j++) {
+            if (models_overlap(models[i], models[j])) {
+                return false; // found overlap → bad
+            }
+        }
+    }
+    return true;
+}
+
+
+
 void sort(tcnf& cnf) {
     for (tclause& model : cnf) std::sort(model.begin(), model.end(), [](int x, int y){return std::abs(x) < std::abs(y);});
     std::sort(cnf.begin(), cnf.end());
+}
+
+
+std::string run_dualiza_with_units(const std::string& input_cnf_path,
+                                   const std::vector<int>& units) {
+    std::ifstream in(input_cnf_path);
+    if (!in) {
+        throw std::runtime_error("Could not open input CNF file");
+    }
+
+    std::string line;
+    std::stringstream cnf_body;
+    int vars = 0, clauses = 0;
+
+    // Parse DIMACS
+    while (std::getline(in, line)) {
+        if (line.empty()) continue;
+
+        if (line[0] == 'c') {
+            continue; // skip comments
+        } else if (line[0] == 'p') {
+            std::stringstream ss(line);
+            std::string tmp;
+            ss >> tmp >> tmp >> vars >> clauses;
+        } else {
+            cnf_body << line << "\n";
+        }
+    }
+    in.close();
+
+    // New file path
+    std::string new_path = input_cnf_path + ".tmp.cnf";
+
+    std::ofstream out(new_path);
+    if (!out) {
+        throw std::runtime_error("Could not open output CNF file");
+    }
+
+    // Write header (update clause count)
+    int new_clauses = clauses + units.size();
+    out << "p cnf " << vars << " " << new_clauses << "\n";
+
+    // Write original clauses
+    out << cnf_body.str();
+
+    // Add unit clauses
+    for (int lit : units) {
+        out << lit << " 0\n";
+    }
+
+    out.close();
+
+    // Run dualiza
+    std::string command = "../../dualiza/dualiza " + new_path;
+
+    std::string result;
+    char buffer[256];
+
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        throw std::runtime_error("Failed to run dualiza");
+    }
+
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        result += buffer;
+    }
+
+    pclose(pipe);
+
+    return result;
+}
+
+
+int extract_number_of_models(const std::string& output) {
+    std::stringstream ss(output);
+    std::string token;
+    int number = -1;
+
+    while (ss >> token) {
+        try {
+            number = std::stoi(token);
+        } catch (...) {
+            // ignore non-integer tokens
+        }
+    }
+
+    return number; // last integer found
 }
 
 
@@ -241,6 +374,12 @@ int main(int argc, char* argv[]) {
             std::cout << "c minimized models are not unique\n";
             verified = false;
         }
+
+        // exponential check
+        if (false && !all_models_disjoint(CaDiCAll_terminal_out)) {
+            std::cout << "c models are not disjoint\n";
+            verified = false;
+        }
     }
 
     // minimized models are not total
@@ -259,7 +398,7 @@ int main(int argc, char* argv[]) {
     }
 
     // if not projected
-    if (projected_vars.size() == 0 and !SHRINK) {
+    if (projected_vars.size() == 0 && !SHRINK) {
         std::cout << "c No projected variables found, running in NORMALE MODE\n";
         // check that all found models are actually models
         for (tclause model : CaDiCAll_terminal_out) {
@@ -271,22 +410,36 @@ int main(int argc, char* argv[]) {
 
     // if projected
     } else {
-        std::cout << "c shrunken models found, running in SHRUNKEN MODE\n"; //Projected variables found, running in PROJECTED MODE\n";
-        CaDiCaL::Solver *solver = new CaDiCaL::Solver;
-        int numVariables;
-        solver->read_dimacs(argv[argc - 3], numVariables);
-        for (tclause model : CaDiCAll_terminal_out) {
-            // projected case
-            for (int lit : model) {
-                solver->assume(lit);
+        if (true) {
+            for (tclause model : CaDiCAll_terminal_out) {
+                int dualiza_count = extract_number_of_models(run_dualiza_with_units(argv[argc - 2], model));
+                int model_size_count = pow(2, size - model.size());
+                if (dualiza_count != model_size_count) {
+                    std::cout << "Shrinking incorrect - dualiza: " << std::to_string(dualiza_count) << " CaDiCAll: " << std::to_string(model_size_count) << " model size: " << std::to_string(model.size()) << std::endl;
+                    std::cout << to_string(model) << std::endl;
+                    verified = false;
+                    std::cout << "s PROBLEM" << std::endl;
+                    return 1;
+                }
             }
-            int res = solver->solve();
-            std::cout << "c cnf and " << to_string(model) << " is ";
-            if (res == 10) {
-                std::cout << "SAT\n";
-            } else {
-                std::cout << "UNSAT\n";
-                verified = false;
+        } else {
+            std::cout << "c shrunken models found, running in SHRUNKEN MODE\n"; //Projected variables found, running in PROJECTED MODE\n";
+            CaDiCaL::Solver *solver = new CaDiCaL::Solver;
+            int numVariables;
+            solver->read_dimacs(argv[argc - 2], numVariables);
+            for (tclause model : CaDiCAll_terminal_out) {
+                // projected case
+                for (int lit : model) {
+                    solver->assume(lit);
+                }
+                int res = solver->solve();
+                std::cout << "c cnf and " << to_string(model) << " is ";
+                if (res == 10) {
+                    std::cout << "SAT\n";
+                } else {
+                    std::cout << "UNSAT\n";
+                    verified = false;
+                }
             }
         }
     }

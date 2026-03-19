@@ -50,7 +50,7 @@ int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, iv
         if (VERBOSE) {
             std::cout << "c ";
             for (int i = 0; i < watch.size; i++) {
-                std::cout << std::to_string(watch.clause->literals[i]) << " ";
+                std::cout << std::to_string(internal->externalize(watch.clause->literals[i])) << " ";
             }
         }
         int i_wl1 = watch.clause->literals[0];
@@ -66,9 +66,11 @@ int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, iv
         // change search for index comparison (own map lit -> index)
         // assert(!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0) == !(poss_in_stack[e_other_var] < poss_in_stack[e_var] && values[e_other_var] * e_other_lit > 0));
         //if (!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
-        if (!(poss_in_stack[e_other_var] < poss_in_stack[e_var] && values[e_other_var] * e_other_lit > 0)) { 
+        if ((poss_in_stack[e_other_var] >= poss_in_stack[e_var]) || (values[e_other_var] * e_other_lit <= 0)) { 
             if (VERBOSE) std::cout << "c b = max(" << std::to_string(b) << "," << std::to_string(dls[e_var]) << ")" << std::endl;
             b = std::max(b, dls[e_var]);
+        } else if (VERBOSE) {
+            std::cout << "c clause is still satisfied" << std::endl;
         }
     }
     STOP(cadicall_check_literal);
@@ -86,7 +88,7 @@ int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl
     while (index >= 0) {
         int v = stack[index];
         // (is_ds[v] && dcpl[dls[v] - 1] > 1) == values[v] < 0
-        if (!is_ds[v] || (is_ds[v] && dcpl[dls[v]] != 1)) {
+        if (!is_ds[v] || (is_ds[v] && dcpl[dls[v]] == 2)) {
             b = std::max(b, dls[v]);
             if (VERBOSE) std::cout << "c " << std::to_string(v * values[v]) << " is not a decision -> b = max(" << std::to_string(b) << "," << std::to_string(dls[v]) << ")" << std::endl;
         } else if (dls[v] > b) {
@@ -170,6 +172,18 @@ void write_models(const char* name, tmodels models) {
         file.put('0');
         file.put('\n');
     }
+}
+
+
+int power(int base, int exp) {
+    int result = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1)
+            result *= base;
+        base *= base;
+        exp /= 2;
+    }
+    return result;
 }
 
 
@@ -315,7 +329,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             if (!false_backtrack) {
                 if (SHRINK) b = implicant_shrinking(stack, is_ds, dls, values, decision_counts_per_level, poss_in_stack, internal);
                 if (COUNT) {
-                    count += pow(2, dl - b);
+                    count += power(2, dl - b);
                     // count++;
                 } else {
                     tmodel new_model;
@@ -333,7 +347,10 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             false_backtrack = false;
 
-            if (found_model && b < dl) {
+            // finding highest decision level with positive decision
+            int highest_pos_dl = highest_dl_to_flip();
+
+            if (found_model && b < dl && b < highest_pos_dl) {
                 found_model = false;
                 if (b - 1 < 0) {
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
@@ -347,8 +364,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 STOP (cadicall_forced_backtrack_model_found);
 
             } else {
-                // finding highest decision level with positive decision
-                int highest_pos_dl = highest_dl_to_flip();
 
                 // backtrack to decisionlevel before that, so we can flip the decision
                 if (highest_pos_dl - 1 < 0) {

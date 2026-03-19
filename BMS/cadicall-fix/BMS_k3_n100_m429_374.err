@@ -1,0 +1,28 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			p05n13
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		/tmp/local-unzipped-12181314-6-325-BMS_k3_n100_m429_374.cnf
+[runlim] start:			Mon Mar 16 16:31:46 2026
+[runlim] child:			3224984
+[runlim] sample:		9.97 time, 10.01 real, 3 MB, 14.38 load
+[runlim] sample:		19.94 time, 20.01 real, 3 MB, 12.87 load
+[runlim] sample:		29.90 time, 30.01 real, 3 MB, 11.89 load
+[runlim] sample:		39.86 time, 40.01 real, 3 MB, 11.07 load
+[runlim] sample:		49.82 time, 50.01 real, 3 MB, 10.74 load
+[runlim] sample:		59.78 time, 60.01 real, 3 MB, 10.48 load
+[runlim] sample:		69.74 time, 70.01 real, 3 MB, 10.41 load
+[runlim] sample:		79.70 time, 80.01 real, 3 MB, 10.34 load
+[runlim] end:			Mon Mar 16 16:33:12 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			86.14 seconds
+[runlim] time:			85.78 seconds
+[runlim] space:			3 MB
+[runlim] load:			16.36 maximum
+[runlim] samples:		861
