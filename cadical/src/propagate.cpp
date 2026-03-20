@@ -252,10 +252,10 @@ bool Internal::propagate () {
       const Watch w = *j++ = *i++;
       const signed char b = val (w.blit);
 
-      if (b > 0)
-        continue; // blocking literal satisfied
-
       if (w.binary ()) {
+
+        if (b > 0)
+          continue; // blocking literal satisfied
 
         // assert (w.clause->redundant || !w.clause->garbage);
 
@@ -359,13 +359,16 @@ bool Internal::propagate () {
 
           assert (lits + 2 <= k), assert (k <= w.clause->end ());
 
+          /*
           if (v > 0) {
 
             // Replacement satisfied, so just replace 'blit'.
 
             j[-1].blit = r;
 
-          } else if (!v) {
+          } else */
+           
+          if (v >= 0) {
 
             // Found new unassigned replacement literal to be watched.
 
