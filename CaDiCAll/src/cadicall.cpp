@@ -89,8 +89,8 @@ int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl
         int v = stack[index];
         // (is_ds[v] && dcpl[dls[v] - 1] > 1) == values[v] < 0
         if (!is_ds[v] || (is_ds[v] && dcpl[dls[v]] == 2)) {
+            if (VERBOSE) std::cout << "c " << std::to_string(v * values[v]) << " is not a decision or dc == 2 -> b = max(" << std::to_string(b) << "," << std::to_string(dls[v]) << ")" << std::endl;
             b = std::max(b, dls[v]);
-            if (VERBOSE) std::cout << "c " << std::to_string(v * values[v]) << " is not a decision -> b = max(" << std::to_string(b) << "," << std::to_string(dls[v]) << ")" << std::endl;
         } else if (dls[v] > b) {
             b = check_literal(v, b, stack, dls, values, index, poss_in_stack, internal);
         } else if (dls[v] == 0 || dls[v] == b) {
@@ -291,12 +291,15 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             return {val, level, is_decision};
         }
 
-        int highest_dl_to_flip() {
+        // if no start is given, starting with at dl
+        int highest_dl_to_flip(int start = -1) {
             if (VERBOSE) std::cout << "c\nc highest_dl_to_flip:" << std::endl;
             START (cadicall_highest_dl_to_flip);
 
+            if (start == -1) start = dl;
+
             int highest_dl = -1;
-            for (int i = dl; i > 0; i--) {
+            for (int i = start; i > 0; i--) {
                 if (decision_counts_per_level[i] < 2) {
                     highest_dl = i;
                     break;
@@ -347,10 +350,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             false_backtrack = false;
 
-            // finding highest decision level with positive decision
-            int highest_pos_dl = highest_dl_to_flip();
-
-            if (found_model && b < dl && b < highest_pos_dl) {
+            if (found_model && b < dl) {
+                b = highest_dl_to_flip(b);
+                if (VERBOSE) std::cout << "c highest decision level <= b with count < 2: " << std::to_string(b) << std::endl;
                 found_model = false;
                 if (b - 1 < 0) {
                     if (VERBOSE) std::cout << "c no more decisions to flip, terminating" << std::endl;
@@ -364,6 +366,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 STOP (cadicall_forced_backtrack_model_found);
 
             } else {
+
+                // finding highest decision level with positive decision
+                int highest_pos_dl = highest_dl_to_flip();
 
                 // backtrack to decisionlevel before that, so we can flip the decision
                 if (highest_pos_dl - 1 < 0) {
