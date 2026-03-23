@@ -28,7 +28,7 @@ bool FIXED = false;
 bool REASON = false;
 bool HELP = false;
 
-int count = 0;
+uint64_t count = 0;
 
 // cnf must be global so EnumProp can use it
 tcnf cnf;

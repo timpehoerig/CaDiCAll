@@ -215,17 +215,21 @@ The analysis starts with the conflicting clause (the clause that is falsified by
 
 By learning new clauses and pruning conflicting regions of the search space, CDCL significantly improves the efficiency of SAT solving. For this reason, it forms the basis of most modern SAT solvers.
 
-As CaDiCaL is a CDCL-based solver, CDCL is implicitly provided to CaDiCAll when interfacing with CaDiCaL via IPASIR-UP.
+As CaDiCaL is a CDCL-based solver, CDCL is implicitly used by CaDiCAll as it uses CaDiCaL through the IPASIR-UP interface.
 
 \subsection{Chronological Backtracking}
 
 Model enumeration counts every model exactly once. To do so, we must ensure, that paths which lead to models are excluded from future exploration. In common model enumerators this is done by blocking clauses, which permit the solver to run into the same model. Without blocking clauses we must ensure manually that every path is explored exactly once.
 
-Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtrack across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can lead to redundant work, which in normal Sat is not a problem, as the solver stops after finding one model and thus rediscovering the same model is not a problem. 
+Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtrack across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can lead to redundant work, which is not a problem in normal Sat, as the solver stops after finding one model and thus rediscovering the same model is not a problem. However, when enumerating all models, the solver does not terminate after finding the first model but must check the remaining search space for more. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model. Implying blocking clauses.
 
-In contrast, chronological backtracking (CB) always undoes only the most recent decision and revisits decisions strictly in reverse order, assigning the opposite value or continuing propagation. As a result, the structure of the search tree remains fixed. This difference becomes particularly relevant when enumerating all models, where it is essential to ensure that each model is reported only once. Because NCB can jump back to arbitrary earlier decision levels and dynamically alter the exploration order, the solver must explicitly prevent rediscovering the same assignment after a model is found. In practice, this requires excluding the complete decision path that led to the model so that the solver cannot revisit the exact same assignment again.
+To avoid blocking clauses we must uncover the search space systematically.  This splits the search space into two parts: The part that has been already uncovered and the part that is left to explore. In order to 
 
-(TODO: why NCB and not CB)
+In contrast, chronological backtracking (CB) always undoes only the most recent decision and continues the search from there by propagating either the negation of the decisions or a learned literal. With CB the search space is uncovered systematically and divides the search space into two parts: The part that has been already uncovered and the part left to explore. By preventing the solver from entering the part that already has been uncovered, no model can be counted twice. While with NCB we must keep track of all literals in every model found to detect or prevent the solver from rediscovering, in CB it suffices to keep track of the current decisions.
+
+
+
+The only critical point where CaDiCAll might enter the part that has already been explored is after backtracking.
 
 In CadiCAll two reasons may trigger backtracking: (i) A model was found or (ii) a conflict occurs. Backtracking after a model was found is handled by the user propagator. Backtracking after a conflict is handled by the solver.
 
