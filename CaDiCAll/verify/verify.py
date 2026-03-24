@@ -143,7 +143,11 @@ if __name__ == "__main__":
     options = [
         ["-f"],
         ["-r"],
+        ["-s"],
         ["-r", "-f"],
+        ["-r", "-s"],
+        ["-f", "-s"],
+        ["-f", "-s", "-r"],
     ]
     stats: dict[str, int] = dict()
     count_correct: int = 0

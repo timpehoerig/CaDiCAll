@@ -381,9 +381,10 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 START (cadicall_forced_backtrack_model_found);
                 solver->force_backtrack(highest_pos_dl - 1);
                 STOP (cadicall_forced_backtrack_model_found);
-                propagate_lit = true;
+                // propagate_lit = true;
             }
 
+            propagate_lit = true;
             STOP (cadicall_cb_check_found_model);
 
             // always return false -> solver can only terminate with UNSAT: no more solutions
@@ -445,6 +446,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                         // remove from decision stack as it is no longer one
                         decision_counts_per_level.pop_back();
                         decisions.pop_back();
+                        propagate_lit = false;
                     }
                 }
             }
@@ -509,6 +511,10 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             if (VERBOSE) print_all(stack, values, dls, is_ds, decisions, decision_counts_per_level, dl);
             if (VERBOSE_DC) print_dc(decisions, decision_counts_per_level, dl);
+
+            // in theory here we can also set propagate_lit = true. However, this also propagates the last decision if the solver made a decision and instantly runs into a conflict. In this case the user propagator is not informed about the decision but still propagates the old one. Thus, it must be dependent of the decision level. Also, if the old decision is already forced. it would propagate the one older one. Handled in notify assignment.
+
+            if (new_level < decision_counts_per_level.size() - 1) propagate_lit = true;
 
             STOP (cadicall_notify_backtrack);
         };
