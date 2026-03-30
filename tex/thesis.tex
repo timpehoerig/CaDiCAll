@@ -223,7 +223,7 @@ Model enumeration counts every model exactly once. To do so, we must ensure, tha
 
 Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtrack across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can lead to redundant work, which is not a problem in normal Sat, as the solver stops after finding one model and thus rediscovering the same model is not a problem. However, when enumerating all models, the solver does not terminate after finding the first model but must check the remaining search space for more. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model. Implying blocking clauses.
 
-Exploring the search space systematically makes blocking clauses redundant. The idea is simple: When backtracking, always only backtrack to the last decision and flip it. If there is no more decision to flip, we can terminate as the whole search space is uncovered. This is known as Chronological Backtracking (CB). With CB the currently made decisions split the search space into two parts: The part that already has been uncovered and the part that is left to explore. With this approach it suffices to keep track of the current decisions instead of all models that have already been explored.
+Exploring the search space systematically makes blocking clauses redundant. The idea is simple: When backtracking, always only backtrack to the last decision and flip it. If there is no more decision to flip, we can terminate as the whole search space is uncovered. This is known as Chronological Backtracking (CB). With CB all currently made decisions split the search space into two parts: The part that already has been uncovered and the part that is left to explore. With this approach it suffices to keep track of the current decisions instead of all models that have already been explored.
 
 Transferring this idea to CaDiCAll imposes different challenges: First, backtracking after a model is found was not supported by the IPASIR-UP interface. Second, even tough chronological backtracking can be set as an option in CaDiCaL. CaDiCaL does not guarantee to assign the negation of the old decision. Thus, to keep track of the current decisions we store them. As discussed in Section X the decision order as well as the phase of decisions can be chosen freely and is left for CaDiCaL to decide. Thus, in order to keep track of the current decisions, for each decision level we store a counter (decision counter) and the decided variable. The decision counter indicates how often this variable was assigned. A count of one stands for a new decision while a count of two indicates that this decision was already flipped. When CaDiCAll determines the highest decision level with a decision that can be flipped, it simply looks for the highest decision level with a decision count of one.
 
@@ -255,37 +255,49 @@ However, after forcing CaDiCaL to backtrack when a model was found, CaDiCaL may 
 
 \end{enumerate}
 
-
-
-While this approach does optimize blocking clauses, it still uses them. Thus, CaDiCAll focuses on the second (ii) approach, which does not require adding any clauses at all. Running CaDiCAll with the first approach is still possible by running it with the option \verb|--reason| and is also included in the benchmarks in Section X.
+While this approach does optimize blocking clauses, it still uses them. Thus, CaDiCAll focuses on the second approach, which does not require adding any clauses at all. Running CaDiCAll with the first approach is still possible by running it with the option \verb|--reason| (\verb|-r|) and is also included in the benchmarks in Section X.
 
 \item Continue the search with decisions
 
-Continuing the search through deciding the negation of the decision via \verb|cb_decide| is more straightforward. After backtracking to the last decision that can be flipped, the user propagator simply decides the negation of that decision. This does not require adding any clauses at all. However, before \verb|cb_decide| is called, the solver propagates. Let \verb|d| be the old decision. This can lead to four different outcomes: (i) The solver propagates the old decision \verb|d|. Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further. (ii) The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. (iii) The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the user propagator can continue normally and return the flipped decision in \verb|cd_decide|. (iv) The solver propagates $\lnot$\verb|d| itself. Then the user propagator does not need to decide it manually and can let the solver chose the next decision itself by returning \verb|0| in \verb|cb_decide|.
+Continuing the search through deciding the negation of the decision via \verb|cb_decide| does not need any clause addition. After determining the highest decision level \verb|dl| with a count of one. CaDiCAll backtracks to the decision level \verb|dl - 1|, then it decides the negation of the old decision and continues from there. However, before \verb|cb_decide| is called and CaDiCAll can decide the negation of the old decision, CaDiCaL propagates which again can lead to different behavior. Let \verb|d| be the old decision. The following four cases must be considered:
+
+\begin{enumerate}
+
+\item The solver propagates the old decision \verb|d|. Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further.
+
+\item The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. This is described in Section X.
+
+\item The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the next time \verb|cb_decide| is called, CaDiCAll detects that on the current level there already has been a decision and decides its negation by return it.
+
+\item The solver propagates $\lnot$\verb|d| itself. Then the user propagator does not need to decide it manually and can let the solver chose the next decision itself by returning \verb|0| in \verb|cb_decide|.
+
+\end{enumerate}
+
+Here it is important to note that now decision can have a decision counter of two. This is not a problem when a model is found and the user propagator forces the solver to backtrack, as the decision level to backtrack to is determined by the user propagator as well. However, when a conflict occurs and CaDiCaL backtracks, this must be considered.
 
 \end{itemize}
 
 \subsubsection{Conflict induced backtracking}
 
-When the solver runs into a conflict and backtracks, the user propagator cannot interfere and is simply informed about it via \verb|notify_backtrack|.
+When CaDiCAll runs into a conflict and backtracks, it is handled completely by CaDiCaL internally. It informs the user propagator via \verb|notify_backtrack| but does not allow any interference. With chronological backtracking activated, we know that CaDiCaL backtracks exactly one level as it always backtracks to the last decision. However, when the search was continued with decision and not through propagating the negation of the old decision. The last decision might be one with a decision count of two. In that case, everything the solver does from this moment on must be undone again. This case is detected either in
+
+HANDLED IN NOTIFY_ASSIGNMENT AFTER A DECISION WAS MADE. COULD BE HANDLED DIRECTLY IN CB_DECIDE?
+
+\verb|notify_assignment| or in \verb|cb_decide| and handled by the user propagator in either \verb|cb_decide| or \verb|notify_backtrack|. Unfortunately, this can lead to an overhead as the solver may spend some time propagating.
+
+Otherwise, we know that the decision count of the level we backtracked to is one and 
+
+Furthermore, even though CaDiCaL derived a learned clause, it does not necessarily learn the negation of the old decision and thus, the same four cases as 
 
 In CaDiCaL, Chronological Backtracking can be set as an option. However, after a backtrack, CaDiCaL does not guarantee to assign the negation of the backtracked decision. Instead it learns a conflict clause with CDCL and continues from there. Thus, 
 
 How the solver backtracks is an option that can be set through IPASIR-UP. In CaDiCAll it is set to chronological backtracking. Thus, backtracking after a conflict preservers the chronological order and does not alter the search space.
 
-\begin{itemize}
-
-\item Determine the decision level to backtrack to
-
-As backtracking is set to chronological, the solver always backtracks to the last decision.
-
-\end{itemize}
-
 
 \verb|cb_decide| will called again. In \verb|cb_decide| the user propagator detects that there is a decision that got backtracked but that negation has yet not been assigned. Thus, the user propagator decides $\lnot$\verb|d|. However, if the solver backtracks now again, it cannot backtrack simply to the last decision but to the last decision that was only decided once. Otherwise the solver would rediscover the path with \verb|d| again.
 
 
-Always backtracking to the last decision is problematic. No matter how we continue the search, with propagations or with decisions, in both the last decision is not always the one we want to flip: (i) When using propagations, the solver may not propagate the negation of the last decision and thus it is forced via \verb|cb_decide|. In that case the decision count is two, indicating that this decision has already been flipped. (ii) When using decisions to flip the last decision, the decision counter is two as well. In both cases we want to backtrack further, to the last decision with a decision count of one. However, as the solver backtracks on its own, it backtracks to the last decision, no matter what decision count it has. If the decision count was two, everything the solver does from this moment on must be undone again. This case is detected directly in \verb|notify_backtrack| and handled by the user propagator in either \verb|cb_decide| or \verb|notify_backtrack|. Unfortunately, this can lead to an overhead as the solver may spend some time propagating.
+Always backtracking to the last decision is problematic. No matter how we continue the search, with propagations or with decisions, in both the last decision is not always the one we want to flip: (i) When using propagations, the solver may not propagate the negation of the last decision and thus it is forced via \verb|cb_decide|. In that case the decision count is two, indicating that this decision has already been flipped. (ii) When using decisions to flip the last decision, the decision counter is two as well. In both cases we want to backtrack further, to the last decision with a decision count of one. However, as the solver backtracks on its own, it backtracks to the last decision, no matter what decision count it has.
 
 When the decision count is one, the same four cases as in the backtracking after a model was found can occur: (i) The solver propagates the old decision \verb|d|. Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further. (ii) The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. (iii) The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the user propagator can continue normally and return the flipped decision in \verb|cd_decide|. (iv) The solver propagates $\lnot$\verb|d| itself. Then the user propagator does not need to decide it manually and can let the solver chose the next decision itself by returning \verb|0| in \verb|cb_decide|.
 

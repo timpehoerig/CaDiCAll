@@ -3,14 +3,14 @@ import os
 
 
 BENCHMARKS = [
-    "cadicall-no-blit",
-    "cadicall-no-blit-f",
-    "cadicall-no-blit-fr",
-    "cadicall-no-blit-r",
-    "cadicall-no-blit-s",
-    "cadicall-no-blit-sf",
-    "cadicall-no-blit-sfr",
-    "cadicall-no-blit-sr",
+    "cadicall-24-03",
+    "cadicall-24-03-f",
+    "cadicall-24-03-fr",
+    "cadicall-24-03-r",
+    "cadicall-24-03-s",
+    "cadicall-24-03-sf",
+    "cadicall-24-03-sfr",
+    "cadicall-24-03-sr",
     "tabularallsat",
 ]
 
