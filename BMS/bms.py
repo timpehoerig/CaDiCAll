@@ -1,28 +1,6 @@
 from summarize import read_all_BMS, BMS, BM
 import matplotlib.pyplot as plt
-
-
-def inverse(all_bms: dict[str, BMS]):
-    out: dict[str, dict[str, int]] = dict()
-    for benchmark_set in all_bms:
-        for name, benchmark in all_bms[benchmark_set].items():
-            if name not in out:
-                out[name] = dict()
-            out[name][benchmark_set] = benchmark.count
-    return out
-
-
-def check(d: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
-    out: dict[str, dict[str, int]] = dict()
-    for bm_name, solvers in d.items():
-        for solver, count in solvers.items():
-            # if count == -1:  # or "-s" in solver:
-            #    continue
-            if count != solvers["tabularallsat"]:
-                if bm_name not in out:
-                    out[bm_name] = {"tabularallsat": solvers["tabularallsat"]}
-                out[bm_name][solver] = count
-    return out
+import sys
 
 
 def get_bms(bms: list[BM], name: str) -> tuple[list[float], list[int], str]:
@@ -36,41 +14,79 @@ def get_bms(bms: list[BM], name: str) -> tuple[list[float], list[int], str]:
 
 def get_single(name: str) -> str:
     if name.startswith("tabularallsat"):
-        return "c*"
-    name = name[name.index("-", len(name) - 4):]
+        return "crimson*"
+    name = "" if "-" not in name else name[name.index("-", len(name) - 4):]
     if "sfr" in name:
-        return "k*"
-    elif "sr" in name:
         return "m*"
+    elif "sr" in name:
+        return "orange*"
     elif "sf" in name:
-        return "kd"
-    elif "fr" in name:
-        return "k*"
-    elif "s" in name:
         return "md"
+    elif "fr" in name:
+        return "m*"
+    elif "s" in name:
+        return "goldd"
     elif "f" in name:
-        return "ks"
+        return "ms"
     elif "r" in name:
-        return "r*"
+        return "skyblue*"
     else:
-        return "gs"
+        return "limes"
 
 
-if __name__ == "__main__":
-    all_bms = read_all_BMS("./")
-    for i, bms in enumerate(sorted(all_bms)):
+def plot(path: str, all_bms: dict[str, BMS], min: int = 450, max: int = 500):
+    for bms in sorted(all_bms):
+
         (x, y, name) = get_bms(list(all_bms[bms].values()), bms)
         plt.plot(
             x, y,
             linestyle="-",
-            marker=name[1],
-            color=name[0],
-            markersize=8,
+            color=name[:-1],
+            marker=name[-1],
+            markersize=4,
             label=bms
         )
 
-    plt.ylim(450, 500)
+    plt.ylim(min, max)
     plt.xlabel("time")
     plt.ylabel("benchmarks")
-    plt.legend()
+    plt.legend(
+        fontsize=8,      # text size
+        markerscale=1,    # marker size in legend
+        handlelength=2    # length of line in legend
+    )
+    plt.savefig(path, dpi=300)
     plt.show()
+
+
+# python3 bms.py bms_name filename [comb]*
+if __name__ == "__main__":
+
+    COMBS = [
+        "",
+        "f",
+        "fr",
+        "r",
+        "s",
+        "sf",
+        "sfr",
+        "sr"
+    ]
+
+    args = sys.argv[1:]
+
+    name_bms = args[0]
+
+    file_name = args[1]
+
+    min = int(args[2]) if len(args) > 2 else 0
+    max = int(args[3]) if len(args) > 2 else 500
+
+    combs = args[4:] if len(args) > 4 else COMBS
+
+    BENCHMARKS = [f"cadicall{f"-{bm}" if bm != "" else ""}" for bm in combs] + ["tabularallsat"]
+
+    all_bms = read_all_BMS(f"./{name_bms}/", BENCHMARKS)
+    all_bms_sorted = sorted(all_bms)
+
+    plot(f"../tex/figures/{file_name}.png", all_bms, min, max)

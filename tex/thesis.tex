@@ -120,6 +120,7 @@
 
 % --- Hauptinhalt ---
 \section{Introduction}
+\label{sec:introduction}
 The Boolean satisfiability problem (SAT) is defined as follows:
 
 Given a propositional formula \( F \) over variables 
@@ -140,14 +141,16 @@ In 2024 \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat s
 
 Besides adding clauses iteratively, IPASIR-UP also allows to interfere with decision making, backtracking and found models. This raises the question whether it is possible to create a model enumerator through IPASIR-UP without blocking clauses by using all state-of-the-art techniques from TabularAllSat.
 
-This thesis introduces CaDiCAll, a model enumerator which is almost entirely implemented through the IPASIR-UP interface and does not need any blocking clauses. "Almost" because there are two minor additions that need to be added to IPASIR-UP: One is already added to the newest version of CaDiCaL's IPASIR-UP interface and the other is fixing a bug introduced by the former. As IPASIR-UP is an interface for CaDiCaL and CaDiCaL being a CDCL-based solver, technique (i) from TabularAllSat is naturally covered. Also technique (ii) chronological backtracking is fully possible through the IPASIR-UP interface and thus also used in CaDiCAll. Using (iii) the implicant shrinking algorithm proposed by TabularAllSat requires access to the watch-lists of literals. This is not supported by the IPASIR-UP interface. However, it is still implemented in CaDiCAll and section ... discusses which additional functionality is needed and how it could be added to the IPASIR-UP interface.
+This thesis introduces CaDiCAll, a model enumerator which is almost entirely implemented through the IPASIR-UP interface and does not need any blocking clauses. "Almost" because there are two minor additions that need to be added to IPASIR-UP: One is already added to the newest version of CaDiCaL's IPASIR-UP interface and the other is fixing a bug introduced by the former. As IPASIR-UP is an interface for CaDiCaL and CaDiCaL being a CDCL-based solver, technique (i) from TabularAllSat is naturally covered. Also technique (ii) chronological backtracking is fully possible through the IPASIR-UP interface and thus also used in CaDiCAll. Using (iii) the implicant shrinking algorithm proposed by TabularAllSat requires access to the watch-lists of literals. This is not supported by the IPASIR-UP interface. However, it is still implemented in CaDiCAll and Section \ref{sec:extending_ipasir_up} discusses which additional functionality is needed and how it could be added to the IPASIR-UP interface.
 
 CaDiCAll supports a fixed variable order. However, per default CaDiCaL decides. It also can be used as a simple model counter, which makes it possible to count models for formulas with exponential many models while keeping memory consumption very little. Furthermore, as IPASIR-UP also introduces the possibility to propagate literals. It is also possible to backtrack through adding reason clauses if necessary.
 
 \section{IPASIR}
+\label{sec:ipasir}
 The IPASIR interface standardizes incremental interaction with CDCL-based SAT solvers by defining a minimal set of functions through which the user can call the solver in bigger contexts while keeping the program Independent of the solver. A solver instance is created and subsequently manipulated only via functions such as \verb|ipasir_add| to add literals to the current clause, terminated by 0. \verb|ipasir_assume| to add temporary assumption literals for the next call to \verb|ipasir_solve|, and \verb|ipasir_solve| to start or resume the search. After \verb|ipasir_solve| returns \verb|SAT| or \verb|UNSAT|, the user may query models with \verb|ipasir_val| or inspect a failed core via \verb|ipasir_failed|. The interface deliberately abstracts from internal solver mechanisms: There is no access to decision levels, propagation events, learned clauses, or backtracking. Although learned clauses are preserved across calls in incremental mode, the user cannot intervene during the search itself. Consequently, model enumeration requires blocking clauses: After finding a model, add its negation as a new clause to the cnf (via \verb|ipasir_add|) and restart the solver. If the solver returns UNSAT, all models are found. However, this approach is sub-optimal as each new blocking clause increases the cnf. This makes it infeasible for big CNFs with many models. Model enumeration without blocking clauses through IPASIR is impossible since the solver terminates immediately upon finding a satisfying assignment.
 
 \section{IPASIR-UP}
+\label{sec:ipasir_up}
 To overcome the limitations from IPASIR, Katalin Fazekas et al. introduced IPASIR-UP in 2023 as an extension of IPASIR that introduces \verb|user propagator|s (UP). IPASIR-UP augments the classical interface with a bidirectional communication layer between the solver's CDCL loop and user-defined callbacks. Instead of restricting interaction to clause addition and top-level solve calls, IPASIR-UP enables controlled intervention during propagation, decision making, backtracking, and model detection.
 
 \begin{itemize}
@@ -204,10 +207,12 @@ void remove_observed_var (int var);
 Then \verb|User Propagator| can simply be connected and disconnected to the solver by calling \verb|connect_external_propagator| and \verb|disconnect_external_propagator|. The notification callback functions are only called for variables marked as \verb|observed|. The user can mark and unmark variables thorugh the functions \verb|add_observed_var| and \verb|remove_observed_var|.
 
 \section{CaDiCAll}
+\label{sec:cadicall}
 
-CaDiCAll is a fully functional model enumerator using CaDiCaL almost exclusively through the IPASIR-UP interface. It is implemented by using all three state-of-the-art mechanisms defined by Spallitta et al\citep{Spallitta_Sebastiani_Biere_2024}: (i) Conflict Driven Clause Learning (Section 4.1), (ii) Chronological Backtracking (Section 4.2) and (iii) Implicant Shrinking (Section 4.3).
+CaDiCAll is a fully functional model enumerator using CaDiCaL almost exclusively through the IPASIR-UP interface. It is implemented by using all three state-of-the-art mechanisms defined by Spallitta et al\citep{Spallitta_Sebastiani_Biere_2024}: Conflict Driven Clause Learning (Section \ref{sec:cdcl}), Chronological Backtracking (Section \ref{sec:chronological_backtracking}) and Implicant Shrinking (Section \ref{sec:implicant_shrinking}).
 
 \subsection{Conflict Driven Clause Learning}
+\label{sec:cdcl}
 
 Conflict-Driven Clause Learning (CDCL) improves the classical DPLL algorithm by learning from conflicts. When the solver runs into a conflict, it does not simply flip the last decision but analyses the conflict to determine the assignments that caused the contradiction.
 
@@ -218,36 +223,34 @@ By learning new clauses and pruning conflicting regions of the search space, CDC
 As CaDiCaL is a CDCL-based solver, CDCL is implicitly used by CaDiCAll as it uses CaDiCaL through the IPASIR-UP interface.
 
 \subsection{Chronological Backtracking}
+\label{sec:chronological_backtracking}
 
-Model enumeration counts every model exactly once. To do so, we must ensure, that paths which lead to models are excluded from future exploration. In common model enumerators this is done by blocking clauses, which permit the solver to run into the same model. Without blocking clauses we must ensure manually that every path is explored exactly once.
+Model enumeration counts every model exactly once. To do so, we must ensure, that paths which lead to models are excluded from future exploration. In common model enumerators this is done by blocking clauses, which permit the solver to run into the same model again. Without blocking clauses we must ensure manually that every path is explored exactly once.
 
-Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtrack across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can lead to redundant work, which is not a problem in normal Sat, as the solver stops after finding one model and thus rediscovering the same model is not a problem. However, when enumerating all models, the solver does not terminate after finding the first model but must check the remaining search space for more. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model. Implying blocking clauses.
+Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtracks across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can lead to redundant work, which is not a problem in normal Sat, as the solver stops after finding one model and thus rediscovering the same model is not a problem. However, when enumerating all models, the solver does not terminate after finding the first model. Instead, it must check the remaining search space for others. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model. Implying blocking clauses.
 
 Exploring the search space systematically makes blocking clauses redundant. The idea is simple: When backtracking, always only backtrack to the last decision and flip it. If there is no more decision to flip, we can terminate as the whole search space is uncovered. This is known as Chronological Backtracking (CB). With CB all currently made decisions split the search space into two parts: The part that already has been uncovered and the part that is left to explore. With this approach it suffices to keep track of the current decisions instead of all models that have already been explored.
 
-Transferring this idea to CaDiCAll imposes different challenges: First, backtracking after a model is found was not supported by the IPASIR-UP interface. Second, even tough chronological backtracking can be set as an option in CaDiCaL. CaDiCaL does not guarantee to assign the negation of the old decision. Thus, to keep track of the current decisions we store them. As discussed in Section X the decision order as well as the phase of decisions can be chosen freely and is left for CaDiCaL to decide. Thus, in order to keep track of the current decisions, for each decision level we store a counter (decision counter) and the decided variable. The decision counter indicates how often this variable was assigned. A count of one stands for a new decision while a count of two indicates that this decision was already flipped. When CaDiCAll determines the highest decision level with a decision that can be flipped, it simply looks for the highest decision level with a decision count of one.
+Transferring this idea to CaDiCAll imposes different challenges: First, backtracking after a model is found was not supported by the IPASIR-UP interface. Second, even tough chronological backtracking can be set as an option in CaDiCaL. CaDiCaL does not guarantee to assign the negation of the old decision. Thus, to keep track of the current decisions we store them. As discussed in Section \ref{sec:deciding} the decision order as well as the phase of decisions can be chosen freely and is left for CaDiCaL to decide. Thus, in order to keep track of the current decisions, for each decision level we store a counter (decision counter) and the decided variable. The decision counter indicates how often this variable was assigned. A count of one stands for a new decision while a count of two indicates that this decision was already flipped. When CaDiCAll determines the highest decision level with a decision that can be flipped, it simply looks for the highest decision level with a decision count of one.
 
 \subsubsection{Backtracking after a model is found}
 
-Backtracking after a model is found was not supported by the IPASIR-UP interface. However, as discussed in Section X it is fairly easy to add and does not introduce any bad behavior. Thus, forcing CaDiCaL to backtrack when a model is found was added to the newest version of CaDiCaL's IPASIR-UP interface by Katalin Fazekas.
+Backtracking after a model is found was not supported by the IPASIR-UP interface. However, as discussed in Section \ref{sec:extending_ipasir_up} it is fairly easy to add and does not introduce any bad behavior. Thus, allowing to force CaDiCaL to backtrack when a model is found was added to the newest version of CaDiCaL's IPASIR-UP interface by Katalin Fazekas.
 
 When a model is found, CaDiCAll determines the highest decision level \verb|dl| with a decision count of one and then forces CaDiCaL to backtrack to the decision level \verb|dl - 1|. If this level is negative there exists no decision that has not been already flipped and the solver can terminate as there is no path left to explore. Otherwise, the decision on level \verb|dl| must be flipped. This is not done automatically. CaDiCaL has no reason to flip it as the backtrack did not occur from a conflict but artificially from the user propagator.
 
-There are two different options to continue the search from here: Either propagate the negation of the decision at level \verb|dl - 1| via \verb|cb_propagate| or decide the negation of the decision at level \verb|dl| via \verb|cb_decide|. CaDiCAll implements both, but focuses on the latter as it does not require adding reason clauses for the propagated literal.
+There are two different options to continue the search from here: Either propagate the negation of the decision at level \verb|dl - 1| via \verb|cb_propagate| or decide the negation of the decision at level \verb|dl| via \verb|cb_decide|. Both versions are implemented in CaDiCAll. \\
 
-\begin{itemize}
+\noindent
+\textbf{Continue the search with propagation} Continuing the search through propagating the negation of the decision via \verb|cb_propagate| seems elegant. When the solver backtracks later again, it does not need to consider flipped decisions as they were propagated and thereby are no decisions anymore. However, if the propagated literal is involved in a conflict and inspected in a conflict analysis, the solver asks for a reason clause via \verb|cb_add_reason_clause_lit| for the propagated literal. The reason clause for this literal is just the negation of all decisions made on a lower level. Thus, reason clauses must not be stored but can be computed on the fly only if necessary. This bears two advantages to blocking clauses: The size of the reason clause is smaller than the size of blocking clauses as it only contains decisions on a lower level and the reason clauses are only added if necessary.
 
-\item Continue the search with propagation
-
-Continuing the search through propagating the negation of the decision via \verb|cb_propagate| seems elegant. When the solver backtracks later again, it does not need to consider flipped decisions as they were propagated and thereby are no decisions anymore. However, if the propagated literal is involved in a conflict and inspected in a conflict analysis, the solver asks for a reason clause via \verb|cb_add_reason_clause_lit| for the propagated literal. The reason clause for this literal is just the negation of all decisions made on a lower level. Thus, reason clauses must not be stored but can be computed on the fly only if necessary. This bears two advantages to blocking clauses: The size of the reason clause is smaller than the size of blocking clauses as it only contains decisions on a lower level and the reason clauses are only added if necessary.
-
-However, after forcing CaDiCaL to backtrack when a model was found, CaDiCaL may learned that it can keep certain literals from higher levels. This may trigger propagation, which can lead to different behavior. Let the old decision be \verb|d|. There are four cases to consider:
+However, after forcing CaDiCaL to backtrack when a model was found, CaDiCaL may have learned that it can keep certain literals from higher levels. This may trigger propagation, which can lead to different behavior. Let the old decision be \verb|d|. There are four cases to consider:
 
 \begin{enumerate}
 
 \item The solver propagates the old decision \verb|d| again. In this case the solver starts to explore the same path again. This is detected directly in \verb|notify_assignment|. However, the first it can be handled are either by \verb|cb_decide| or \verb|cb_check_found_model| as these are the only two functions that can force the solver to backtrack. The function \verb|notify_assignment| marks the current path as a duplicate and as soon as either \verb|cb_decide| or \verb|cb_check_found_model| is called, it forces the solver to backtrack further. This is sound as everything that led to the propagation of \verb|d| was propagated itself. Thus, the propagation of \verb|d| is a direct consequence of the decision on the current level.
 
-\item The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. This is described in the Section X.
+\item The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. This is described in the Section \ref{sec:conflict_induced_backtracking}.
 
 \item The solver only propagates literals which are different from \verb|d| or non at all. In that case, when \verb|cb_propagate| is called, $\lnot$\verb|d| will be propagated.
 
@@ -255,53 +258,46 @@ However, after forcing CaDiCaL to backtrack when a model was found, CaDiCaL may 
 
 \end{enumerate}
 
-While this approach does optimize blocking clauses, it still uses them. Thus, CaDiCAll focuses on the second approach, which does not require adding any clauses at all. Running CaDiCAll with the first approach is still possible by running it with the option \verb|--reason| (\verb|-r|) and is also included in the benchmarks in Section X.
+While this approach does optimize blocking clauses, it still uses them. Thus, CaDiCAll focuses on the second approach, which does not require adding any clauses at all. Running CaDiCAll with the first approach is still possible by running it with the option \verb|--reason| (\verb|-r|) and is also included in the benchmarks in Section \ref{sec:benchmarks}. \\
 
-\item Continue the search with decisions
-
-Continuing the search through deciding the negation of the decision via \verb|cb_decide| does not need any clause addition. After determining the highest decision level \verb|dl| with a count of one. CaDiCAll backtracks to the decision level \verb|dl - 1|, then it decides the negation of the old decision and continues from there. However, before \verb|cb_decide| is called and CaDiCAll can decide the negation of the old decision, CaDiCaL propagates which again can lead to different behavior. Let \verb|d| be the old decision. The following four cases must be considered:
+\noindent
+\textbf{Continue the search with decisions} Continuing the search through deciding the negation of the decision via \verb|cb_decide| does not need any clause addition. After determining the highest decision level \verb|dl| with a count of one. CaDiCAll backtracks to the decision level \verb|dl - 1|, then it decides the negation of the old decision and continues from there. However, before \verb|cb_decide| is called and CaDiCAll can decide the negation of the old decision, CaDiCaL propagates which again can lead to different behavior. Let \verb|d| be the old decision. The following four cases must be considered:
 
 \begin{enumerate}
 
 \item The solver propagates the old decision \verb|d|. Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further.
 
-\item The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. This is described in Section X.
+\item The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. This is described in Section \ref{sec:conflict_induced_backtracking}.
 
-\item The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the next time \verb|cb_decide| is called, CaDiCAll detects that on the current level there already has been a decision and decides its negation by return it.
+\item The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the next time \verb|cb_decide| is called, CaDiCAll detects that on the current level there already has been a decision earlier and decides its negation by return it.
 
 \item The solver propagates $\lnot$\verb|d| itself. Then the user propagator does not need to decide it manually and can let the solver chose the next decision itself by returning \verb|0| in \verb|cb_decide|.
 
 \end{enumerate}
 
-Here it is important to note that now decision can have a decision counter of two. This is not a problem when a model is found and the user propagator forces the solver to backtrack, as the decision level to backtrack to is determined by the user propagator as well. However, when a conflict occurs and CaDiCaL backtracks, this must be considered.
-
-\end{itemize}
+Here it is important to note that now decision can have a decision counter of two. This is not a problem when a model is found and the user propagator forces the solver to backtrack, as the decision level to backtrack to is determined by the user propagator as well. However, when a conflict occurs and CaDiCaL backtracks by itself, this must be considered.
 
 \subsubsection{Conflict induced backtracking}
+\label{sec:conflict_induced_backtracking}
 
-When CaDiCAll runs into a conflict and backtracks, it is handled completely by CaDiCaL internally. It informs the user propagator via \verb|notify_backtrack| but does not allow any interference. With chronological backtracking activated, we know that CaDiCaL backtracks exactly one level as it always backtracks to the last decision. However, when the search was continued with decision and not through propagating the negation of the old decision. The last decision might be one with a decision count of two. In that case, everything the solver does from this moment on must be undone again. This case is detected either in
+When CaDiCAll runs into a conflict and backtracks, it is handled completely by CaDiCaL internally. It informs the user propagator via \verb|notify_backtrack| but does not allow any interference. With chronological backtracking activated, we know that CaDiCaL backtracks exactly one level as it always backtracks to the last decision. However, when the search was continued with decision and not through propagating the negation of the old decision. The last decision might be one with a decision count of two. Here, CaDiCaL will still backtrack to this decision, and continue the search from there. In that case, the solver rediscovers the old search space and everything the solver does from this moment on must be undone again. This case is detected by CaDiCAll as it notices that the decision count on this level is already two and forces CaDiCaL to backtrack further. Unfortunately, this can lead to an overhead as the solver may spend some time propagating before the user propagator can interfere.
 
-HANDLED IN NOTIFY_ASSIGNMENT AFTER A DECISION WAS MADE. COULD BE HANDLED DIRECTLY IN CB_DECIDE?
+Otherwise, we know that the decision count of the level we backtracked to is one and the search can continue from here. Even though CaDiCaL derived a learned clause from the conflict, it does not necessarily learn the negation of the old decision and thus, the same four cases as when backtracking after a model was found can occur:
 
-\verb|notify_assignment| or in \verb|cb_decide| and handled by the user propagator in either \verb|cb_decide| or \verb|notify_backtrack|. Unfortunately, this can lead to an overhead as the solver may spend some time propagating.
+\begin{enumerate}
+  
+\item The solver propagates the old decision \verb|d|. Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further.
 
-Otherwise, we know that the decision count of the level we backtracked to is one and 
+\item The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs again.
 
-Furthermore, even though CaDiCaL derived a learned clause, it does not necessarily learn the negation of the old decision and thus, the same four cases as 
+\item The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the user propagator can continue normally and return the flipped decision in \verb|cd_decide|.
 
-In CaDiCaL, Chronological Backtracking can be set as an option. However, after a backtrack, CaDiCaL does not guarantee to assign the negation of the backtracked decision. Instead it learns a conflict clause with CDCL and continues from there. Thus, 
+\item The solver propagates $\lnot$\verb|d| itself. Then the user propagator does not need to decide it manually and can let the solver chose the next decision itself by returning \verb|0| in \verb|cb_decide|.
 
-How the solver backtracks is an option that can be set through IPASIR-UP. In CaDiCAll it is set to chronological backtracking. Thus, backtracking after a conflict preservers the chronological order and does not alter the search space.
-
-
-\verb|cb_decide| will called again. In \verb|cb_decide| the user propagator detects that there is a decision that got backtracked but that negation has yet not been assigned. Thus, the user propagator decides $\lnot$\verb|d|. However, if the solver backtracks now again, it cannot backtrack simply to the last decision but to the last decision that was only decided once. Otherwise the solver would rediscover the path with \verb|d| again.
-
-
-Always backtracking to the last decision is problematic. No matter how we continue the search, with propagations or with decisions, in both the last decision is not always the one we want to flip: (i) When using propagations, the solver may not propagate the negation of the last decision and thus it is forced via \verb|cb_decide|. In that case the decision count is two, indicating that this decision has already been flipped. (ii) When using decisions to flip the last decision, the decision counter is two as well. In both cases we want to backtrack further, to the last decision with a decision count of one. However, as the solver backtracks on its own, it backtracks to the last decision, no matter what decision count it has.
-
-When the decision count is one, the same four cases as in the backtracking after a model was found can occur: (i) The solver propagates the old decision \verb|d|. Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further. (ii) The solver runs into a conflict while propagating. In this case, a conflict induced backtracking occurs. (iii) The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the user propagator can continue normally and return the flipped decision in \verb|cd_decide|. (iv) The solver propagates $\lnot$\verb|d| itself. Then the user propagator does not need to decide it manually and can let the solver chose the next decision itself by returning \verb|0| in \verb|cb_decide|.
+\end{enumerate}
 
 \subsection{Deciding}
+\label{sec:deciding}
 
 The order in which decisions are made can heavily impact the performance of sat solvers. The right decision can lead the solver into early conflicts, pruning big parts of the search space completely or skipping long nested parts. While in model enumeration the later benefit is lost as all models must be found, it still profits from early conflicts.
 
@@ -309,38 +305,38 @@ In order to search systematically through the whole search tree, a fixed variabl
 
 First, the phase of a decided variable can be chosen freely, while keeping backtracking still simple enough. For each decision level a decision count is saved. Instead of backtracking to the highest decision level with a positive decision, simply backtrack to the highest decision level with a decision count of 1. Meaning it has been decided exactly once.
 
-Second, the order in which variables are decided can also be chosen complete free, as long as after a backtracking the decision is just flipped. This enables the solver to profit from dynamic decision heuristics such as Variable State Independent Decaying Sum (VISIDS) which is known to improve solver performance significantly and thus is a commonly used decision heuristic in modern sat solvers. The performance difference between fixed and dynamic decision orders can be seen in ....
+Second, the order in which variables are decided can also be chosen complete free, as long as after a backtracking the decision is just flipped. This enables the solver to profit from dynamic decision heuristics such as Variable State Independent Decaying Sum (VISIDS) which is known to improve solver performance significantly and thus is a commonly used decision heuristic in modern sat solvers. The performance difference between fixed and dynamic decision orders can be seen in Section \ref{sec:benchmarks}.
 
 The decision count is updated if a decision is made or flipped and reset if the decision is propagated or backtracked over. If the solver aks for a decision and the decision count on the current level is one. The decision must be flipped and thus \verb|cb_decide| returns the negation of the old decision. Otherwise, \verb|cb_decide| returns 0 and thus, lets the solver decide itself.
 
 \subsection{Implicant Shrinking}
+\label{sec:implicant_shrinking}
 Models (also called implicants) found by the solver are total. Models are total if they contain every variable. For a CNF \((x_1 \lor x_2) \land (x_1 \lor \lnot x_2) \) a model enumerator returns two total models: \(x_1 \land x_2\) and \(x_1 \land \lnot x_2\). As \(x_1\) occurs in both models positively, the only difference lays in \(x_2\) which occurs once positively and once negatively. In other words, if \(x_1\) is positiv, it does not matter what the value of \(x_2\) is, it is always a model for the CNF. Thus, these models can be merged into one model by dropping \(x_2\), resulting in one partial model \(x_1\). This reduces both, the amount of models in total and the size of models. It also may fasten the solving itself. Normally, after finding the first model \(x_1 \land x_2\) a model enumerator backtracks to the last decision that can be flipped. Assuming the decisions where \(x_1\) at decision level 1 and \(x_2\) at decision level 2, a model enumerator would backtrack to decision level one and then continue with \(\lnot x_2\). However, if the model enumerator shrinks the model \(x_1 \land x_2\) to \(x_1\) the last decision that can be flipped is \(x_1\). Thus, the model enumerator backtracks to decision level 0 and can continue with \(\lnot x_1\), skipping the branch with \(\lnot x_2\) completely. As the branch containing \(x_2\) could be arbitrary large, this may reduce the search space significantly.
 
-Finding out which literals can be dropped is non trivial. Implicant shrinking algorithms from non chronological backtracking based model enumerators do not guarantee mutual exclusiveness between different assignments\cite{Spallitta_Sebastiani_Biere_2024}. Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} introduces their own shrinking algorithm that is (i) compatible with chronological backtracking and (ii) tries to cut the highest amount of literals while still ensuring mutual exclusivity. This algorithm starts with the last literal on the Trail and tries to drop as many literals as possible. A literal \(\ell\) can be dropped if \(\ell\) is a decision and all clauses in which \(\ell\) occurs contain another literal \(\ell'\) that satisfies the clause.
+Finding out which literals can be dropped is non trivial. Implicant shrinking algorithms from non chronological backtracking based model enumerators do not guarantee mutual exclusiveness between different assignments\cite{Spallitta_Sebastiani_Biere_2024}. Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} introduces their own shrinking algorithm that is both: Compatible with chronological backtracking and that tries to cut the highest amount of literals while still ensuring mutual exclusivity. This algorithm starts with the last literal on the Trail and tries to drop as many literals as possible. A literal \(\ell\) can be dropped if \(\ell\) is a decision and all clauses in which \(\ell\) occurs contain another literal \(\ell'\) that satisfies the clause.
 
-In CaDiCaL the 2-watched-literal scheme is used. This allows the solver not tho constantly check all clauses if the assignment of a literal changes. Instead every clause of the CNF is only watched by two literals, let them be \(\ell_1 \text{ and } \ell_2\). This is enough to track the status of the clause if the following invariant holds: At least one literal is not falsified. In order to keep this invariant alive, if one watched literal \(\ell_1\) becomes falsified the solver tries to find a replacement. If there is another literal \(\ell'\) in that clause that is neither false nor \(\ell_2\), it replaces \(\ell_1\) as the watching literal. If there exists no such literal \(\ell'\) the solver nows that \(\ell_2\) is the only literal left that could satisfy the clause and forces \(\ell_2\). If both literals \(\ell_1\) and \(\ell_2\) are falsified, the clause is falsified, yielding UNSAT.
+\begin{minted}[escapeinside=§§]{cpp}
+int implicant_shrinking(vector<int> stack) {
+    int b = 0;
+    int index = stack.size() - 1;
+    while (index >= 0) {
+        int v = stack[index];
+        if (!decision(v)) {
+            b = std::max(b, decision_level(v));
+        } else if (decision_level(v) > b) {
+            b = check_literal(v, b, stack, index);
+        } else if (decision_level(v) == 0 || decision_level(v) == b) {
+            break;
+        }
+        index--;
+    }
+    return b;
+}
+\end{minted}
+
+In CaDiCaL the 2-watched-literal scheme is used. This allows the solver not to constantly check all clauses if the assignment of a literal changes. Instead every clause of the CNF is only watched by two literals, let them be \(\ell_1 \text{ and } \ell_2\). This is enough to track the status of the clause if the following invariant holds: At least one literal is not falsified. In order to keep this invariant alive, if one watched literal \(\ell_1\) becomes falsified the solver tries to find a replacement. If there is another literal \(\ell'\) in that clause that is neither false nor \(\ell_2\), it replaces \(\ell_1\) as the watching literal. If there exists no such literal \(\ell'\) the solver nows that \(\ell_2\) is the only literal left that could satisfy the clause and forces \(\ell_2\). If both literals \(\ell_1\) and \(\ell_2\) are falsified, the clause is falsified, yielding UNSAT.
 
 If we want to drop a literal \(\ell\), it suffices to check all clauses that are watched by \(\ell\) instead of all clauses in which \(\ell\) occurs. If a model is found, we now at least one of the watching literals for every clauses is satisfied. Thus, dropping a literal that is not watched will never falsify a clause. However, if we drop a literal \(\ell\) that is currently watching a clause \(c\), we know there exists another literal \(\ell' \in c\) that satisfies \(c\). This literal \(\ell'\) must now become the new watching literal for \(c\). Otherwise, when trying to drop \(\ell'\), \(c\) would not be checked.
-
-\begin{algorithm}[htbp]
-\caption{IMPLICANT-SHRINKING($T$)}
-\label{alg:implicant-shrinking}
-\begin{algorithmic}[1]
-\STATE $b \gets 0$
-\STATE $T' \gets T$
-\WHILE{$T' \neq \epsilon$}
-    \STATE $\ell \gets T'.\text{pop()}$
-    \IF{$\rho(\ell) \neq \text{DECISION}$}
-        \STATE $b \gets \max(b, \delta(\ell))$
-    \ELSIF{$\delta(\ell) > b$}
-        \STATE $b \gets \text{CHECK-LITERAL}(\ell, b, T')$
-    \ELSIF{$\delta(\ell) = 0 \ \text{or}\ (\delta(\ell) = b \ \text{and}\ \rho(\ell) = \text{DECISION})$}
-        \STATE \textbf{break}
-    \ENDIF
-\ENDWHILE
-\RETURN $b$
-\end{algorithmic}
-\end{algorithm}
 
 Going through all literals in all clauses watched by \(\ell\) may introduce a bottleneck. Thus Spallitta et al \citep{Spallitta_Sebastiani_Biere_2024} introduced a faster but more conservative algorithm exploiting the 2-watched-literal scheme. Conservative meaning it may not drop all literals that could be dropped.
 
@@ -363,47 +359,63 @@ The 2-watched-literal scheme is used in the the faster approach proposed from Sp
 \end{algorithmic}
 \end{algorithm}
 
+\begin{minted}[escapeinside=§§]{cpp}
+int check_literal(int v, int b, vector<int> stack, int index) {
+    for (auto clause : watches(v)) {
+        int l = clause.get_other_watched_literal(v);
+        if (contains_up_to(stack, index, l)) { 
+            b = std::max(b, decision_level(v));
+        }
+    }
+    return b;
+}
+\end{minted}
+
 Instead of checking all other literals in the watched clause, simply check the other literal \(\ell'\) that watches that clause. If it satisfies the clause as well, the literal \(\ell\) can be dropped. As \(\ell'\) already watches the clause, nothing must be updated. This is more conservative as it may not drop literals that could be dropped. If \(\ell'\) is falsified but another literal in that clause is satisfied, \(\ell\) still could be dropped but is not. However, as this conservative approach does not need to traverse the clause and check each literal, it is significantly faster.
 
-As IPASIR-UP does not allow any access to watches, this is implemented by using a backdoor to CaDiCaL directly. Section XX discussed what is needed and how it could be added to the IPASIR-UP interface.
+As IPASIR-UP does not allow any access to watches, this is implemented by using a backdoor to CaDiCaL directly. Section \ref{sec:extending_ipasir_up} discussed what is needed and how it could be added to the IPASIR-UP interface.
 
-Adapting this implicant shrinking algorithm to CaDiCAll using IPASIr-UP may introduce a fault. As stated in Section 5.1 and 5.2 there are two different ways to flip a decision. If the decision is flipped by deciding its negation, \cref{alg:implicant-shrinking} must be adapted.
+Adapting this implicant shrinking algorithm to CaDiCAll using IPASIR-UP may introduce a fault. As stated in Section \ref{sec:cadicall} there are two different ways to flip a decision. If the decision is flipped by deciding its negation, \cref{alg:implicant-shrinking} must be adapted.
 
 Consider the CNF \((x_1 \lor x_2 \lor x_3)\). Let \(x_2\) and \(x_3\) be the watched literals at the start and the decision order be \(x_1 \to x_2 \to x_3\). The first model to be found will be \(x_1 \land x_2 \land x_3\). Implicant shrinking will first remove \(x_3\) as the other watched literal (\(x_2\)) still satisfies the clause. Then it will try to remove \(x_2\). However, as the other watched literal is \(x_3\) which is no longer on the trail, it cannot continue. Thus, discovering the model \(x_1 \land x_2\). Then the solver backtracks and flips \(x_2\) by deciding its negation \(\lnot x_2\). Remind that \(\lnot x_2\) is still a decision. As \(x_2\) is one of the watched literals but is now falsified, \(x_1\) becomes the new watched literal, as it is the only literal in the clause that is neither false nor already watched. Then the solver decides \(x_3\) resulting in the model \(x_1 \land \lnot x_2 \land x_3\). Now implicant shrinking starts again. First removing \(x_3\) as the otcher watched literal (\(x_1\)) still satisfied the clause. Next it tries to remove \(\lnot x_2\) as it is the next highest decision. As \(\lnot x_2\) does not occur in any clauses, it cannot be a watched literal. Thus removing it does not falsify any clause. Then, it tries to remove \(x_1\). However, as the other watched literal is \(x_3\) which was already removed, \(x_1\) can not be removed. Hence, yielding the model \(x_1\).
 
 The implicant shrinking algorithm yielded both models \(x_1 \land x_2\) and \(x_1\). These models are not distinct, as setting \(x_2\) in the later generates the former.
 
-This can be fixed by allowing implicant shrinking only to remove literals with a decision count of 1 (line 5 in \cref{alg:implicant-shrinking-fix}). Consider a variable with decision count 2 to be checked by implicant shrinking. There are two possibilities: (i) The variable could not be removed when it's decision count was 1. Removing it now could trigger exactly a case like the example above. (ii) The variable was removed when it's decision count was 1. In that case the model enumerator would have backtracked over the variable and thus resetting the decision count, which makes this case impossible to reach.
+This can be fixed by allowing implicant shrinking only to remove literals with a decision count of 1. Consider a variable with decision count 2 to be checked by implicant shrinking. There are two possibilities: First, the variable could not be removed when it's decision count was 1. Removing it now could trigger exactly a case like the example above. Second, the variable was removed when it's decision count was 1. In that case the model enumerator would have backtracked over the variable and thus resetting the decision count, which makes this case impossible to reach. Resulting in the following fix for the implicant shrinking algorithm:
 
-Flipping decisions by propagation their negations (Section 5.2) is not affected by this fix, as the highest decision count is always one.
+\begin{minted}[escapeinside=§§]{cpp}
+int implicant_shrinking(vector<int> stack) {
 
-\begin{algorithm}[htbp]
-\caption{IMPLICANT-SHRINKING($T$)}
-\label{alg:implicant-shrinking-fix}
-\begin{algorithmic}[1]
-\STATE $b \gets 0$
-\STATE $T' \gets T$
-\WHILE{$T' \neq \epsilon$}
-    \STATE $\ell \gets T'.\text{pop()}$
-    \IF{$\rho(\ell) \neq \text{DECISION}$ \textcolor{red}{and $decision\_count(\ell) = 1$}}
-        \STATE $b \gets \max(b, \delta(\ell))$
-    \ELSIF{$\delta(\ell) > b$}
-        \STATE $b \gets \text{CHECK-LITERAL}(\ell, b, T')$
-    \ELSIF{$\delta(\ell) = 0 \ \text{or}\ (\delta(\ell) = b \ \text{and}\ \rho(\ell) = \text{DECISION})$}
-        \STATE \textbf{break}
-    \ENDIF
-\ENDWHILE
-\RETURN $b$
-\end{algorithmic}
-\end{algorithm}
+    int b = 0;
+    int index = stack.size() - 1;
+    while (index >= 0) {
+        int v = stack[index];
+        if (!decision(v) §\textcolor{red}{|| (decision(v) && decision\_count(v) == 2)}§) {
+            b = std::max(b, decision_level(v));
+        } else if (decision_level(v) > b) {
+            b = check_literal(v, b, stack, index);
+        } else if (decision_level(v) == 0 || decision_level(v) == b) {
+            break;
+        }
+        index--;
+    }
+
+    return b;
+}
+\end{minted}
+
+Flipping decisions by propagation their negations (Section \ref{sec:cadicall}) is not affected by this fix, as the highest decision count is always one.
 
 \section{Extending IPASIR-UP}
+\label{sec:extending_ipasir_up}
 
-The idea of CaDiCAll is to use IPASIR-UP as the only interface to the solver. This means that all features needed for model enumeration must be implemented using IPASIR-UP. This has the advantage that CaDiCAll can be easily adapted to other solvers supporting IPASIR-UP without any changes to the solver itself. However, IPASIR-UP does not provide all features needed for an efficient model enumerator. Thus, some extensions to IPASIR-UP are necessary.
+The core idea underlying CaDiCAll is to use IPASIR-UP as the sole interface to the underlying SAT solver. Consequently, all functionality required for model enumeration must be realized exclusively through this interface. This design choice offers a clear advantage: CaDiCAll can be readily adapted to any solver that supports IPASIR-UP, without requiring modifications to the solver itself. However, IPASIR-UP in its current form does not provide all the functionality necessary for efficient model enumeration. As a result, certain extensions to the interface are required to achieve competitive performance.
 
-We propose three kinds of extensions to IPASIR-UP: (i) Additional features required to make model enumeration using IPASIR-UP possible. (ii) Additional features to allow implicant shrinking and (iii) Additional features to avoid duplications and thus making CaDiCAll faster using IPASIR-UP.
+We propose three categories of extensions to IPASIR-UP. First, we introduce the features necessary to enable model enumeration through the interface. Second, additional features that allow implicant shrinking. Third, we point out where duplication due to IPASIR-UP occur and how to reduce it and thereby improving the overall runtime performance of CaDiCAll.
 
 \subsection{Making IPASIR-UP the only interface needed}
+
+Most changes only affect the user propagator and not the solver directly. However, there are some features of CaDiCaL that break the chronological order of variables and thus must be taken into account.
 
 \subsubsection{Backtracking after a model was found}
 
@@ -413,7 +425,7 @@ However, a similar situation arises when enumerating all satisfying assignments 
 
 When a model is found, IPASIR-UP allows the user propagator to observe and reject the model by returning \verb|false| in \verb|cb_check_found_model|. It then calls \verb|cb_has_external_clause|. If the user propagator returns \verb|true|, the solver repeatedly calls \verb|cb_add_external_clause_lit| allowing the user propagator to add the negation of the model as a blocking clause. This forces the solver to backtrack and explore other branches of the search space. However, as we do not want to add blocking clauses, CaDiCAll always returns \verb|false| in \verb|cb_check_found_model|. Which means, the solver is not forced to backtrack and would report the same model directly again. Resulting in an infinite loop where the solver is stuck.
 
-In order to allow the user propagator to maintain additional constraints, IPASIR-UP provides the function \verb|force_backtrack|. This functions is allowed to be called inside \verb|cb_decide|. It enables the user propagator to force the solver to backtrack to a specific decision level before making a new decision. Forcing the solver to backtrack inside \verb|cb_decide| does not introduce bad behavior as at this point, the trail is fully consistent: All assignments up to the current decision level do not falsify the CNF, they are not in conflict with any other propagations and no propagations are pending.
+In order to allow the user propagator to maintain additional constraints, IPASIR-UP provides the function \verb|force_backtrack|. This function is allowed to be called inside \verb|cb_decide|. It enables the user propagator to force the solver to backtrack to a specific decision level before making a new decision. Forcing the solver to backtrack inside \verb|cb_decide| does not introduce bad behavior as at this point, the trail is fully consistent: All assignments up to the current decision level do not falsify the CNF, they are not in conflict with any other propagations and no propagations are pending.
 
 When calling \verb|cb_check_found_model| the trail is in an equally consistent state as in \verb|cb_decide|: The trail fully satisfies the CNF and as it is a total assignment, there are no pending propagations. Thus, allowing \verb|force_backtrack| in \verb|cb_check_found_model| would not introduce any bad behavior.
 
@@ -429,7 +441,7 @@ This feature was added to the newest version of CaDiCaL's IPASIR-UP interface by
 
 \subsubsection{Maintaining chronlogical backtracking}
 
-When the solver is about to make the next decision, the solver internally calls \verb|ask_decision|, which then calls \verb|cb_decide|. The user propagator is allowed to call \verb|force_backtrack| inside \verb|cb_decide|. However, backtracking might make the decision returned by the user propagator invalid, as it might be already assigned due to propagations after backtracking. However, instead of asking the user propagator again, the solver decides then on its own. This imposes a problem as CaDiCAll does not allow all decision to be made by the solver, some decisions are already fixed in order to force the solver to explore the search space chronologically. This can be fixed by calling \verb|ask_decision| recursively instead of letting the solver decide. This way, the user propagator can make a new decision after backtracking and thus keep the exploration of the search space chronological.
+When the solver is about to make the next decision, the solver internally calls \verb|ask_decision|, which then calls \verb|cb_decide|. The user propagator is allowed to call \verb|force_backtrack| inside \verb|cb_decide|. However, backtracking might make the decision returned by the user propagator invalid, as it might be already assigned due to propagations after backtracking. However, instead of asking the user propagator again for the next decision, the solver makes the decision on its own. This imposes a problem as CaDiCAll does not always allow decision to be made by the solver, some decisions may be already fixed in order to force the solver to explore the search space chronologically. This can be fixed by calling \verb|ask_decision| recursively instead of letting the solver decide. This way, the user propagator can make a new decision after backtracking and thus keep the exploration of the search space chronological.
 
 An important note is that, if the user propagator backtracks below the pseudo decision level of the solver. The solver goes back to the CDCL loop instead of making a decision. In that case the solver ignores the decision made by the user propagator, continues with the CDCL loop and calls \verb|ask_decision| again when it is about to make the next decision. However, the CDCL loop may propagate literals that lead to paths that have already been explored. Thus, the user propagator must check wether the work done by the CDCL loop has led to such a path and if so, backtrack further. If not, the user propagator can either return the original decision or make a new one if the CDCL loop already propagated it.
 
@@ -453,9 +465,9 @@ bool Internal::propagate_out_of_order_units () {
 \end{minted}
 
 \subsection{Implicant Shrinking}
-The implicant shrinking algorithm described in section X needs access to the all watch-lists of a given literal. However, this is not supported via the IPASIR-UP interface. The implicant shrinking algorithm uses them read only. Thus, exposing a read only reference to them is unproblematic and could be integrated into IPASIR-UP without any changes to CaDiCaL itself. Here it is important to note that literals can be named differently external and internal. However, there already exist functions to translate from internal to external and vice versa, and thus the internal representation can be completely hidden through the IPASIR-UP interface.
+The implicant shrinking algorithm described in section \ref{sec:implicant_shrinking} needs access to the watch-lists of a given literal in order to determine wether the other watched literal of a clause satisfies it or not. However, this is not supported via the IPASIR-UP interface. The implicant shrinking algorithm uses them read only. Thus, exposing a read only reference to them is unproblematic and could be integrated into IPASIR-UP without any changes to CaDiCaL itself. Here it is important to note that literals can be named differently external and internal. However, there already exist functions to translate from internal to external and vice versa, and thus the internal representation can be completely hidden through the IPASIR-UP interface.
 
-A function implementing this feature would look like the following. It takes an external variable as input and returns all other literals that are currently watching the same clauses.
+A function implementing this feature would look like the following. It takes an external variable as an input and returns all other literals that are currently watching the same clauses.
 
 \begin{minted}[escapeinside=||]{cpp}
 std::vector<int> other_watching_literals(int external_variable) {
@@ -481,20 +493,155 @@ If the sole purpose of this function is to be used by the implicant shrinking al
 
 With this minor addition to the IPASIR-UP interface, the implicant shrinking algorithm can be implemented entirely through IPASIR-UP.
 
+Currently, CaDiCAll implements this functionality by using this backdoor directly in the source code of CaDiCAll as it is not added to the IPASIR-UP interface yet.
+
 \subsection{Optimization}
 
-This thesis aimed to show if and how a model enumerator using IPASIR-UP is possible. How CaDiCAll and the IPASIR-UP interface can be optimized to reduce CaDiCAll's runtime was explicitly looked at. However, there are some obvious optimizations worth mentioning.
+The primary goal of this thesis was to investigate whether and how a model enumerator can be implemented using IPASIR-UP. Optimizing CaDiCAll and the IPASIR-UP interface to minimize runtime was not the main focus of this work. Nevertheless, while implementing CaDiCAll, we identified some bottlenecks that could be optimized by adapting the IPASIR-UP interface.
 
 \subsubsection{Interacting with the solver}
 
-When the solver calls the functions \verb|notify_assignments| and \verb|cb_check_found_models| it creates a vector containing assigned literals. When we timed CaDiCAll, in CNFs with many models, CaDiCAll spend around 40 percent of its total time with vector operations. When passing these vectors from the solver to the user propagator, the solver always allocates memory for the vectors and frees it afterwords again. By making these vectors persistent, the total running time of CaDiCAll on CNFs with many models was cut in half.
+When the solver calls the functions \verb|notify_assignments| and \verb|cb_check_found_models| it creates a vector containing assigned literals. When we timed CaDiCAll, in CNFs with many models, CaDiCAll spend around 40 percent of its total time with vector operations. We found that when the solver is passing these vectors to the user propagator, the solver allocates new memory for each vectors and frees it afterwords again. By making these vectors persistent, the total running time of CaDiCAll on CNFs with many models was cut in half.
 
 \subsubsection{Duplicating Datastructures}
 
-In order to check where to backtrack to, if the solver recovers paths that have already been explored, or to check which literals can be dropped during implicant shrinking, CaDiCAll needs to maintain the values of variables, their decision levels and wether they are decisions or propagations. IPASIR-UP provides through the notification callback functions \verb|notify_assignment|, \verb|notify_new_decision_level| and \verb|notify_backtrack| enough information to maintain these values external from the solver itself. However, this means that every time a variable is assigned, it is not only stored internally by CaDiCaL but also externally by CaDiCAll. This does not only double the expenses but introduces an even bigger overhead as the information must also be passed from the solver to the user propagator through the callback functions.  Thus, allowing read only access to CaDiCaLs variable assignment and stack would make most external representation redundant.
+The most obvious performance bottleneck is the duplication of data structures.
 
-\section{Results}
-...
+In order to check where to backtrack to, if the solver rediscovers paths that have already been explored, or to check which literals can be dropped during implicant shrinking, CaDiCAll needs to maintain the values of variables, their decision levels and wether they are decisions or propagations. IPASIR-UP provides enough information to observe all these information through the notification callback functions \verb|notify_assignment|, \verb|notify_new_decision_level| and \verb|notify_backtrack|. However, this means that every time a variable is assigned, it is not only stored internally by CaDiCaL but also externally by CaDiCAll. This does not only double the expenses but introduces an even bigger overhead as the information must also be passed from the solver to the user propagator through the callback functions. Thus, allowing read only access to CaDiCaLs variable assignment and stack would make most external representation redundant. As this would be a bigger change to the IPASIR-UP interface and is not necessary to implement a model enumerator, it is not implemented in the current version of CaDiCAll. However, it could be added in the future to allow for more efficient model enumeration and other applications of IPASIR-UP as well.
+
+\subsubsection{Storing Models}
+
+Enumerating all models does not only require exponential time in the worst case but can also require exponential space as CNFs can have an exponential number of models. Thus, storing all models in memory may not be feasible for large CNFs. Thus, CaDiCAll provides the option to only count models without saving them. This can be enabled by the command line option \verb|--count| or \verb|-c|.
+
+\section{Benchmarks}
+\label{sec:benchmarks}
+
+The goal of the experimental evaluation is to assess the performance of CaDiCAll and determine wether or not implementing a model enumerator using IPASIR-UP is feasible. In particular, we aim to evaluate:
+
+\begin{itemize}
+    \item The impact of implicant shrinking
+    \item The effectiveness of reason-based propagation
+    \item The influence of a fixed variable order
+    \item The overall competitiveness compared to TabularAllSat
+\end{itemize}
+
+\subsection{Configuration}
+
+CaDiCAll supports multiple configurations, controlled via the command-line options:
+
+\begin{itemize}
+
+\item Shrinking (\verb|--shrink| or \verb|-s|)
+
+Enables implicant shrinking using the algorithm described in the Section \ref{sec:implicant_shrinking}. This reduces models to smaller implicants, potentially finding models without actually computing them.
+
+\item Reason-based propagation (\verb|--reason| or \verb|-r|)
+
+Instead of deciding the negation of decision literals, this mode propagates them using reason clauses. This can lead to faster backtracking as the solver can learn from the reason clauses and thus, may skip more of the search space. However, it also introduces an overhead as the solver needs to propagate the reason clauses and thus, may spend more time on propagations than on finding models.
+
+\item Fixed variable order (\verb|--fixed| or \verb|-f|)
+
+Enabling this option forces the solver to explore the search space in a fixed order. This is achieved by always deciding the next undecided variable in a fixed order. This allows CaDiCAll to systematically explore the search space keeping track of the decision stack. However, it also prevents the solver from using dynamic decision heuristics, which can lead to worse performance.
+\end{itemize}
+
+All combinations of these options are evaluated, resulting in a total of 8 configurations for CaDiCAll. Furthermore CaDiCAll has the option to only count and not save the found models (\verb|--count| or \verb|-c|). All benchmarks are run with this option enabled, as saving models introduces a significant overhead in used space and IO-operations but does not impact the behavior of the solver itself. (TODO: Add a benchmark showing the impact of saving models? TabularAllSat does save)
+
+\subsection{Baseline}
+
+As CaDiCAll is a model enumeration implementing all state-of-the-art mechanisms defined and described by Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024}, the natural baseline for comparison is their solver: TabularAllSat. TabularAllSat is a CDCL based solver that uses reason-based propagations to flip variables and shrinks its models when found. Thus, running CaDiCAll with shrinking (\verb|-s|) and reason-based propagation (\verb|-r|) enabled allows a one to one comparison to TabularAllSat.
+
+\subsection{Benchmark Sets}
+
+Two benchmark sets are used in this evaluation:
+
+\begin{itemize}
+    \item TabularAllSat Benchmarks
+    
+A set of benchmarks specifically designed for evaluating All-SAT solvers, introduced by Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024}. These benchmarks are crafted to have a high number of satisfying assignments and to allow for effective implicant shrinking.
+
+  \item SATLIB Benchmarks
+
+As implementing the shrinking algorithm through IPASIR-UP is not possible without changing CaDiCaL itself in a non trivial manner, we also evaluate CaDiCAll on a set of benchmarks from SATLIB \citep{SATLIB}. These benchmarks are widely used in the SAT community and cover a variety of problem domains. As they are not specifically designed to benefit implicant shrinking, they may provide a different view on CaDiCAlls performance when implicant shrinking is deactivated. The benchmarks used from SATLIB include the planning instances: blocksworld (7 instances) and logitsics (3 instances). All intervall Series (4 instances) and SAT-encoded Quasigroup (or Latin square) instances (22 instances). This specific set is selected as they are known to have a high number of models and thus, are suitable for evaluating model enumeration but are not especially designed for All-SAT and thus not allow effective shrinking.
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+
+All benchmarks where run on the Helix cluster of the university of Heidelberg with the following specifications: 20.000 AMD EPYC Milan Processor kernals, around 100 Terabyte of Space and around 200 NVIDIA Ampere Tensor Core GPUs (A100 und A40). Each benchmarks was run with a time limit of 5000 seconds and a memory limit of 7000 megabyte. The benchmarks compare the time taken to find each model.
+
+\subsection{Results}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{figures/all_bms.png}
+    \caption{All Benchmarks}
+    \label{fig:all_bms}
+\end{figure}
+
+As illustrated in Figure~\ref{fig:all_custom}, CaDiCAll without a fixed variable order exhibits performance comparable to TabularAllSat on the custom benchmark set. Both approaches successfully solve 32 out of 36 instances within nearly identical runtimes. When enabling a fixed variable order, CaDiCAll solves 31 instances, i.e., one fewer than in the default configuration. However, for the instances that are solved, the runtime remains largely unchanged and is still comparable to both TabularAllSat and CaDiCAll without a fixed variable order. Furthermore, the results indicate that enabling or disabling implicant shrinking and reason-based propagation has no measurable impact on performance for this benchmark set. Specifically, configurations using shrinking (-s) and reason-based propagation (-r) perform identically to those that do not. This behavior is expected, as the custom benchmarks are not designed to benefit from shrinking, and therefore do not allow these techniques to effectively reduce the search space.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{figures/all_custom.png}
+    \caption{All Custom Benchmarks}
+    \label{fig:all_custom}
+\end{figure}
+
+An overview of the results on the TabularAllSat benchmark set is shown in Figure~\ref{fig:all_bms}. The results clearly indicate that TabularAllSat outperforms CaDiCAll on this benchmark suite, both in terms of runtime and the number of solved instances. More specifically, CaDiCAll configured with shrinking (-s), as well as with both shrinking and reason-based propagation (-s -r), exhibits performance comparable to TabularAllSat on the first 480-490 instances. Beyond this range, however, CaDiCAll becomes significantly slower on the subsequent six benchmarks and fails to solve the final three instances. Disabling shrinking leads to a further degradation in performance. This behavior is expected, as the benchmark set is explicitly designed to benefit from effective implicant shrinking, thereby favoring approaches that exploit this technique. Interestingly, when enforcing a fixed variable order (-f), shrinking no longer has a significant impact on the performance of CaDiCAll. A plausible explanation is that, although the benchmarks are constructed to enable effective shrinking, this advantage depends on the solver's ability to dynamically choose a suitable variable ordering. When the variable order is fixed, the solver may be unable to identify an ordering that facilitates effective shrinking, thereby diminishing its impact on overall performance.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{figures/best_cadicall.png}
+    \caption{TabularAllSat vs. CaDiCAll}
+    \label{fig:best_cadicall}
+\end{figure}
+
+Figure~\ref{fig:best_cadicall} presents a direct comparison between TabularAllSat and the best-performing configuration of CaDiCAll, namely with both shrinking (-s) and reason-based propagation (-r) enabled. This detailed view confirms that TabularAllSat overall outperforms CaDiCAll on this benchmark set.
+
+However, CaDiCAll is able to match the performance of TabularAllSat on approximately the first 480 benchmarks. Up to instance 487, no significant performance difference can be observed between CaDiCAll with both shrinking and reason-based propagation and CaDiCAll with only shrinking enabled. Both configurations remain competitive with TabularAllSat in this range.
+
+Beyond this point, CaDiCAll without reason-based propagation begins to fall behind. This observation should be interpreted with some caution, as its performance still remains relatively close to the configuration with reason-based propagation. One possible explanation is that the benchmarks are specifically designed to benefit from effective shrinking, and that reason clauses further enhance this effect. Another explanation might be that without reason-based propagation, CaDiCAll is more prone to revisiting previously explored regions of the search space again, thereby incurring additional computational overhead.
+
+After approximately 490 benchmarks, both CaDiCAll configurations become significantly slower than TabularAllSat and fail to solve the final three instances. These last three benchmarks (\verb|BMS_k3_n100_m429_93|, \verb|BMS_k3_n100_m429_30|, and \verb|BMS_k3_n100_m429_303|) represent the most challenging instances in the benchmark set, with model counts of 19.414.570.229, 151.814.114.272, and 1.802.910.617.456, respectively.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{figures/cadicall_no_f.png}
+    \caption{CaDiCAll without fixed variable order}
+    \label{fig:cadicall_without_f}
+\end{figure}
+
+Figure~\ref{fig:cadicall_without_f} includes the performance of the last CaDiCAll configurations that do not enforce a fixed variable order. Namely, the configurations of CaDiCAll without implicant shrinking but with reason-based propagation (-r) and CaDiCAll without both shrinking and reason-based propagation. These configurations perform significantly worse than the best-performing configuration. Nevertheless, for approximately the first 470 benchmark instances, their performance remains comparable to that of the other CaDiCAll configurations and even to TabularAllSat.
+
+A notable observation is that CaDiCAll without shrinking but with reason-based propagation (-r) performs nearly identically to the configuration without both features. This suggests that reason-based propagation alone does not significantly influence performance when implicant shrinking is disabled. In turn, this supports the hypothesis that the primary benefit of reason-based propagation arises from its interaction with shrinking.
+
+However, this observation should be interpreted with caution. The benchmark set is specifically designed for TabularAllSat, which integrates both implicant shrinking and reason-based propagation. Consequently, the limited effect of reason-based propagation in isolation may be influenced by the structure of the benchmark instances. Furthermore, it indicates that omitting reason-based propagation, despite potentially increasing the likelihood of revisiting previously explored regions of the search space and requiring additional backtracking, does not necessarily impose a substantial performance penalty in this setting.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\textwidth]{figures/cadicall_f.png}
+    \caption{CaDiCAll with fixed variable order}
+    \label{fig:cadicall_with_f}
+\end{figure}
+
+Figure~\ref{fig:cadicall_with_f} presents the performance of the CaDiCAll configurations that enforce a fixed variable order. Overall, these configurations perform significantly worse than both the best-performing CaDiCAll configuration and TabularAllSat.
+
+Nevertheless, for approximately the first 470 benchmark instances, their performance remains comparable to that of the other CaDiCAll configurations and to TabularAllSat. In addition, they exhibit behavior similar to those CaDiCAll configurations without a fixed variable order in which implicant shrinking is disabled.
+
+While configurations with implicant shrinking still outperform those without, the differences among configurations with a fixed variable order are relatively small. This suggests that the effectiveness of implicant shrinking strongly depends on the solver's ability to determine a suitable variable ordering dynamically.
+
+This observation is further supported by the results shown in Figure~\ref{fig:all_custom}, where enforcing a fixed variable order has a less pronounced impact on performance for the custom benchmark set. Taken together, these findings indicate that the TabularAllSat benchmark instances are particularly amenable to shrinking when the solver is free to choose the variable order, whereas a fixed ordering can substantially limit this advantage.
+
+\subsection{Benchmark Conclusion}
+
+The experimental results demonstrate that the performance of CaDiCAll is highly dependent on both the chosen configuration and the structural properties of the benchmark instances. On the custom benchmark set, CaDiCAll performs comparably to TabularAllSat, solving nearly the same number of instances within similar runtimes. In this setting, neither implicant shrinking nor reason-based propagation has a measurable impact, which is consistent with the fact that these benchmarks are not designed to benefit from shrinking.
+
+In contrast, the results on the TabularAllSat benchmark set reveal clear performance differences. Here, TabularAllSat consistently outperforms CaDiCAll, particularly on the most challenging instances. While CaDiCAll with implicant shrinking and especially in combination with reason-based propagation remains competitive on a large portion of the benchmarks, its performance degrades significantly on the hardest instances. This highlights the importance of shrinking for efficient model enumeration in instances with large and highly structured solution spaces.
+
+Furthermore, the experiments show that reason-based propagation alone does not significantly improve performance in the absence of shrinking. Its benefits become apparent primarily when combined with shrinking, suggesting a strong interaction between these two techniques. This indicates that reason-based propagation is most effective when it supports the reduction of implicants rather than acting as an independent optimization.
+
+Another key observation concerns the role of variable ordering. Enforcing a fixed variable order consistently degrades performance across the TabularAllSat benchmarks and largely diminishes the benefits of implicant shrinking. This suggests that dynamic variable ordering is crucial for enabling effective shrinking, as it allows the solver to adapt to the structure of the instance. In contrast, the impact of a fixed variable order is less pronounced on the custom benchmarks, further emphasizing that the effectiveness of these techniques is closely tied to the characteristics of the problem instances.
+
+Overall, the results indicate that integrating model enumeration into the solver via IPASIR-UP is a viable approach. However, achieving competitive performance requires careful exploitation of shrinking and solver heuristics. In particular, the combination of implicant shrinking, reason-based propagation, and dynamic variable ordering emerges as the most effective configuration for challenging benchmark instances.
 
 \section{Conclusion}
 ...

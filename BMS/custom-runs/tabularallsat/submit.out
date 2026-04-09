@@ -1,0 +1,14 @@
+version    tabularallsat
+binary     /home/fr/fr_fr/fr_fp1060/src/tabularAllSAT/cdcl-vsads/solver
+directory  tabularallsat
+benchmarks 37
+delta      64
+jobs       1
+name       cetabularallsat
+options    -c
+slurmspace 236G
+slurmtime  99
+sockets    2
+threads    1
+space      7000
+time       5000

@@ -1,0 +1,34 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			m08n12
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		/tmp/local-unzipped-12372163-1-16-ais12.cnf
+[runlim] start:			Wed Apr  1 15:48:31 2026
+[runlim] child:			7404
+[runlim] sample:		9.96 time, 10.01 real, 19 MB, 0.50 load
+[runlim] sample:		19.90 time, 20.01 real, 23 MB, 1.13 load
+[runlim] sample:		29.85 time, 30.01 real, 27 MB, 1.72 load
+[runlim] sample:		39.79 time, 40.01 real, 58 MB, 2.23 load
+[runlim] sample:		49.74 time, 50.01 real, 31 MB, 2.73 load
+[runlim] sample:		59.67 time, 60.01 real, 64 MB, 3.08 load
+[runlim] sample:		69.63 time, 70.01 real, 68 MB, 3.45 load
+[runlim] sample:		79.56 time, 80.01 real, 38 MB, 3.69 load
+[runlim] sample:		89.51 time, 90.01 real, 39 MB, 3.89 load
+[runlim] sample:		99.46 time, 100.01 real, 71 MB, 4.06 load
+[runlim] sample:		109.40 time, 110.01 real, 42 MB, 4.21 load
+[runlim] sample:		119.35 time, 120.01 real, 43 MB, 4.33 load
+[runlim] sample:		129.28 time, 130.01 real, 79 MB, 4.43 load
+[runlim] sample:		139.23 time, 140.01 real, 79 MB, 4.52 load
+[runlim] end:			Wed Apr  1 15:50:55 2026
+[runlim] status:		ok
+[runlim] result:		20
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			144.20 seconds
+[runlim] time:			143.31 seconds
+[runlim] space:			79 MB
+[runlim] load:			4.52 maximum
+[runlim] samples:		1441

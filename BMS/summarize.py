@@ -2,19 +2,6 @@ from BM import BM, BMS
 import os
 
 
-BENCHMARKS = [
-    "cadicall-24-03",
-    "cadicall-24-03-f",
-    "cadicall-24-03-fr",
-    "cadicall-24-03-r",
-    "cadicall-24-03-s",
-    "cadicall-24-03-sf",
-    "cadicall-24-03-sfr",
-    "cadicall-24-03-sr",
-    "tabularallsat",
-]
-
-
 def get_one(lst: list[str], one: str) -> float:
     for line in lst:
         if one in line:
@@ -80,15 +67,47 @@ def read_BMS(path_to_dir: str) -> BMS:
     return out
 
 
-def read_all_BMS(directory: str) -> dict[str, BMS]:
+def read_all_BMS(directory: str, bmss: list[str]) -> dict[str, BMS]:
     out: dict[str, BMS] = dict()
     for dir in os.listdir(directory):
-        if dir not in BENCHMARKS:
+        if dir not in bmss:
             continue
         out[dir] = read_BMS(os.path.join(directory, dir))
     return out
 
 
+def inverse(all_bms: dict[str, BMS]):
+    out: dict[str, dict[str, int]] = dict()
+    for benchmark_set in all_bms:
+        for name, benchmark in all_bms[benchmark_set].items():
+            if name not in out:
+                out[name] = dict()
+            out[name][benchmark_set] = benchmark.count
+    return out
+
+
+def check(d: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
+    out: dict[str, dict[str, int]] = dict()
+    for bm_name, solvers in d.items():
+        for solver, count in solvers.items():
+            # if count == -1:  # or "-s" in solver:
+            #    continue
+            if count != solvers["tabularallsat"]:
+                if bm_name not in out:
+                    out[bm_name] = {"tabularallsat": solvers["tabularallsat"]}
+                out[bm_name][solver] = count
+    return out
+
+
 if __name__ == "__main__":
-    bms = read_all_BMS("./")
+    bms = read_all_BMS("./BMS/", ["tabularallsat", "cadicall-sfr", "cadicall-sr", "cadicall-sf", "cadicall-fr", "cadicall-s", "cadicall-f", "cadicall-r", "cadicall"])
     print(bms.keys())
+
+    d = inverse(bms)
+
+    tab = bms["tabularallsat"]
+
+    sorted_tab = sorted(tab.items(), key=lambda item: item[1].count)
+
+    for k, v in sorted_tab:
+        print(f"{k}: {v.count}")

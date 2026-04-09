@@ -1,0 +1,22 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			p07n18
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		-r
+[runlim] argv[3]:		-s
+[runlim] argv[4]:		/tmp/local-unzipped-12372159-1-30-bw_large.c.cnf
+[runlim] start:			Wed Apr  1 15:39:25 2026
+[runlim] child:			3531678
+[runlim] end:			Wed Apr  1 15:39:25 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			0.24 seconds
+[runlim] time:			0.20 seconds
+[runlim] space:			12 MB
+[runlim] load:			1.31 maximum
+[runlim] samples:		2
