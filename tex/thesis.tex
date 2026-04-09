@@ -361,9 +361,8 @@ The 2-watched-literal scheme is used in the the faster approach proposed from Sp
 
 \begin{minted}[escapeinside=§§]{cpp}
 int check_literal(int v, int b, vector<int> stack, int index) {
-    for (auto clause : watches(v)) {
-        int l = clause.get_other_watched_literal(v);
-        if (contains_up_to(stack, index, l)) { 
+    for (int lit : other_watching_literals(v)) {
+        if (!satisfied_by(lit, get_n(stack, index))) {
             b = std::max(b, decision_level(v));
         }
     }
