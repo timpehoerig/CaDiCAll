@@ -33,6 +33,8 @@ def read_log(path: str) -> int:
     with open(path, 'r') as file:
         content = file.read().split("\n")
         if "tabularallsat" in path:
+            if "s MODEL COUNT" not in content:
+                return -1
             idx = content.index("s MODEL COUNT")
         else:
             idx = content.index("NUMBER SATISFYING ASSIGNMENTS")
@@ -100,14 +102,12 @@ def check(d: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
 
 
 if __name__ == "__main__":
-    bms = read_all_BMS("./BMS/", ["tabularallsat", "cadicall-sfr", "cadicall-sr", "cadicall-sf", "cadicall-fr", "cadicall-s", "cadicall-f", "cadicall-r", "cadicall"])
+    bms = read_all_BMS("./mc2025/", ["tabularallsat", "cadicall-sfr", "cadicall-sr", "cadicall-sf", "cadicall-fr", "cadicall-s", "cadicall-f", "cadicall-r", "cadicall"])
     print(bms.keys())
 
     d = inverse(bms)
 
-    tab = bms["tabularallsat"]
+    d = check(d)
 
-    sorted_tab = sorted(tab.items(), key=lambda item: item[1].count)
-
-    for k, v in sorted_tab:
-        print(f"{k}: {v.count}")
+    for k, v in d.items():
+        print(k, v)

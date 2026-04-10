@@ -1,0 +1,37 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			m07n03
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		-f
+[runlim] argv[3]:		-s
+[runlim] argv[4]:		/tmp/local-unzipped-12459993-1-40-mc2025_track1_123.cnf
+[runlim] start:			Thu Apr  9 20:20:17 2026
+[runlim] child:			3789951
+[runlim] sample:		9.94 time, 10.01 real, 17 MB, 30.09 load
+[runlim] sample:		19.88 time, 20.01 real, 26 MB, 33.86 load
+[runlim] sample:		29.82 time, 30.01 real, 38 MB, 38.34 load
+[runlim] sample:		39.72 time, 40.01 real, 33 MB, 42.60 load
+[runlim] sample:		49.55 time, 50.01 real, 44 MB, 46.57 load
+[runlim] sample:		59.47 time, 60.01 real, 39 MB, 50.26 load
+[runlim] sample:		69.40 time, 70.01 real, 49 MB, 52.69 load
+[runlim] sample:		79.32 time, 80.01 real, 49 MB, 54.51 load
+[runlim] sample:		89.24 time, 90.01 real, 49 MB, 55.97 load
+[runlim] sample:		99.17 time, 100.01 real, 55 MB, 56.97 load
+[runlim] sample:		109.08 time, 110.01 real, 55 MB, 58.06 load
+[runlim] sample:		119.03 time, 120.01 real, 69 MB, 58.97 load
+[runlim] sample:		128.97 time, 130.01 real, 55 MB, 59.51 load
+[runlim] sample:		138.92 time, 140.01 real, 55 MB, 59.90 load
+[runlim] sample:		148.87 time, 150.01 real, 55 MB, 60.22 load
+[runlim] end:			Thu Apr  9 20:22:57 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			159.77 seconds
+[runlim] time:			158.51 seconds
+[runlim] space:			71 MB
+[runlim] load:			60.42 maximum
+[runlim] samples:		1597

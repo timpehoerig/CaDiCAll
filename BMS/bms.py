@@ -1,6 +1,6 @@
 from summarize import read_all_BMS, BMS, BM
 import matplotlib.pyplot as plt
-import sys
+import argparse
 
 
 def get_bms(bms: list[BM], name: str) -> tuple[list[float], list[int], str]:
@@ -34,8 +34,33 @@ def get_single(name: str) -> str:
         return "limes"
 
 
+def scatter(path: str, all_bms: dict[str, BMS]):
+
+    x, y = list(all_bms.keys())
+
+    plt.xlabel(x)
+    plt.ylabel(y)
+
+    plt.xscale("log")
+    plt.yscale("log")
+
+    xs = [bm.time for bm in all_bms[x].values()]
+    ys = [bm.time for bm in all_bms[y].values()]
+
+
+    plt.scatter(
+        xs, ys,
+        marker="*",
+        color="blue",
+    )
+    plt.plot([min(xs), max(xs)], [min(ys), max(ys)], "k-", alpha=0.5)
+    plt.plot([max(xs), max(xs)], [min(ys), max(ys)], "r-", alpha=0.5)
+    plt.savefig(path, dpi=300)
+    plt.show()
+
+
 def plot(path: str, all_bms: dict[str, BMS], min: int = 450, max: int = 500):
-    for bms in sorted(all_bms):
+    for bms in BENCHMARKS:
 
         (x, y, name) = get_bms(list(all_bms[bms].values()), bms)
         plt.plot(
@@ -46,6 +71,8 @@ def plot(path: str, all_bms: dict[str, BMS], min: int = 450, max: int = 500):
             markersize=4,
             label=bms
         )
+
+    plt.plot([5000, 5000], [min, max], "r-", alpha=0.2)
 
     plt.ylim(min, max)
     plt.xlabel("time")
@@ -59,34 +86,52 @@ def plot(path: str, all_bms: dict[str, BMS], min: int = 450, max: int = 500):
     plt.show()
 
 
+def parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run BMS with optional configurations"
+    )
+
+    # Required arguments
+    parser.add_argument("bms_name", help="Name of the benchmark set")
+    parser.add_argument("filename", help="Input file")
+
+    parser.add_argument("--min", type=int, default=0, help="Minimum time for plot")
+    parser.add_argument("--max", type=int, default=500, help="Maximum time for plot")
+
+    parser.add_argument("-s", "--scatter", action="store_true", help="Use scatter plot instead of line plot")
+
+    parser.add_argument("-p", "--plot", nargs="*", default=COMBS, help="s fr ...], default = all")
+
+    return parser
+
+
 # python3 bms.py bms_name filename [comb]*
 if __name__ == "__main__":
 
     COMBS = [
-        "",
-        "f",
-        "fr",
-        "r",
+        "sr",
         "s",
-        "sf",
         "sfr",
-        "sr"
+        "",
+        "r",
+        "sf",
+        "fr",
+        "f"
     ]
 
-    args = sys.argv[1:]
+    args = parser().parse_args()
 
-    name_bms = args[0]
+    if args.scatter:
+        BENCHMARKS = [f"cadicall{f"-{bm}" if bm != "" else ""}" for bm in args.plot]
+        if len(args.plot) < 2:
+            BENCHMARKS = ["tabularallsat"] + BENCHMARKS
 
-    file_name = args[1]
+        all_bms = read_all_BMS(f"./{args.bms_name}/", BENCHMARKS)
+        all_bms_sorted = sorted(all_bms)
+        scatter(f"../tex/figures/{args.filename}.png", all_bms)
+    else:
+        BENCHMARKS = ["tabularallsat"] + [f"cadicall{f"-{bm}" if bm != "" else ""}" for bm in args.plot]
 
-    min = int(args[2]) if len(args) > 2 else 0
-    max = int(args[3]) if len(args) > 2 else 500
-
-    combs = args[4:] if len(args) > 4 else COMBS
-
-    BENCHMARKS = [f"cadicall{f"-{bm}" if bm != "" else ""}" for bm in combs] + ["tabularallsat"]
-
-    all_bms = read_all_BMS(f"./{name_bms}/", BENCHMARKS)
-    all_bms_sorted = sorted(all_bms)
-
-    plot(f"../tex/figures/{file_name}.png", all_bms, min, max)
+        all_bms = read_all_BMS(f"./{args.bms_name}/", BENCHMARKS)
+        all_bms_sorted = sorted(all_bms)
+        plot(f"../tex/figures/{args.filename}.png", all_bms, args.min, args.max)

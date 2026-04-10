@@ -1,0 +1,24 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			o01n06
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		-f
+[runlim] argv[3]:		-s
+[runlim] argv[4]:		/tmp/local-unzipped-12459993-2-86-mc2025_track1_097.cnf
+[runlim] start:			Thu Apr  9 20:22:25 2026
+[runlim] child:			3021924
+[runlim] sample:		9.95 time, 10.01 real, 7 MB, 6.48 load
+[runlim] sample:		19.89 time, 20.01 real, 8 MB, 10.73 load
+[runlim] end:			Thu Apr  9 20:22:50 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			24.35 seconds
+[runlim] time:			24.17 seconds
+[runlim] space:			8 MB
+[runlim] load:			12.67 maximum
+[runlim] samples:		243

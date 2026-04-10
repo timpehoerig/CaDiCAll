@@ -1,0 +1,14 @@
+version    cadicall-24-03
+binary     /home/fr/fr_fr/fr_fp1060/src/cadicall/master_thesis/CaDiCAll/src/cadicall
+directory  cadicall-24-03-fsr
+benchmarks 100
+delta      64
+jobs       2
+name       mc25cadicall-24-03
+options    -c -f -s -r
+slurmspace 236G
+slurmtime  99
+sockets    2
+threads    1
+space      7000
+time       5000
