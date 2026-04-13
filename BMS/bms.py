@@ -4,11 +4,14 @@ import argparse
 
 
 def get_bms(bms: list[BM], name: str) -> tuple[list[float], list[int], str]:
-    y = sorted(map(lambda bm: bm.time, bms))
+    #y = sorted(map(lambda bm: bm.time, bms))
+    y = sorted(bms, key=lambda bm: bm.time)
     y_sum: list[float] = list()
     for yi in y:
-        y_sum.append(yi)
-    x = list(range(len(y)))
+        if yi.time >= 5000 or yi.real >= 5000:
+            continue
+        y_sum.append(yi.time)
+    x = list(range(len(y_sum)))
     return y_sum, x, get_single(name)
 
 
@@ -50,11 +53,19 @@ def scatter(path: str, all_bms: dict[str, BMS]):
 
     plt.scatter(
         xs, ys,
-        marker="*",
-        color="blue",
+        marker="o",
+        color="r",
     )
-    plt.plot([min(xs), max(xs)], [min(ys), max(ys)], "k-", alpha=0.5)
-    plt.plot([max(xs), max(xs)], [min(ys), max(ys)], "r-", alpha=0.5)
+
+    # dia
+    plt.plot([0, max(*xs, *ys)], [0, max(*xs, *ys)], "k-", alpha=0.5)
+
+    # cut off
+    plt.plot([5000, 5000], [0, 5000], "r-", alpha=0.5)
+    plt.plot([0, 5000], [5000, 5000], "r-", alpha=0.5)
+
+    plt.axis("equal")
+
     plt.savefig(path, dpi=300)
     plt.show()
 
@@ -72,11 +83,14 @@ def plot(path: str, all_bms: dict[str, BMS], min: int = 450, max: int = 500):
             label=bms
         )
 
-    plt.plot([5000, 5000], [min, max], "r-", alpha=0.2)
+    # plt.plot([5000, 5000], [min, max], "r-", alpha=0.2)
 
     plt.ylim(min, max)
     plt.xlabel("time")
     plt.ylabel("benchmarks")
+
+    # plt.yscale("log")
+
     plt.legend(
         fontsize=8,      # text size
         markerscale=1,    # marker size in legend
