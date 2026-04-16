@@ -26,6 +26,9 @@
 \contentsline {subsection}{\numberline {6.3}Benchmark Sets}{22}{subsection.6.3}%
 \contentsline {subsection}{\numberline {6.4}Evaluation Metrics}{23}{subsection.6.4}%
 \contentsline {subsection}{\numberline {6.5}Results}{23}{subsection.6.5}%
+\contentsline {subsubsection}{\numberline {6.5.1}Benchmark set from TabularAllSat}{25}{subsubsection.6.5.1}%
+\contentsline {subsubsection}{\numberline {6.5.2}Benchmark Set from SATLIB}{29}{subsubsection.6.5.2}%
+\contentsline {subsubsection}{\numberline {6.5.3}Benchmark Set from the Model Counting Competition 2025}{30}{subsubsection.6.5.3}%
 \contentsline {subsection}{\numberline {6.6}Benchmark Conclusion}{32}{subsection.6.6}%
-\contentsline {section}{\numberline {7}Furture Work}{32}{section.7}%
-\contentsline {section}{\numberline {8}Conclusion}{33}{section.8}%
+\contentsline {section}{\numberline {7}Furture Work}{33}{section.7}%
+\contentsline {section}{\numberline {8}Conclusion}{34}{section.8}%

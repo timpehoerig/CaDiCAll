@@ -1,5 +1,7 @@
 from BM import BM, BMS
 import os
+import sys
+from functools import reduce
 
 
 def get_one(lst: list[str], one: str) -> float:
@@ -91,23 +93,31 @@ def inverse(all_bms: dict[str, BMS]):
 def check(d: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
     out: dict[str, dict[str, int]] = dict()
     for bm_name, solvers in d.items():
-        for solver, count in solvers.items():
-            # if count == -1:  # or "-s" in solver:
-            #    continue
-            if count != solvers["tabularallsat"]:
-                if bm_name not in out:
-                    out[bm_name] = {"tabularallsat": solvers["tabularallsat"]}
-                out[bm_name][solver] = count
+
+        if len(set(count for solver, count in solvers.items() if not (solver.startswith("cadicall") and count == -1))) != 1:
+            out[bm_name] = solvers
+
+    return out
+
+
+def inv[T, U](d: dict[T, U]) -> dict[U, list[T]]:
+    out: dict[U, list[T]] = dict()
+    for k, v in d.items():
+        if v not in out:
+            out[v] = list()
+        out[v].append(k)
     return out
 
 
 if __name__ == "__main__":
-    bms = read_all_BMS("./mc2025/", ["tabularallsat", "cadicall-sfr", "cadicall-sr", "cadicall-sf", "cadicall-fr", "cadicall-s", "cadicall-f", "cadicall-r", "cadicall"])
-    print(bms.keys())
+    name = sys.argv[1]
+
+    bms = read_all_BMS(f"./{name}/", ["tabularallsat", "dualiza", "cadicall-sfr", "cadicall-sr", "cadicall-sf", "cadicall-fr", "cadicall-s", "cadicall-f", "cadicall-r", "cadicall"])
+    # print(bms.keys())
 
     d = inverse(bms)
 
     d = check(d)
 
     for k, v in d.items():
-        print(k, v)
+        print(k, dict(sorted(v.items(), key=lambda x: x[0], reverse=True)))

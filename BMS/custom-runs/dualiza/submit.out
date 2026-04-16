@@ -1,0 +1,14 @@
+version    dualiza
+binary     /home/fr/fr_fr/fr_fp1060/src/cadicall/master_thesis/dualiza/dualiza/dualiza
+directory  dualiza
+benchmarks 37
+delta      64
+jobs       1
+name       cedualiza
+options    -c
+slurmspace 236G
+slurmtime  99
+sockets    2
+threads    1
+space      7000
+time       5000

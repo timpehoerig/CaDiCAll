@@ -17,27 +17,35 @@ def get_bms(bms: list[BM], name: str) -> tuple[list[float], list[int], str]:
 
 def get_single(name: str) -> str:
     if name.startswith("tabularallsat"):
-        return "crimson*"
+        return "darkred*"
+    if name.startswith("dualiza"):
+        return "crimsons"
     name = "" if "-" not in name else name[name.index("-", len(name) - 4):]
     if "sfr" in name:
-        return "m*"
+        return C[0] + "*"
     elif "sr" in name:
         return "orange*"
     elif "sf" in name:
-        return "md"
+        return C[1] + "d"
     elif "fr" in name:
-        return "m*"
+        return C[2] + "^"
     elif "s" in name:
         return "goldd"
     elif "f" in name:
-        return "ms"
+        return C[3] + "o"
     elif "r" in name:
-        return "skyblue*"
+        return "skyblue^"
     else:
         return "limes"
 
 
-def scatter(path: str, all_bms: dict[str, BMS]):
+C = ["#EE82EE",  # violet
+     "#DA70D6",  # orchid
+     "#BA55D3",  # medium orchid
+     "#8A2BE2"]  # blue violet
+
+
+def scatter(path: str, all_bms: dict[str, BMS], color_ref: str):
 
     x, y = list(all_bms.keys())
 
@@ -50,11 +58,12 @@ def scatter(path: str, all_bms: dict[str, BMS]):
     xs = [bm.time for bm in all_bms[x].values()]
     ys = [bm.time for bm in all_bms[y].values()]
 
+    c = get_single(color_ref)[:-1]
 
     plt.scatter(
         xs, ys,
         marker="o",
-        color="r",
+        color=c,
     )
 
     # dia
@@ -66,12 +75,20 @@ def scatter(path: str, all_bms: dict[str, BMS]):
 
     plt.axis("equal")
 
+    ax = plt.gca()
+    ax.set_box_aspect(1)
+
     plt.savefig(path, dpi=300)
     plt.show()
 
 
-def plot(path: str, all_bms: dict[str, BMS], min: int = 450, max: int = 500):
+def plot(path: str, all_bms: dict[str, BMS], min: int = 450, maxx: int = 500):
+
+    amount: int = 0
+
     for bms in BENCHMARKS:
+
+        amount = max(amount, len(all_bms[bms].values()))
 
         (x, y, name) = get_bms(list(all_bms[bms].values()), bms)
         plt.plot(
@@ -85,17 +102,34 @@ def plot(path: str, all_bms: dict[str, BMS], min: int = 450, max: int = 500):
 
     # plt.plot([5000, 5000], [min, max], "r-", alpha=0.2)
 
-    plt.ylim(min, max)
-    plt.xlabel("time")
-    plt.ylabel("benchmarks")
+    plt.ylim(min, maxx)
+    plt.xlabel("time (s)")
+    plt.ylabel(f"benchmarks (n = {amount})")
 
     # plt.yscale("log")
 
+    handles, labels = plt.gca().get_legend_handles_labels()
+
+    def sort_key(h):
+        y = h.get_ydata()
+        x = h.get_xdata()
+        return (y[-1], x[-1])  # (height, x-value)
+
+    # Sort: highest y first, but for ties smaller x first
+    handles, labels = zip(*sorted(
+        zip(handles, labels),
+        key=lambda hl: (hl[0].get_ydata()[-1], -hl[0].get_xdata()[-1]),
+        reverse=True
+    ))
+
     plt.legend(
+        handles,
+        labels,
         fontsize=8,      # text size
         markerscale=1,    # marker size in legend
         handlelength=2    # length of line in legend
     )
+
     plt.savefig(path, dpi=300)
     plt.show()
 
@@ -123,6 +157,8 @@ def parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
 
     COMBS = [
+        "t",
+        "d",
         "sr",
         "s",
         "sfr",
@@ -135,17 +171,21 @@ if __name__ == "__main__":
 
     args = parser().parse_args()
 
+    BENCHMARKS = []
+    for bm in args.plot:
+        if bm == "t":
+            BENCHMARKS.append("tabularallsat")
+        elif bm == "d":
+            BENCHMARKS.append("dualiza")
+        elif bm == "":
+            BENCHMARKS.append("cadicall")
+        else:
+            BENCHMARKS.append(f"cadicall-{bm}")
+
+    all_bms = read_all_BMS(f"./{args.bms_name}/", BENCHMARKS)
+    all_bms_sorted = sorted(all_bms)
+
     if args.scatter:
-        BENCHMARKS = [f"cadicall{f"-{bm}" if bm != "" else ""}" for bm in args.plot]
-        if len(args.plot) < 2:
-            BENCHMARKS = ["tabularallsat"] + BENCHMARKS
-
-        all_bms = read_all_BMS(f"./{args.bms_name}/", BENCHMARKS)
-        all_bms_sorted = sorted(all_bms)
-        scatter(f"../tex/figures/{args.filename}.png", all_bms)
+        scatter(f"../tex/figures/{args.filename}.png", all_bms, BENCHMARKS[0])
     else:
-        BENCHMARKS = ["tabularallsat"] + [f"cadicall{f"-{bm}" if bm != "" else ""}" for bm in args.plot]
-
-        all_bms = read_all_BMS(f"./{args.bms_name}/", BENCHMARKS)
-        all_bms_sorted = sorted(all_bms)
         plot(f"../tex/figures/{args.filename}.png", all_bms, args.min, args.max)

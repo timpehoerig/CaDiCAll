@@ -21,6 +21,8 @@
 \usepackage{cleveref}
 \usepackage{tikz}
 \usepackage{float}
+\usepackage{caption}
+\captionsetup{skip=3pt}
 \usetikzlibrary{trees}
 
 \definecolor{codegray}{rgb}{0.97,0.97,0.97}
@@ -619,94 +621,116 @@ All benchmarks where run on the Helix cluster of the university of Heidelberg wi
 
 \subsection{Results}
 
+The different benchmark sets yield notably divergent results. In the TabularAllSat benchmark suite (Figure~\ref{fig:bms_all}), TabularAllSat clearly outperforms CaDiCaL. In contrast, on the SATLIB benchmark set (Figure~\ref{fig:custom_all}), TabularAllSat and all CaDiCaL configurations without a fixed variable ordering exhibit comparable performance. However, for the benchmark set derived from the Model Counting Competition 2025 (Figure~\ref{fig:mc_all}), CaDiCaL demonstrates a slight performance advantage.
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{figures/all_bms.png}
+    \includegraphics[width=1\textwidth]{figures/bms_all.png}
     \caption{Benchmarks from TabularAllSat}
-    \label{fig:all_bms}
+    \label{fig:bms_all}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{figures/all_custom.png}
+    \includegraphics[width=1\textwidth]{figures/custom_all.png}
     \caption{All Custom Benchmarks}
-    \label{fig:all_custom}
+    \label{fig:custom_all}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{figures/all_mc.png}
+    \includegraphics[width=1\textwidth]{figures/mc_all.png}
     \caption{All Model Count Competition Benchmarks}
-    \label{fig:all_mc}
+    \label{fig:mc_all}
 \end{figure}
 
-As illustrated in Figure~\ref{fig:all_custom}, CaDiCAll without a fixed variable order exhibits performance comparable to TabularAllSat on the custom benchmark set. Both approaches successfully solve 32 out of 36 instances within nearly identical runtimes. When enabling a fixed variable order, CaDiCAll solves 31 instances, i.e., one fewer than in the default configuration. However, for the instances that are solved, the runtime remains largely unchanged and is still comparable to both TabularAllSat and CaDiCAll without a fixed variable order. Furthermore, the results indicate that enabling or disabling implicant shrinking and reason-based propagation has no measurable impact on performance for this benchmark set. Specifically, configurations using shrinking (-s) and reason-based propagation (-r) perform identically to those that do not. This behavior is expected, as the custom benchmarks are not designed to benefit from shrinking, and therefore do not allow these techniques to effectively reduce the search space.
-
-An overview of the results on the TabularAllSat benchmark set is shown in Figure~\ref{fig:all_bms}. The results clearly indicate that TabularAllSat outperforms CaDiCAll on this benchmark suite, both in terms of runtime and the number of solved instances. More specifically, CaDiCAll configured with shrinking (-s), as well as with both shrinking and reason-based propagation (-s -r), exhibits performance comparable to TabularAllSat on the first 480-490 instances. Beyond this range, however, CaDiCAll becomes significantly slower on the subsequent six benchmarks and fails to solve the final three instances. Disabling shrinking leads to a further degradation in performance. This behavior is expected, as the benchmark set is explicitly designed to benefit from effective implicant shrinking, thereby favoring approaches that exploit this technique. Interestingly, when enforcing a fixed variable order (-f), shrinking no longer has a significant impact on the performance of CaDiCAll. A plausible explanation is that, although the benchmarks are constructed to enable effective shrinking, this advantage depends on the solver's ability to dynamically choose a suitable variable ordering. When the variable order is fixed, the solver may be unable to identify an ordering that facilitates effective shrinking, thereby diminishing its impact on overall performance.
+\subsubsection{Benchmark set from TabularAllSat}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{figures/best_cadicall.png}
-    \caption{TabularAllSat vs. CaDiCAll}
-    \label{fig:best_cadicall}
+    \includegraphics[width=1\textwidth]{figures/bms_all_closeup.png}
+    \caption{TabularAllSat vs. CaDiCAll Close Up}
+    \label{fig:bms_all_closeup}
 \end{figure}
+
+A closer examination of the results for the TabularAllSat benchmark set (Figure~\ref{fig:bms_all}) is shown in Figure~\ref{fig:bms_all_closeup}. It reveals a clear performance advantage of TabularAllSat over CaDiCaL, both in terms of runtime and the number of solved instances. More specifically, CaDiCaL configured with shrinking (-s), as well as with both shrinking and reason-based propagation (-s -r), exhibits performance comparable to TabularAllSat for approximately the first 480 instances. Beyond this point, however, the performance of CaDiCaL degrades significantly. Up to around 490 instances, CaDiCaL remains partially competitive with TabularAllSat. However, on the subsequent instances, its performance declines rapidly, ultimately failing to solve the final three benchmarks. These last three benchmarks (\verb|BMS_k3_n100_m429_93|, \verb|BMS_k3_n100_m429_30|, and \verb|BMS_k3_n100_m429_303|) represent the most challenging instances in the benchmark set, with model counts of 19.414.570.229, 151.814.114.272, and 1.802.910.617.456, respectively.
+
+Disabling shrinking results in a further deterioration of performance, which is consistent with expectations, as implicant shrinking is one of the most viable features and the benchmark set is explicitly designed to showcase effective implicant shrinking. Consequently, approaches that exploit this technique are inherently favored. Interestingly, when a fixed variable ordering is enforced (-f), shrinking no longer yields a performance improvement for CaDiCaL. A plausible explanation for this observation is that, although the benchmarks are constructed to enable effective shrinking, this advantage depends on the solver's ability to dynamically select a suitable variable ordering. When the variable ordering is fixed, the solver may be unable to identify an arrangement that facilitates effective shrinking, thereby reducing its overall impact on performance.
+
+Overall, the configurations with a fixed variable order (-f) perform significantly worse than both the best-performing CaDiCAll configuration and TabularAllSat. Nevertheless, for approximately the first 470 benchmark instances as shown in Figure~\ref{fig:bms_all}, their performance remains comparable to that of the other CaDiCAll configurations and to TabularAllSat. In addition, they exhibit behavior similar to those CaDiCAll configurations without a fixed variable order in which implicant shrinking is disabled.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/bms_t_vs_sr.png}
     \caption{TabularAllSat vs. CaDiCAll}
-    \label{fig:scatter_t_vs_sr}
+    \label{fig:bms_t_vs_sr}
 \end{figure}
+
+A direct comparison between TabularAllSat and the best-performing configuration of CaDiCaL, with both shrinking and reason-based propagation enabled (Figure~\ref{fig:bms_t_vs_sr}), reveals a performance difference of approximately one order of magnitude.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/bms_sr_vs_s.png}
     \caption{CaDiCAll sr vs s}
-    \label{fig:scatter_sr_s}
+    \label{fig:bms_sr_vs_s}
 \end{figure}
 
-Figure~\ref{fig:best_cadicall} presents a direct comparison between TabularAllSat and the best-performing configuration of CaDiCAll, namely with both shrinking (-s) and reason-based propagation (-r) enabled. This detailed view confirms that TabularAllSat overall outperforms CaDiCAll on this benchmark set.
+When comparing the performance of CaDiCaL with and without reason-based propagation, while shrinking is enabled (Figure~\ref{fig:bms_sr_vs_s}), the overall results are largely similar, with a slight advantage observed for configurations that employ reason-based propagation. One possible explanation is that, without reason-based propagation, CaDiCaL is more prone to revisiting previously explored regions of the search space, thereby incurring additional overhead in recovering from redundant explorations.
 
-However, CaDiCAll is able to match the performance of TabularAllSat on approximately the first 480 benchmarks. Up to instance 487, no significant performance difference can be observed between CaDiCAll with both shrinking and reason-based propagation and CaDiCAll with only shrinking enabled. Both configurations remain competitive with TabularAllSat in this range.
-
-Beyond this point, CaDiCAll without reason-based propagation begins to fall behind. This observation should be interpreted with some caution, as its performance still remains relatively close to the configuration with reason-based propagation. One possible explanation is that the benchmarks are specifically designed to benefit from effective shrinking, and that reason clauses further enhance this effect. Another explanation might be that without reason-based propagation, CaDiCAll is more prone to revisiting previously explored regions of the search space again, thereby incurring additional computational overhead.
-
-After approximately 490 benchmarks, both CaDiCAll configurations become significantly slower than TabularAllSat and fail to solve the final three instances. These last three benchmarks (\verb|BMS_k3_n100_m429_93|, \verb|BMS_k3_n100_m429_30|, and \verb|BMS_k3_n100_m429_303|) represent the most challenging instances in the benchmark set, with model counts of 19.414.570.229, 151.814.114.272, and 1.802.910.617.456, respectively.
+However, it is important to note that this effect may also be influenced by the design of the benchmark instances. As these benchmarks are specifically designed for TabularAllSat, which inherently utilizes reason-based propagation. They may implicitly favor configurations that incorporate this technique. Consequently, implicant shrinking may be more effective when reason-based propagation is enabled, as the benchmark structure is aligned with this operational paradigm.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{figures/cadicall_no_f.png}
-    \caption{CaDiCAll without fixed variable order}
-    \label{fig:cadicall_without_f}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/bms__vs_r.png}
+    \includegraphics[width=1\textwidth]{figures/bms_r_vs_.png}
     \caption{CaDiCAll vs CaDiCAll r}
-    \label{fig:scatter__vs_r}
+    \label{fig:bms_r_vs_}
 \end{figure}
 
-Figure~\ref{fig:cadicall_without_f} includes the performance of the last CaDiCAll configurations that do not enforce a fixed variable order. Namely, the configurations of CaDiCAll without implicant shrinking but with reason-based propagation (-r) and CaDiCAll without both shrinking and reason-based propagation. These configurations perform significantly worse than the best-performing configuration. Nevertheless, for approximately the first 470 benchmark instances, their performance remains comparable to that of the other CaDiCAll configurations and even to TabularAllSat.
+This hypothesis is further supported by comparing the performance of CaDiCaL with and without reason-based propagation when shrinking is disabled (Figure~\ref{fig:bms_r_vs_}). In this setting, the performance of both configurations is nearly identical. This suggests that reason-based propagation alone does not significantly influence performance when implicant shrinking is disabled. In turn, it suggests that either the primary benefit of reason-based propagation arises from its interaction with shrinking, or that the benchmark set inherently favors shrinking when reason-based propagations are employed.
 
-A notable observation is that CaDiCAll without shrinking but with reason-based propagation (-r) performs nearly identically to the configuration without both features. This suggests that reason-based propagation alone does not significantly influence performance when implicant shrinking is disabled. In turn, this supports the hypothesis that the primary benefit of reason-based propagation arises from its interaction with shrinking.
-
-However, this observation should be interpreted with caution. The benchmark set is specifically designed for TabularAllSat, which integrates both implicant shrinking and reason-based propagation. Consequently, the limited effect of reason-based propagation in isolation may be influenced by the structure of the benchmark instances. Furthermore, it indicates that omitting reason-based propagation, despite potentially increasing the likelihood of revisiting previously explored regions of the search space and requiring additional backtracking, does not necessarily impose a substantial performance penalty in this setting.
+\subsubsection{Benchmark Set from SATLIB}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{figures/cadicall_f.png}
-    \caption{CaDiCAll with fixed variable order}
-    \label{fig:cadicall_with_f}
+    \includegraphics[width=1\textwidth]{figures/custom_no_d_closeup.png}
+    \caption{All Custom Benchmarks Close Up}
+    \label{fig:custom_no_d_closeup}
 \end{figure}
 
-Figure~\ref{fig:cadicall_with_f} presents the performance of the CaDiCAll configurations that enforce a fixed variable order. Overall, these configurations perform significantly worse than both the best-performing CaDiCAll configuration and TabularAllSat.
+Figure~\ref{fig:custom_no_d_closeup} illustrated a closer look at the performance on the custom benchmarkset from SATLIB that was shown in Figure~\ref{fig:custom_all}. CaDiCAll without a fixed variable order exhibits performance comparable to TabularAllSat on the custom benchmark set. Both approaches successfully solve 32 out of 36 instances within nearly identical runtimes (Figure~\ref{fig:custom_t_vs_r}). When enabling a fixed variable order, CaDiCAll solves 31 instances, one fewer than in the default configuration. However, for the instances that are solved, the runtime remains largely unchanged and is still comparable to both TabularAllSat and CaDiCAll without a fixed variable order. Furthermore, the results indicate that enabling or disabling implicant shrinking and reason-based propagation has no measurable impact on performance for this benchmark set. Specifically, configurations using shrinking (-s) and reason-based propagation (-r) perform identically to those that do not. This behavior is expected, as the custom benchmarks are not designed to benefit from shrinking, and therefore do not allow these techniques to effectively reduce the search space.
 
-Nevertheless, for approximately the first 470 benchmark instances, their performance remains comparable to that of the other CaDiCAll configurations and to TabularAllSat. In addition, they exhibit behavior similar to those CaDiCAll configurations without a fixed variable order in which implicant shrinking is disabled.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/custom_t_vs_r.png}
+    \caption{TabularAllSat vs CaDiCAll r}
+    \label{fig:custom_t_vs_r}
+\end{figure}
 
-While configurations with implicant shrinking still outperform those without, the differences among configurations with a fixed variable order are relatively small. This suggests that the effectiveness of implicant shrinking strongly depends on the solver's ability to determine a suitable variable ordering dynamically.
+Figure~\ref{fig:custom_t_vs_r} shows a direct comparision between the performance of TabularAllSat and CaDiCAll with reason-based propagation on the custom benchmark set from SATLIB.
 
-This observation is further supported by the results shown in Figure~\ref{fig:all_custom}, where enforcing a fixed variable order has a less pronounced impact on performance for the custom benchmark set. Taken together, these findings indicate that the TabularAllSat benchmark instances are particularly amenable to shrinking when the solver is free to choose the variable order, whereas a fixed ordering can substantially limit this advantage.
+\subsubsection{Benchmark Set from the Model Counting Competition 2025}
+
+The results of the benchmark set from SATLIB raises the question wether or not the TabularAllSat solver performs better on the TabularAllSat benchamrks because the instances favor it. To provide an aditional angle, we conducted benchmarks on the benchmark set from the model counting competition from 2025 (Firgure~\ref{fig:mc_all}). A closer look is provided in Figure~\ref{fig:mc_all_closeup}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/mc_all_closeup.png}
+    \caption{All Model Counting Competition Benchmarks from 2025 Close Up}
+    \label{fig:mc_all_closeup}
+\end{figure}
+
+These results draw a different picture than what was shown by the TabularAllSat benchmarks. It was expected, that CaDiCAlls performance may be closer to TabularAllSats, as these benchmarks where not explicitly designed for TabularAllSat and implicant shrinking. However, it was not expected, that CaDiCAll would perform better than TabularAllSat as CaDiCAll is not optimized. An interessting note is that CaDiCAll with rason-based propagation (21 solved instances) is not only faster but also able to solve more instances than TabularAllSat (18 solved instances). However, if we compare TabularAllSat which enables implicant shrinking to CaDiCAlls configuration with implican shrinking activated, the difference in solved benchmarks is not significant (CaDiCall with 19 vs TabularAllSat with 18 solved instances).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/mc_t_vs_r.png}
+    \caption{TabularAllSat vs CaDiCAll r}
+    \label{fig:mc_t_vs_r}
+\end{figure}
+
+Figure~\ref{fig:mc_t_vs_r} presents a direct comparison between the performance of TabularAllSat and the best-performing configuration of CaDiCaL, namely the variant employing only reason-based propagation.
+
+Furthermore, Figure~\ref{fig:mc_all_closeup} reveals an additional noteworthy observation. CaDiCaL without reason-based propagation performs comparably to its counterpart with reason-based propagation on the first 16 benchmark instances. However, on the subsequent five instances, it exhibits slightly inferior performance and ultimately solves one instance less.
 
 \subsection{Benchmark Conclusion}
 

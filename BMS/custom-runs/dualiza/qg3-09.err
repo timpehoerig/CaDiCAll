@@ -1,0 +1,21 @@
+[runlim] version:		2.0.0rc1
+[runlim] host:			p05n17
+[runlim] time limit:		311040000 seconds
+[runlim] real time limit:	5000 seconds
+[runlim] space limit:		7000 MB
+[runlim] argv[0]:		./binary
+[runlim] argv[1]:		-c
+[runlim] argv[2]:		/tmp/local-unzipped-12519504-1-21-qg3-09.cnf
+[runlim] start:			Wed Apr 15 14:30:48 2026
+[runlim] child:			271195
+[runlim] sample:		9.94 time, 10.01 real, 26 MB, 1.80 load
+[runlim] end:			Wed Apr 15 14:31:00 2026
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		1
+[runlim] processes:		2
+[runlim] real:			12.15 seconds
+[runlim] time:			12.03 seconds
+[runlim] space:			26 MB
+[runlim] load:			2.54 maximum
+[runlim] samples:		121

@@ -725,7 +725,7 @@ int main(int argc, char* argv[]) {
     solver->set("restart", false);
     solver->set("inprocessing", false);
     solver->set("rephase", false);
-    solver->set("log", true);
+    solver->set("log", false);
 
     // default is 2
     if (PROFILE) {
