@@ -1,4 +1,4 @@
-\begin{thebibliography}{3}
+\begin{thebibliography}{4}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -10,6 +10,21 @@ Stephen~A. Cook.
 \newblock The complexity of theorem-proving procedures.
 \newblock \emph{Proceedings of the Third Annual ACM Symposium on Theory of
   Computing}, pages 151--158, 1971.
+
+\bibitem[Fazekas et~al.(2023)Fazekas, Niemetz, Preiner, Kirchweger, Szeider,
+  and Biere]{fazekas_et_al:LIPIcs.SAT.2023.8}
+Katalin Fazekas, Aina Niemetz, Mathias Preiner, Markus Kirchweger, Stefan
+  Szeider, and Armin Biere.
+\newblock {IPASIR-UP: User Propagators for CDCL}.
+\newblock In Meena Mahajan and Friedrich Slivovsky, editors, \emph{26th
+  International Conference on Theory and Applications of Satisfiability Testing
+  (SAT 2023)}, volume 271 of \emph{Leibniz International Proceedings in
+  Informatics (LIPIcs)}, pages 8:1--8:13, Dagstuhl, Germany, 2023. Schloss
+  Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik.
+\newblock ISBN 978-3-95977-286-0.
+\newblock \doi{10.4230/LIPIcs.SAT.2023.8}.
+\newblock URL
+  \url{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.SAT.2023.8}.
 
 \bibitem[Levin(1973)]{Levin1973}
 Leonid~A. Levin.

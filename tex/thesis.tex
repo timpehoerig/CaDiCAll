@@ -1,4 +1,5 @@
 \documentclass[12pt,a4paper]{article}
+% remove 'twoside' if printed only on one side of a paper not double sided
 
 % --- Pakete ---
 \usepackage[utf8]{inputenc}
@@ -22,6 +23,7 @@
 \usepackage{tikz}
 \usepackage{float}
 \usepackage{caption}
+\usepackage{fancyhdr}
 \captionsetup{skip=3pt}
 \usetikzlibrary{trees}
 
@@ -36,14 +38,19 @@
 
 
 % --- Seitenlayout ---
-\geometry{left=3cm,right=3cm,top=2cm,bottom=2cm,footskip=\footskip}
+\geometry{
+  inner=2.5cm,   % binding side (larger)
+  outer=2.5cm,   % outer margin
+  top=2cm,
+  bottom=2cm,
+  footskip=\footskip
+}
 
 \onehalfspacing
 
-\usepackage{fancyhdr}
 \pagestyle{fancy}
-\fancyhf{} % alles löschen
-\fancyfoot[R]{\thepage} % zentriert, unabhängig vom Rand
+\fancyhf{}
+\fancyfoot[LE,RO]{\thepage}
 
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
@@ -114,6 +121,12 @@
 % --- Abstract ---
 \section*{Abstract}
 
+The Boolean satisfiability problem (SAT) is a fundamental NP-complete problem with numerous applications in verification and reasoning. While modern CDCL solvers efficiently compute single satisfying assignments, many applications require enumerating all solutions (All-SAT), which is challenging due to their potentially exponential number and the inefficiency of standard techniques such as blocking clauses.
+
+Implementing a model enumerator through the IPASIR-UP interface allows to leverage highly optimized SAT solvers such as CaDiCaL while maintaining a clear separation between solver and enumeration logic. This modular approach ensures that the enumerator remains independent of a specific solver implementation, requiring only compliance with the interface. As a result, improvements in underlying solvers can be directly utilized without modifying the enumerator, enabling both flexibility and long-term maintainability.
+
+This thesis presents CaDiCAll a model enumerator without blocking clauses using the IPASIR-UP interface.
+
 % --- Inhaltsverzeichnis ---
 \newpage
 \tableofcontents
@@ -132,30 +145,31 @@ Given a propositional formula \( F \) over variables
 
 This problem was the first to be proven NP-complete by \citet{Cook1971} in 1971 and independently by \citet{Levin1973} in 1973. As a result, finding efficient algorithms for the SAT problem quickly became one of the most important and influential challenges in computer science. Modern Conflict-Driven Clause Learning (CDCL) solvers are capable of handling formulas with millions of variables and clauses. As a result, SAT solving plays a central role in hardware and software verification, automated reasoning, planning, scheduling, model checking, and cryptanalysis.
 
-State-of-the-art solvers such as CaDiCal, Glucose, and Kissat demonstrate how theoretical advances combined with low level optimizations can transform an intractable worst-case problem into a powerful practical tool. These solvers typically focus on the decision problem: determining whether at least one satisfying assignment exists. If the formula is satisfiable, the solver returns a single model.
+State-of-the-art solvers such as CaDiCal, Glucose, and Kissat demonstrate how theoretical advances combined with low level optimizations can transform an intractable worst-case problem into a powerful practical tool. These solvers typically focus on the decision problem: Determining whether at least one satisfying assignment exists. If the formula is satisfiable, the solver returns a single model.
 
-However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments or a specific subset of them. This task, known as model enumeration (or All-SAT), generalizes the classical SAT problem from computing a single satisfying assignment to computing the whole set \(\{\alpha : V \to {0,1} \mid \alpha \models F\}\)
-While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
+However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments. This task, known as model enumeration (or All-SAT), generalizes the classical SAT problem from computing a single satisfying assignment to computing the whole set \(\{\alpha : V \to {0,1} \mid \alpha \models F\}\). While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
 
 A common technique for model enumeration is the iterative use of SAT solvers combined with blocking clauses. After each model is found, a clause composed of the negation of every literal in that model is added to the CNF formula, ensuring that the solver does not rediscover the same assignment.
 
-With the introduction of standardized interfaces such as IPASIR, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCal itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
+With the introduction of standardized interfaces such as IPASIR, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCaL itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
 
-In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current All- SAT state-of-the-art literature": Conflict Driven Clause Learning short CDCL, Chronological backtracking to avoid blocking clauses and Implicant shrinking to minimize models. 
+In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current All-SAT state-of-the-art literature": Conflict Driven Clause Learning short CDCL, Chronological backtracking to avoid blocking clauses and Implicant Shrinking to minimize models. 
 
 Besides adding clauses iteratively, IPASIR-UP also allows to interfere with decision making, backtracking and found models. This raises the question whether it is possible to create a model enumerator through IPASIR-UP without blocking clauses by using all state-of-the-art techniques from TabularAllSat.
 
-This thesis introduces CaDiCAll, a model enumerator which is almost entirely implemented through the IPASIR-UP interface and does not need any blocking clauses. "Almost" because there are two minor additions that need to be added to IPASIR-UP: One is already added to the newest version of CaDiCaL's IPASIR-UP interface and the other is fixing a bug introduced by the former. As IPASIR-UP is an interface for CaDiCaL and CaDiCaL being a CDCL-based solver, technique (i) from TabularAllSat is naturally covered. Also technique (ii) chronological backtracking is fully possible through the IPASIR-UP interface and thus also used in CaDiCAll. Using (iii) the implicant shrinking algorithm proposed by TabularAllSat requires access to the watch-lists of literals. This is not supported by the IPASIR-UP interface. However, it is still implemented in CaDiCAll and Section \ref{sec:extending_ipasir_up} discusses which additional functionality is needed and how it could be added to the IPASIR-UP interface.
+This thesis introduces CaDiCAll, a model enumerator that showcases that model enumeration through the IPASIR-UP interface without blocking clauses is possible. However, CaDiCAll requires changes to both, the IPASIR-UP interface and CaDiCaL itself in order to work. Some of these changes are already added to the newest version of the IPASIR-UP interface, while others remain to be discussed. CaDiCAll implements all three state-of-the-art techniques defined by Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024}: Conflict Driven Clause Learning, Chronological Backtracking and Implicant Shrinking. 
 
-CaDiCAll supports a fixed variable order. However, per default CaDiCaL decides. It also can be used as a simple model counter, which makes it possible to count models for formulas with exponential many models while keeping memory consumption very little. Furthermore, as IPASIR-UP also introduces the possibility to propagate literals. It is also possible to backtrack through adding reason clauses if necessary.
+\newpage
 
 \section{IPASIR}
 \label{sec:ipasir}
 The IPASIR interface standardizes incremental interaction with CDCL-based SAT solvers by defining a minimal set of functions through which the user can call the solver in bigger contexts while keeping the program independent of the solver. A solver instance is created and subsequently manipulated only via functions such as \verb|ipasir_add| to add literals to the current clause, terminated by 0. \verb|ipasir_assume| to add temporary assumption literals and \verb|ipasir_solve| to start or resume the search. After \verb|ipasir_solve| returns \verb|SAT| or \verb|UNSAT|, the user may query models with \verb|ipasir_val| or inspect a failed core via \verb|ipasir_failed|. The interface deliberately abstracts from internal solver mechanisms: There is no access to decision levels, propagation events, learned clauses, or backtracking. Although learned clauses are preserved across calls in incremental mode, the user cannot intervene during the search itself. Consequently, model enumeration requires blocking clauses: After finding a model, add its negation as a new clause to the cnf (via \verb|ipasir_add|) and restart the solver. If the solver returns UNSAT, all models are found. However, this approach is sub-optimal as each new blocking clause increases the cnf. This makes it infeasible for big CNFs with many models. Model enumeration without blocking clauses through IPASIR is impossible since the solver terminates immediately upon finding a satisfying assignment.
 
+\newpage
+
 \section{IPASIR-UP}
 \label{sec:ipasir_up}
-To overcome the limitations from IPASIR, Katalin Fazekas et al. introduced IPASIR-UP in 2023 as an extension of IPASIR that introduces \verb|user propagator|s (UP). IPASIR-UP augments the classical interface with a bidirectional communication layer between the solver's CDCL loop and user-defined callbacks. Instead of restricting interaction to clause addition and top-level solve calls, IPASIR-UP enables controlled intervention during propagation, decision making, backtracking, and model detection.
+To overcome the limitations from IPASIR, Katalin Fazekas et al. \citet{fazekas_et_al:LIPIcs.SAT.2023.8} introduced IPASIR-UP in 2023 as an extension of IPASIR that introduces \verb|user propagator|s (UP). IPASIR-UP augments the classical interface with a bidirectional communication layer between the solver's CDCL loop and user-defined callbacks. Instead of restricting interaction to clause addition and top-level solve calls, IPASIR-UP enables controlled intervention during propagation, decision making, backtracking, and model detection.
 
 \begin{itemize}
 \item Model validation
@@ -181,7 +195,7 @@ void notify_assignment(const ivec &list) override {}
 void notify_new_decision_level() override {}
 void notify_backtrack(size_t new_level) override {}
 \end{minted}
-  These notification callbacks inform the user propagator about changes to the assignment trail. \verb|notify_assignment| communicates newly assigned literals, \verb|notify_new_decision_level| signals that a decision was made and thus the decision level increased, and \verb|notify_backtrack| reports to which level the solver backtracked.
+  These notification callbacks inform the user propagator about changes to the assignment trail. The callback function \verb|notify_assignment| communicates newly assigned literals, \verb|notify_new_decision_level| signals that a decision was made and thus the decision level increased, and \verb|notify_backtrack| reports to which level the solver backtracked.
 
 \item Decision making
 \begin{minted}{cpp}
@@ -208,7 +222,9 @@ void add_observed_var (int var);
 void remove_observed_var (int var);
 \end{minted}
 
-Then the \verb|User Propagator| can simply be connected and disconnected to the solver by calling \verb|connect_external_propagator| and \verb|disconnect_external_propagator|. The notification callback functions are only called for variables marked as \verb|observed|. The user can mark and unmark variables thorugh the functions \verb|add_observed_var| and \verb|remove_observed_var|.
+Then the \verb|User Propagator| can simply be connected and disconnected to the solver by calling \verb|connect_external_propagator| and \verb|disconnect_external_propagator|. The notification callback functions are only called for variables that are marked as \verb|observed|. The user can mark and unmark variables through the functions \verb|add_observed_var| and \verb|remove_observed_var|.
+
+\newpage
 
 \section{CaDiCAll}
 \label{sec:cadicall}
@@ -217,7 +233,7 @@ After identifying a model, a model enumerator must continue exploring the search
 
 However, this approach introduces several challenges. First, modern SAT solvers are generally not designed to explore the search space in a strictly systematic manner, as they rely on heuristic-driven decision strategies. Second, a systematic exploration of the search space may become computationally infeasible, since the search space can grow exponentially with the number of variables.
 
-CaDiCAll is a fully functional model enumerator using CaDiCaL almost exclusively through the IPASIR-UP interface. It is implemented by using all three state-of-the-art mechanisms defined by Spallitta et al\citep{Spallitta_Sebastiani_Biere_2024}: Conflict Driven Clause Learning (Section \ref{sec:cdcl}), Chronological Backtracking (Section \ref{sec:chronological_backtracking}) and Implicant Shrinking (Section \ref{sec:implicant_shrinking}).
+We introduce CaDiCAll, a fully functional model enumerator using CaDiCaL almost exclusively through the IPASIR-UP interface. It overcomes these challenges by implementing all three state-of-the-art mechanisms defined by Spallitta et al\citep{Spallitta_Sebastiani_Biere_2024} for All-Sat solvers: Conflict Driven Clause Learning (Section \ref{sec:cdcl}), Chronological Backtracking (Section \ref{sec:chronological_backtracking}) and Implicant Shrinking (Section \ref{sec:implicant_shrinking}).
 
 \subsection{Conflict Driven Clause Learning}
 \label{sec:cdcl}
@@ -245,12 +261,12 @@ Transferring this idea to CaDiCAll imposes different challenges: First, backtrac
 
 Backtracking after a model is found was not supported by the IPASIR-UP interface. However, as discussed in Section \ref{sec:extending_ipasir_up} it is fairly easy to add and does not introduce any bad behavior. Thus, allowing to force CaDiCaL to backtrack when a model is found was added to the newest version of CaDiCaL's IPASIR-UP interface by Katalin Fazekas.
 
-When a model is found, CaDiCAll determines the highest decision level \verb|dl| with a decision count of one and then forces CaDiCaL to backtrack to the decision level \verb|dl - 1|. If this level is negative there exists no decision that has not been already flipped and the solver can terminate as there is no path left to explore. Otherwise, the decision on level \verb|dl| must be flipped. This is not done automatically. CaDiCaL has no reason to flip it as the backtrack did not occur from a conflict but artificially from the user propagator.
+When a model is found, CaDiCAll determines the highest decision level \verb|dl| with a decision count of one and then forces CaDiCaL to backtrack to the decision level \verb|dl - 1|. If this level is negative there exists no decision that has not been already flipped and the solver can terminate as there is no path left to explore. Otherwise, the decision on level \verb|dl| must be flipped. This is not done automatically, CaDiCaL has no reason to flip it as the backtrack did not occur from a conflict but artificially from the user propagator.
 
 There are two different options to continue the search from here: Either propagate the negation of the decision at level \verb|dl - 1| via \verb|cb_propagate| or decide the negation of the decision at level \verb|dl| via \verb|cb_decide|. Both versions are implemented in CaDiCAll. \\
 
 \noindent
-\textbf{Continuing the search by propagating} the negation of decision literals via \verb|cb_propagate| appears to be a natural and elegant approach. When the solver propagates the negation of previously made decisions and subsequently backtracks, these literals no longer appear as decision literals and therefore do not need to be considered but simply can be backtracked over.
+\textbf{Continuing the search by propagating} the negation of decision literals via  the callback function \verb|cb_propagate| appears to be a natural and elegant approach. When the solver propagates the negation of previously made decisions and subsequently backtracks, these literals no longer appear as decision literals and therefore do not need to be considered but simply can be backtracked over.
 
 However, if a propagated literal participates in a conflict and is examined during conflict analysis, the solver requests a reason clause via \verb|cb_add_reason_clause_lit|. The corresponding reason clause for such a literal consists of the negation of all decisions made at lower decision levels. Consequently, reason clauses do not need to be stored explicitly but can instead be generated on demand when required.
 
@@ -260,7 +276,7 @@ Nevertheless, when the user propagator forces CaDiCaL to backtrack after a model
 
 \begin{enumerate}
 
-\item The solver propagates the previous decision \verb|d| again. In this case, the solver effectively re-enters the same search path, which is directly detected in \verb|notify_assignment| as CaDiCAll detects that the previous decision has been assigned again. However, the earliest point at which this situation can be handled is either \verb|cb_decide| or \verb|cb_check_found_model|, since these are the only callback functions capable of enforcing backtracking. The function \verb|notify_assignment| marks the current search path as a duplicate, and as soon as either \verb|cb_decide| or \verb|cb_check_found_model| is invoked, the solver is forced to backtrack further. This behavior is sound because all assignments leading to the propagation of \verb|d| are themselves consequences of earlier decisions. Hence, the propagation of \verb|d| is a direct implication of the current decision level.
+\item The solver propagates the previous decision \verb|d| again. In this case, the solver effectively enters the same search path, which is directly detected in \verb|notify_assignment| as CaDiCAll detects that the previous decision has been assigned again. However, the earliest point at which this situation can be handled is either \verb|cb_decide| or \verb|cb_check_found_model|, since these are the only callback functions capable of enforcing backtracking. The function \verb|notify_assignment| marks the current search path as a duplicate, and as soon as either \verb|cb_decide| or \verb|cb_check_found_model| is invoked, the solver is forced to backtrack further. This behavior is sound because all assignments leading to the propagation of \verb|d| are themselves consequences of earlier decisions. Hence, the propagation of \verb|d| is a direct implication of the current decision level.
 
 \item The solver encounters a conflict during propagation. In this case, conflict-induced backtracking is triggered. This mechanism is described in Section~\ref{sec:conflict_induced_backtracking}.
 
@@ -345,9 +361,7 @@ In CaDiCaL the 2-watched-literal scheme is used. This allows the solver not to c
 
 If we want to drop a literal \(\ell\), it suffices to check all clauses that are watched by \(\ell\) instead of all clauses in which \(\ell\) occurs. If a model is found, we now at least one of the two watching literals for every clauses is satisfied. Thus, dropping a literal that is not watched will never falsify a clause. However, if we drop a literal \(\ell\) that is currently watching a clause \(c\), we know there exists another literal \(\ell' \in c\) that satisfies \(c\). This literal \(\ell'\) must now become the new watching literal for \(c\). Otherwise, when trying to drop \(\ell'\), \(c\) would not be checked.
 
-Going through all literals in all clauses watched by \(\ell\) may introduce a bottleneck. Thus Spallitta et al \citep{Spallitta_Sebastiani_Biere_2024} introduced a faster but more conservative algorithm exploiting the 2-watched-literal scheme. Conservative meaning it may not drop all literals that could be dropped.
-
-The 2-watched-literal scheme is used in the the faster approach proposed from Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} as shown in the following function:
+Going through all literals in all clauses watched by \(\ell\) may introduce a bottleneck. Thus Spallitta et al \citep{Spallitta_Sebastiani_Biere_2024} introduced a faster but more conservative algorithm exploiting the 2-watched-literal scheme. Conservative meaning it may not drop all literals that could be dropped:
 
 \begin{minted}[escapeinside=§§]{cpp}
 int check_literal(int v, int b, vector<int> stack, int index) {
@@ -416,7 +430,6 @@ CaDiCaL allows to enable chronological backtracking. This option enforces the so
 solver->set("chronoalways", true);
 \end{minted}
 
-
 Furthermore, CaDiCaL provides a range of configurable features that are primarily designed to optimize solving performance. Some of these features however, are not compatible with a systematic exploration of the search space as they may reshape the search space or cause the solver to backtrack. Consequently, CaDiCAll explicitly disables these features:
 
 \begin{itemize}
@@ -447,6 +460,8 @@ solver->set("rephase", false);
 
 \end{itemize}
 
+\newpage
+
 \section{Extending IPASIR-UP}
 \label{sec:extending_ipasir_up}
 
@@ -464,7 +479,7 @@ In conventional SAT solving, backtracking only occurs when the solver encounters
 
 A similar situation arises when enumerating all satisfying assignments (models). Once the solver finds a model, the current assignment satisfies all clauses and therefore no conflict is present to trigger backtracking. Nevertheless, the search must continue in order to determine whether additional models exist. Thus, the solver must be forced to leave the current branch of the search space and explore alternative assignments.
 
-When a model is found, IPASIR-UP allows the user propagator to observe and reject the model by returning \verb|false| in \verb|cb_check_found_model|. It then calls \verb|cb_has_external_clause|. If the user propagator returns \verb|true|, the solver repeatedly calls \verb|cb_add_external_clause_lit| allowing the user propagator to add the negation of the model as a blocking clause. This forces the solver to backtrack and explore other branches of the search space. However, as we do not want to add blocking clauses, CaDiCAll always returns \verb|false| in \verb|cb_check_found_model|. Which means, the solver is not forced to backtrack and would report the same model directly again. Resulting in an infinite loop where the solver is stuck.
+When a model is found, \verb|cb_check_found_model| is called. Here, IPASIR-UP allows the user propagator to observe and reject the found model by returning \verb|false|. It then calls \verb|cb_has_external_clause|. If the user propagator returns \verb|true|, the solver repeatedly calls \verb|cb_add_external_clause_lit| allowing the user propagator to add the negation of the model as a blocking clause. This forces the solver to backtrack and explore other branches of the search space. However, as we do not want to add blocking clauses, CaDiCAll always returns \verb|false| in \verb|cb_check_found_model|. Which means, the solver is not forced to backtrack and would report the same model directly again. Resulting in an infinite loop where the solver is stuck.
 
 In order to allow the user propagator to maintain additional constraints, IPASIR-UP provides the function \verb|force_backtrack|. This function is allowed to be called inside \verb|cb_decide|. It enables the user propagator to force the solver to backtrack to a specific decision level before making a new decision. Forcing the solver to backtrack inside \verb|cb_decide| does not introduce bad behavior as at this point, the trail is fully consistent: All assignments up to the current decision level do not falsify the CNF, they are not in conflict with any other propagations and no propagations are pending.
 
@@ -530,9 +545,9 @@ std::vector<int> other_watching_literals(int external_variable) {
 }
 \end{minted}
 
-The user propagator can then checker wether all other waching literals are satisfied by the remaining trail. If so, the literal can be dropped without falsifying any clause. If not, the literal cannot be dropped as it is still needed to satisfy at least one clause.
+The user propagator can then checker wether all other watching literals are satisfied by the remaining trail. If so, the literal can be dropped without falsifying any clause. If not, the literal cannot be dropped as it is still needed to satisfy at least one clause.
 
-If the sole purpose of this function is to be used by the implicant shrinking algorithm implemented from CaDiCAll, it could be optimized by checking if the other watching literal satisfies the clause instead of appending it to the list of other watching literals. This way, the function can return a boolean value indicating whether the literal can be dropped or not, without the need to return all other watching literals. This also allows early breaks, as the function can return false as soon as it finds a clause that is not satisfied by the other watching literal. However, the function would also need either access to the internal stack and position of literals, as the user propagator needs to check if the other watching literal is satisfied by the remaining trail, or it would need to be passed the current trail as an argument.
+If the sole purpose of this function is to be used by the implicant shrinking algorithm implemented from CaDiCAll, it could be optimized by checking if the other watching literal satisfies the clause instead of appending it to the list of other watching literals. This way, the function can return a boolean value indicating whether the literal can be dropped or not, without the need to return all other watching literals. This also allows early breaks, as the function can return false as soon as it finds a clause that is not satisfied by the other watching literal. However, the function would also need either access to the internal stack and the position of literals, as the user propagator needs to check if the other watching literal is satisfied by the remaining trail, or it would need to be passed the current trail as an argument.
 
 With this minor addition to the IPASIR-UP interface, the implicant shrinking algorithm can be implemented entirely through IPASIR-UP.
 
@@ -555,6 +570,8 @@ In order to check where to backtrack to, if the solver rediscovers paths that ha
 \subsubsection{Storing Models}
 
 Enumerating all models does not only require exponential time in the worst case but can also require exponential space as CNFs can have an exponential number of models. Thus, storing all models in memory may not be feasible for large CNFs. Thus, CaDiCAll provides the option to only count models without saving them. This can be enabled by the command line option \verb|--count| or \verb|-c|.
+
+\newpage
 
 \section{Benchmarks}
 \label{sec:benchmarks}
@@ -744,7 +761,13 @@ Figure~\ref{fig:mc_t_vs_r} presents a direct comparison between the performance 
 
 Furthermore, Figure~\ref{fig:mc_all_closeup} reveals an additional noteworthy observation. CaDiCaL without reason-based propagation performs comparably to its counterpart with reason-based propagation on the first 16 benchmark instances. However, on the subsequent five instances, it exhibits slightly inferior performance and ultimately solves one instance less.
 
-\subsection{Benchmark Conclusion}
+\subsection{Mismatching Results}
+
+While developing CaDiCAll, it was continuesly tested against TabularAllSat and Dualiza with CNFs fuzzed with cnfuzz. In total all three solvers where compared on over 100 000 instances. However, these fuzzed CNFs where created with either the flag \verb|--tiny| or \verb|--small| in order to be manageable.
+
+However, CaDiCAll, TabularAllSat and Dualiza do not yield the same model count for all instances of the three benchmark sets. In Particular, there is one benchmark from the TabularAllSat benchmark set (BMS\_k3\_n100\_m429\_454) where TabularAllSat and CaDiCAll yield a model count of 16311020912 and Dualiza one of 7721086320. The custom benchmark set also includes one benchmark with a mismatch (qg4-09) and the model counting competition benchmark set includes four (mc2025\_track1\_79, ...93, ...95 and ... 101). On these five instances CaDiCAll yields the same count as Dualiza while TabularAllSat yields a different one.
+
+\subsection{Benchmark Results Overview}
 
 The experimental results demonstrate that the performance of CaDiCAll is highly dependent on both the chosen configuration and the structural properties of the benchmark instances.
 
@@ -760,6 +783,8 @@ Another key observation concerns the role of variable ordering. Enforcing a fixe
 
 Overall, the results indicate that integrating model enumeration into the solver via IPASIR-UP is a viable approach. However, achieving competitive performance requires careful exploitation of shrinking and solver heuristics. In particular, the combination of implicant shrinking, reason-based propagation, and dynamic variable ordering emerges as the most effective configuration for challenging benchmark instances.
 
+\newpage
+
 \section{Furture Work}
 
 CaDiCAll demonstrates that implementing a model enumerator without blocking clauses via the IPASIR-UP interface is feasible. However, achieving this requires certain extensions to both the IPASIR-UP interface and the underlying solver, CaDiCaL.
@@ -769,6 +794,8 @@ Future work could focus on extending the IPASIR-UP interface to provide read-onl
 More substantial improvements may be achieved through modifications to CaDiCaL itself. In particular, enabling a strictly chronological exploration of the search space requires the ability to fully disable solver features that interfere with this process, including out-of-order propagations. Providing such functionality as an optional configuration within CaDiCaL would allow the implementation of a model enumerator via IPASIR-UP without requiring further modifications to the solver.
 
 Taken together, these extensions and adaptations have the potential to significantly improve the performance of CaDiCAll. This raises the question of whether, with these enhancements, CaDiCAll could become competitive with state-of-the-art model enumeration approaches such as TabularAllSat.
+
+\newpage
 
 \section{Conclusion}
 The goal of this thesis was to assess whether it is feasible to implement a model enumerator without blocking clauses using the IPASIR-UP interface. While the developed prototype, CaDiCAll, demonstrates that such an approach is conceptually possible, its implementation and the results reveal important practical limitations.
@@ -784,6 +811,8 @@ Furthermore, the results on more general benchmark sets, including SATLIB and in
 Taken together, these findings suggest that the feasibility of this approach ultimately hinges on solver support for strict chronological search. If CaDiCaL were extended to allow such behavior as an optional configuration, the remaining interface-level enhancements appear manageable. Under these conditions, using CaDiCaL as the core solver while combining it with advanced model enumeration techniques such as implicant shrinking could enable a competitive model enumerator without blocking clauses.
 
 In conclusion, while the current state of IPASIR-UP and CaDiCaL does not yet allow for a fully efficient realization of this idea, the approach shows clear potential. Whether this potential justifies the required modifications to the solver remains an open question, but the results of this thesis indicate that it is a promising direction for future research.
+
+\newpage
 
 % --- Literaturverzeichnis ---
 \bibliographystyle{plainnat}  % oder andere: see below
