@@ -45,11 +45,11 @@ if $fuzz; then
 fi
 
 if $shrink; then
-  echo "Script: run wbcp_enum -s"
-  ../src/wbcp_enum -s $path_fuzzed_cnf
+  echo "Script: run cadicall -s"
+  ../src/cadicall -s $path_fuzzed_cnf
 else
-  echo "Script: run wbcp_enum"
-  ../src/wbcp_enum $path_fuzzed_cnf
+  echo "Script: run cadicall"
+  ../src/cadicall $path_fuzzed_cnf
 fi
 
 if $shrink; then
