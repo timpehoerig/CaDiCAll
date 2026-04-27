@@ -446,7 +446,7 @@ solver->set("restarts", false);
 
 Implizierter Restart als begründung
 
-Inprocessing techniques, such as clause elimination and subsumption, dynamically transform the formula during the search. While these simplifications can improve efficiency, they alter the underlying search space and thus, may disrupt a systematical exploration. To maintain a stable, inprocessing is disabled.
+Inprocessing techniques, such as clause elimination and subsumption, implicitly restart the solver. As restarts may cause the solver to rediscover already found models, inprocessing is turned off completely.
 
 \begin{minted}{cpp}
 solver->set("inprocessing", false);
