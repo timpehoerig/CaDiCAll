@@ -724,7 +724,7 @@ int main(int argc, char* argv[]) {
     solver->set("chronoalways", true);
     solver->set("restart", false);
     solver->set("inprocessing", false);
-    solver->set("rephase", false);
+    solver->set("rephase", true);
     solver->set("log", false);
 
     // default is 2

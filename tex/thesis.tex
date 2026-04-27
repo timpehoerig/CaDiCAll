@@ -767,7 +767,7 @@ Furthermore, Figure~\ref{fig:mc_all_closeup} reveals an additional noteworthy ob
 
 \subsection{Mismatching Results}
 
-While developing CaDiCAll, it was continuesly tested against TabularAllSat and Dualiza with CNFs fuzzed with cnfuzz. In total all three solvers where compared on over 100 000 instances. However, these fuzzed CNFs where created with either the flag \verb|--tiny| or \verb|--small| in order to be manageable.
+While developing CaDiCAll, it was continuesly tested against TabularAllSat and Dualiza with CNFs fuzzed with cnfuzz. In total all three solvers where compared on over 200 000 instances. However, these fuzzed CNFs where created with either the flag \verb|--tiny| or \verb|--small| in order to be manageable.
 
 However, CaDiCAll, TabularAllSat and Dualiza do not yield the same model count for all instances of the three benchmark sets. In Particular, there is one benchmark from the TabularAllSat benchmark set (BMS\_k3\_n100\_m429\_454) where TabularAllSat and CaDiCAll yield a model count of 16311020912 and Dualiza one of 7721086320. The custom benchmark set also includes one benchmark with a mismatch (qg4-09) and the model counting competition benchmark set includes four (mc2025\_track1\_79, ...93, ...95 and ... 101). On these five instances CaDiCAll yields the same count as Dualiza while TabularAllSat yields a different one.
 
