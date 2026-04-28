@@ -121,7 +121,7 @@
 % --- Abstract ---
 \section*{Abstract}
 
-The Boolean satisfiability problem (SAT) is a fundamental NP-complete problem with numerous applications in verification and reasoning. While modern CDCL solvers efficiently compute single satisfying assignments, many applications require enumerating all solutions (All-SAT), which is challenging due to their potentially exponential number and the inefficiency of standard techniques such as blocking clauses.
+The Boolean satisfiability problem (SAT) is a fundamental NP-complete problem with numerous applications in verification and reasoning. While modern CDCL solvers efficiently compute single satisfying assignments, many applications require enumerating all solutions (AllSAT), which is challenging due to their potentially exponential number and the inefficiency of standard techniques such as blocking clauses.
 
 Implementing a model enumerator through the IPASIR-UP interface allows to leverage highly optimized SAT solvers such as CaDiCaL while maintaining a clear separation between solver and enumeration logic. This modular approach ensures that the enumerator remains independent of a specific solver implementation, requiring only compliance with the interface. As a result, improvements in underlying solvers can be directly utilized without modifying the enumerator, enabling both flexibility and long-term maintainability.
 
@@ -147,13 +147,13 @@ This problem was the first to be proven NP-complete by \citet{Cook1971} in 1971 
 
 State-of-the-art solvers such as CaDiCal, Glucose, and Kissat demonstrate how theoretical advances combined with low level optimizations can transform an intractable worst-case problem into a powerful practical tool. These solvers typically focus on the decision problem: Determining whether at least one satisfying assignment exists. If the formula is satisfiable, the solver returns a single model.
 
-However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments. This task, known as model enumeration (or All-SAT), generalizes the classical SAT problem from computing a single satisfying assignment to computing the whole set \(\{\alpha : V \to {0,1} \mid \alpha \models F\}\). While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
+However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments. This task, known as model enumeration (or AllSAT), generalizes the classical SAT problem from computing a single satisfying assignment to computing the whole set \(\{\alpha : V \to {0,1} \mid \alpha \models F\}\). While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
 
 A common technique for model enumeration is the iterative use of SAT solvers combined with blocking clauses. After each model is found, a clause composed of the negation of every literal in that model is added to the CNF formula, ensuring that the solver does not rediscover the same assignment.
 
 With the introduction of standardized interfaces such as IPASIR, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCaL itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
 
-In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current All-SAT state-of-the-art literature": Conflict Driven Clause Learning short CDCL, Chronological backtracking to avoid blocking clauses and Implicant Shrinking to minimize models. 
+In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current AllSAT state-of-the-art literature": Conflict Driven Clause Learning short CDCL, Chronological backtracking to avoid blocking clauses and Implicant Shrinking to minimize models. 
 
 Besides adding clauses iteratively, IPASIR-UP also allows to interfere with decision making, backtracking and found models. This raises the question whether it is possible to create a model enumerator through IPASIR-UP without blocking clauses by using all state-of-the-art techniques from TabularAllSat.
 
@@ -163,7 +163,7 @@ This thesis introduces CaDiCAll, a model enumerator that showcases that model en
 
 \section{IPASIR}
 \label{sec:ipasir}
-The IPASIR interface standardizes incremental interaction with CDCL-based SAT solvers by defining a minimal set of functions through which the user can call the solver in bigger contexts while keeping the program independent of the solver. A solver instance is created and subsequently manipulated only via functions such as \verb|ipasir_add| to add literals to the current clause, terminated by 0. \verb|ipasir_assume| to add temporary assumption literals and \verb|ipasir_solve| to start or resume the search. After \verb|ipasir_solve| returns \verb|SAT| or \verb|UNSAT|, the user may query models with \verb|ipasir_val| or inspect a failed core via \verb|ipasir_failed|. The interface deliberately abstracts from internal solver mechanisms: There is no access to decision levels, propagation events, learned clauses, or backtracking. Although learned clauses are preserved across calls in incremental mode, the user cannot intervene during the search itself. Consequently, model enumeration requires blocking clauses: After finding a model, add its negation as a new clause to the cnf (via \verb|ipasir_add|) and restart the solver. If the solver returns UNSAT, all models are found. However, this approach is sub-optimal as each new blocking clause increases the cnf. This makes it infeasible for big CNFs with many models. Model enumeration without blocking clauses through IPASIR is impossible since the solver terminates immediately upon finding a satisfying assignment.
+The IPASIR interface standardizes incremental interaction with CDCL-based SAT solvers by defining a minimal set of functions through which the user can call the solver in bigger contexts while keeping the program independent of the solver. A solver instance is created and subsequently manipulated only via functions such as \verb|ipasir_add| to add literals to the current clause, terminated by 0. \verb|ipasir_assume| to add temporary assumption literals and \verb|ipasir_solve| to start or resume the search. After \verb|ipasir_solve| returns \verb|SAT| or \verb|UNSAT|, the user may query models with \verb|ipasir_val| or inspect a failed core via \verb|ipasir_failed|. The interface deliberately abstracts from internal solver mechanisms: There is no access to decision levels, propagation events, learned clauses, or backtracking. Although learned clauses are preserved across calls in incremental mode, the user cannot intervene during the search itself. Consequently, model enumeration requires blocking clauses: After finding a model, add its negation as a new clause to the CNF (via \verb|ipasir_add|) and restart the solver. If the solver returns UNSAT, all models are found. However, this approach is sub-optimal as each new blocking clause increases the CNF. This makes it infeasible for big CNFs with many models. Model enumeration without blocking clauses through IPASIR is impossible since the solver terminates immediately upon finding a satisfying assignment.
 
 \newpage
 
@@ -213,7 +213,7 @@ int cb_add_reason_clause_lit(int propagated_lit) override {
   \verb|cb_propagate| enables the user propagator to return implied literals under the current partial assignment. If a conflict is detected in which the propagated literal was involved, the solver asks for a reason clause through repeatedly calling \verb|cb_add_reason_clause_lit| (terminated by 0). This enables steering through the decision space while adding the reason clauses only if really necessary.
 \end{itemize}
 
-A user must define a \verb|User Propagator| defining all the functions above.
+A user must define a \verb|User Propagator| implementing all these functions above.
 
 \begin{minted}{cpp}
 void connect_external_propagator (ExternalPropagator* propagator);
@@ -233,7 +233,7 @@ After identifying a model, a model enumerator must continue exploring the search
 
 However, this approach introduces several challenges. First, modern SAT solvers are generally not designed to explore the search space in a strictly systematic manner, as they rely on heuristic-driven decision strategies. Second, a systematic exploration of the search space may become computationally infeasible, since the search space can grow exponentially with the number of variables.
 
-We introduce CaDiCAll, a fully functional model enumerator using CaDiCaL almost exclusively through the IPASIR-UP interface. It overcomes these challenges by implementing all three state-of-the-art mechanisms defined by Spallitta et al\citep{Spallitta_Sebastiani_Biere_2024} for All-Sat solvers: Conflict Driven Clause Learning (Section \ref{sec:cdcl}), Chronological Backtracking (Section \ref{sec:chronological_backtracking}) and Implicant Shrinking (Section \ref{sec:implicant_shrinking}).
+We introduce CaDiCAll, a fully functional model enumerator using CaDiCaL almost exclusively through the IPASIR-UP interface. It overcomes these challenges by implementing all three state-of-the-art mechanisms defined by Spallitta et al\citep{Spallitta_Sebastiani_Biere_2024} for AllSAT solvers: Conflict Driven Clause Learning (Section \ref{sec:cdcl}), Chronological Backtracking (Section \ref{sec:chronological_backtracking}) and Implicant Shrinking (Section \ref{sec:implicant_shrinking}).
 
 \subsection{Conflict Driven Clause Learning}
 \label{sec:cdcl}
@@ -249,15 +249,15 @@ As CaDiCaL is a CDCL-based solver, CDCL is implicitly used by CaDiCAll as it use
 \subsection{Chronological Backtracking}
 \label{sec:chronological_backtracking}
 
-Model enumeration counts every model exactly once. To do so, we must ensure, that paths which lead to models are excluded from future exploration. In common model enumerators this is done by blocking clauses, which permit the solver to run into the same model again. Without blocking clauses we must ensure manually that every path is explored exactly once.
+Model enumeration ensures that each model is counted exactly once by excluding paths that have already led to a model from further exploration. In common model enumerators this is done by blocking clauses, which permit the solver to run into the same model again. Without blocking clauses we must ensure manually that every path is explored exactly once.
 
-Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtracks across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can lead to redundant work, which is not a problem in normal Sat, as the solver stops after finding one model and thus rediscovering the same model is not a problem. However, when enumerating all models, the solver does not terminate after finding the first model. Instead, it must check the remaining search space for others. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model. Implying blocking clauses.
+Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtracks across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can introduce redundant work. In standard SAT solving, this is usually not an issue, since the solver stops after finding a single model, so encountering the same model again does not matter. However, when enumerating all models, the solver does not terminate after finding the first model. Instead, it must check the remaining search space for others. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model. Implying blocking clauses.
 
 Exploring the search space systematically makes blocking clauses redundant. The idea is simple: When backtracking, always only backtrack to the last decision and flip it. If there is no more decision to flip, we can terminate as the whole search space is uncovered. This is known as Chronological Backtracking (CB). With CB all currently made decisions split the search space into two parts: The part that already has been uncovered and the part that is left to explore. With this approach it suffices to keep track of the current decisions instead of all models that have already been explored.
 
 Transferring this idea to CaDiCAll imposes different challenges: First, backtracking after a model is found was not supported by the IPASIR-UP interface. Second, even tough chronological backtracking can be set as an option in CaDiCaL. CaDiCaL does not guarantee to assign the negation of the old decision. Thus, to keep track of the current decisions we store them. As discussed in Section \ref{sec:deciding} the decision order as well as the phase of decisions can be chosen freely and is left for CaDiCaL to decide. Thus, in order to keep track of the current decisions, for each decision level we store a counter (decision counter) and the decided variable. The decision counter indicates how often this variable was assigned. A count of one stands for a new decision while a count of two indicates that this decision was already flipped. When CaDiCAll determines the highest decision level with a decision that can be flipped, it simply looks for the highest decision level with a decision count of one.
 
-\subsubsection{Backtracking after a model is found}
+\subsubsection{Backtracking After A Model Is Found}
 
 Backtracking after a model is found was not supported by the IPASIR-UP interface. However, as discussed in Section \ref{sec:extending_ipasir_up} it is fairly easy to add and does not introduce any bad behavior. Thus, allowing to force CaDiCaL to backtrack when a model is found was added to the newest version of CaDiCaL's IPASIR-UP interface by Katalin Fazekas.
 
@@ -309,7 +309,7 @@ Here it is important to note that now decision can have a decision counter of tw
 
 However, this situation must be handled more carefully when a conflict occurs and CaDiCaL performs backtracking independently. In this case, the decision counter must be taken into account to ensure that CaDiCaL backtracks to the correct decision level.
 
-\subsubsection{Conflict induced backtracking}
+\subsubsection{Conflict Induced Backtracking}
 \label{sec:conflict_induced_backtracking}
 
 When CaDiCAll encounters a conflict and performs backtracking, it is handled completely by CaDiCaL internally. Although CaDiCaL informs the user propagator via \verb|notify_backtrack|, it does not allow the user propagator to interfere with the backtracking procedure.
@@ -384,7 +384,7 @@ Consider the CNF \((x_1 \lor x_2 \lor x_3)\). Let \(x_2\) and \(x_3\) be the wat
 
 The implicant shrinking algorithm yielded both models \(x_1 \land x_2\) and \(x_1\). These models are not distinct, as setting \(x_2\) in the later generates the former.
 
-This can be fixed by allowing implicant shrinking only to remove literals with a decision count of 1. Consider a variable with decision count 2 to be checked by implicant shrinking. There are two possibilities: First, the variable could not be removed when it's decision count was one. Removing it now would trigger exactly a case like in the example above. Second, the variable was removed when it's decision count was one. In that case the model enumerator would have backtracked over the variable and thus resetting the decision count, which makes this case impossible to reach. Resulting in the following fix for the implicant shrinking algorithm:
+This can be fixed by allowing implicant shrinking only to remove literals with a decision count of one. Consider a variable with decision count two to be checked by implicant shrinking. There are two possibilities: First, the variable could not be removed when it's decision count was one. Removing it now would trigger exactly a case like in the example above. Second, the variable was removed when it's decision count was one. In that case the model enumerator would have backtracked over the variable and thus resetting the decision count, which makes this case impossible to reach. Resulting in the following fix for the implicant shrinking algorithm:
 
 \begin{minted}[escapeinside=§§]{cpp}
 int implicant_shrinking(vector<int> stack) {
@@ -416,7 +416,7 @@ The order in which decisions are made can heavily impact the performance of sat 
 
 In order to search systematically through the whole search tree, a fixed variable order is the easiest. On each \verb|cb_decide| call, decide the next undecided variable positively. If the solver needs to backtrack, simply find the highest decision level with a positive decision. CaDiCAll was first implemented with a fixed variable order as it suffices for model enumeration. However, this constraint can be weakened and thus fasten up the performance while still preserving a systematically order.
 
-First, the phase of a decided variable can be chosen freely, while keeping backtracking still simple enough. For each decision level a decision count is saved. When CaDiCAll determines the decision level to backtrack to after a model was found. Instead of backtracking to the highest decision level with a positive decision, simply backtrack to the highest decision level with a decision count of 1. Meaning it has been decided exactly once.
+First, the phase of a decided variable can be chosen freely, while keeping backtracking still simple enough. For each decision level a decision count is saved. When CaDiCAll determines the decision level to backtrack to after a model was found. Instead of backtracking to the highest decision level with a positive decision, simply backtrack to the highest decision level with a decision count of one. Meaning it has been decided exactly once.
 
 Second, the order in which variables are decided can also be chosen complete free, as long as after a backtracking the decision is just flipped. This enables the solver to profit from dynamic decision heuristics such as Variable State Independent Decaying Sum (VISIDS) which is known to improve solver performance significantly and thus is a commonly used decision heuristic in modern sat solvers. The performance difference between fixed and dynamic decision orders can be seen in Section~\ref{sec:experiments}.
 
@@ -444,8 +444,6 @@ solver->set("restarts", false);
 
 \item \textbf{Inprocessing}
 
-Implizierter Restart als begründung
-
 Inprocessing techniques, such as clause elimination and subsumption, implicitly restart the solver. As restarts may cause the solver to rediscover already found models, inprocessing is turned off completely.
 
 \begin{minted}{cpp}
@@ -456,10 +454,10 @@ solver->set("inprocessing", false);
 
 Ausprobieren ob nicht doch geht (fixed argumentieren aber eigentlich auch kein problem)
 
-Because the polarity of decisions changes over time, the solver may return to assignments that are logically equivalent to ones already explored, but reached via a different sequence of decisions. This leads to redundant exploration and undermines the goal of visiting each part of the search space exactly once.
+CaDiCAll was first implemented with a fixed variable order and a fixed phase, as rephasing had no effect, it was turned off. When we evolved CaDiCAll to allow CaDiCaL to make the decisions, rephasing may have an effect on the decisions and thus is turned on in the current version of CaDiCAll.
 
 \begin{minted}{cpp}
-solver->set("rephase", false);
+solver->set("rephase", true);
 \end{minted}
 
 \end{itemize}
@@ -477,7 +475,7 @@ We propose three categories of extensions to IPASIR-UP. First, we introduce the 
 
 Most changes only affect the user propagator and not the solver directly. However, there are some features of CaDiCaL that break the chronological order of the search space and thus must be taken into account.
 
-\subsubsection{Backtracking after a model was found}
+\subsubsection{Backtracking After A Model Was Found}
 
 In conventional SAT solving, backtracking only occurs when the solver encounters a conflict. To continue the search, the solver must undo at least one previous decision and explore a different branch of the search space.
 
@@ -499,7 +497,7 @@ bool is_consistent = external->propagator->cb_check_found_model (etrail);
 
 This feature was added to the newest version of CaDiCaL's IPASIR-UP interface by Katalin Fazekas. Thus, allowing CaDiCAll to backtrack to the last decision after a model is found and continuing the search from there without adding blocking clauses.
 
-\subsubsection{Maintaining chronlogical backtracking}
+\subsubsection{Maintaining Chronlogical Backtracking}
 
 When the solver is about to make the next decision, the solver internally calls \verb|ask_decision|, which then calls \verb|cb_decide|. The user propagator is allowed to call \verb|force_backtrack| inside \verb|cb_decide|. However, backtracking might make the decision returned by the user propagator invalid, as it might be already assigned due to propagations after backtracking. However, instead of asking the user propagator again for the next decision, the solver makes the decision on its own. This imposes a problem as CaDiCAll does not always allow decision to be made by the solver, some decisions may be already fixed in order to force the solver to explore the search space chronologically. This can be fixed by calling \verb|ask_decision| recursively instead of letting the solver decide. This way, the user propagator can make a new decision after backtracking and thus keep the exploration of the search space chronological.
 
@@ -514,7 +512,7 @@ if ((size_t) level < assumptions.size () ||
 };
 \end{minted}
 
-\subsubsection{Out of order propagations}
+\subsubsection{Out Of Order Propagations}
 
 CaDiCaL tries to remove falsified literals in order to shrink the CNF and optimize the performance. Consequentially, this may produce new units. In order to keep blocking literals correct, CaDiCaL propagates these units at the root level to derive all implied units. However, to propagate units at the root level, CaDiCaL potentially backtracks multiple levels and thus, skipping branches that potentially lead to models. In order to avoid this, out-of-order propagation is deactivated.
 
@@ -561,7 +559,7 @@ Currently, CaDiCAll implements this functionality by using this backdoor directl
 
 The primary goal of this thesis was to investigate whether and how a model enumerator can be implemented using IPASIR-UP. Optimizing CaDiCAll and the IPASIR-UP interface to minimize runtime was not the main focus of this work. Nevertheless, while implementing CaDiCAll, we identified some bottlenecks that could be optimized by adapting the IPASIR-UP interface.
 
-\subsubsection{Interacting with the solver}
+\subsubsection{Interacting With The Solver}
 
 When the solver calls the functions \verb|notify_assignments| and \verb|cb_check_found_models| it creates a vector containing assigned literals. When we timed CaDiCAll, in CNFs with many models, CaDiCAll spend around 40 percent of its total time with vector operations. We found that when the solver is passing these vectors to the user propagator, the solver allocates new memory for each vectors and frees it afterwords again. By making these vectors persistent, the total running time of CaDiCAll on CNFs with many models was cut in half. This optimization is implemented in CaDiCAll's version of the IPASIR-UP interface but is not yet part of the official IPASIR-UP interface.
 
@@ -608,7 +606,7 @@ Instead of deciding the negation of decision literals, this mode propagates them
 Enabling this option forces the solver to explore the search space in a fixed order. This is achieved by always deciding the next undecided variable in a fixed order. This allows CaDiCAll to systematically explore the search space keeping track of the decision stack. However, it also prevents the solver from using dynamic decision heuristics, which can lead to worse performance.
 \end{itemize}
 
-All combinations of these options are evaluated, resulting in a total of 8 configurations for CaDiCAll. Furthermore CaDiCAll has the option to only count and not save the found models (\verb|--count| or \verb|-c|). All experiments are run with this option enabled, as saving models introduces a significant overhead in used space and IO-operations but does not impact the behavior of the solver itself.
+All combinations of these options are evaluated, resulting in a total of 8 configurations for CaDiCAll. Furthermore CaDiCAll has the option to only count and not save the found models (\verb|--count| or \verb|-c|). All benchmarks are run with this option enabled, as saving models introduces a significant overhead in used space and IO-operations but does not impact the behavior of the solver itself.
 
 \subsection{Baseline}
 
@@ -618,7 +616,7 @@ In order to properly assess CaDiCAlls performance, we compare it to \textbf{Tabu
 
 \item \textbf{TabularAllSat}
 
-As CaDiCAll is a model enumerator implementing all state-of-the-art mechanisms defined and described by Spallitta et al.\citep{Spallitta_Sebastiani_Biere_2024}, the natural baseline for comparison is their solver: TabularAllSat. TabularAllSat is a CDCL based solver that uses reason-based propagations to flip variables and shrinks its models when found. Thus, running CaDiCAll with shrinking (\verb|-s|) and reason-based propagation (\verb|-r|) enabled allows a one to one comparison to TabularAllSat. TabularAllSat also support counting models without actually storing them. Thus, TabularAllSat is also run with the option \verb|-c| on the experiments, providing comparable performance stats.
+As CaDiCAll is a model enumerator implementing all state-of-the-art mechanisms defined and described by Spallitta et al.\citep{Spallitta_Sebastiani_Biere_2024}, the natural baseline for comparison is their solver: TabularAllSat. TabularAllSat is a CDCL based solver that uses reason-based propagations to flip variables and shrinks its models when found. Thus, running CaDiCAll with shrinking (\verb|-s|) and reason-based propagation (\verb|-r|) enabled allows a one to one comparison to TabularAllSat. TabularAllSat also support counting models without actually storing them. Thus, TabularAllSat is also run with the option \verb|-c| on the benchmarks, providing comparable performance stats.
 
 \item \textbf{Dualiza}
 
@@ -632,25 +630,25 @@ We compared the performance on the following three benchmark sets:
 
 \begin{itemize}
 
-\item \textbf{TabularAllSat experiments}
+\item \textbf{TabularAllSat Benchmarks}
     
-A set of experiments specifically designed for evaluating All-SAT solvers, introduced by Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024}. These experiments are crafted to have a high number of satisfying assignments and to allow for effective implicant shrinking.
+A set of benchmarks specifically designed for evaluating AllSAT solvers, introduced by Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024}. These benchmarks are crafted to have a high number of satisfying assignments and to allow for effective implicant shrinking.
 
-\item \textbf{SATLIB experiments}
+\item \textbf{SATLIB Benchmarks}
 
-As implementing the shrinking algorithm through IPASIR-UP is not possible without changing CaDiCaL itself in a non trivial manner, we also evaluate CaDiCAll on a set of experiments from SATLIB \citep{SATLIB}. These experiments are widely used in the SAT community and cover a variety of problem domains. As they are not specifically designed to benefit implicant shrinking, they may provide a different view on CaDiCAlls performance when implicant shrinking is deactivated. The experiments used from SATLIB include the planning instances: blocksworld (7 instances) and logitsics (3 instances). All intervall Series (4 instances) and SAT-encoded Quasigroup (or Latin square) instances (22 instances). This specific set is selected as they are known to have a high number of models and thus, are suitable for evaluating model enumeration but are not especially designed for All-SAT and thus not allow effective shrinking.
+As implementing the shrinking algorithm through IPASIR-UP is not possible without changing CaDiCaL itself in a non trivial manner, we also evaluate CaDiCAll on a set of benchmarks from SATLIB \citep{SATLIB}. These benchmarks are widely used in the SAT community and cover a variety of problem domains. As they are not specifically designed to benefit implicant shrinking, they may provide a different view on CaDiCAlls performance when implicant shrinking is deactivated. The benchmarks used from SATLIB include the planning instances: blocksworld (7 instances) and logitsics (3 instances). All intervall Series (4 instances) and SAT-encoded Quasigroup (or Latin square) instances (22 instances). This specific set is selected as they are known to have a high number of models and thus, are suitable for evaluating model enumeration but are not especially designed for AllSAT and thus not allow effective shrinking.
 
-\item \textbf{Model Counting Competition 2025}
+\item \textbf{Model Counting Competition 2025 Benchmarks}
 
-experiments from the Model Counting Competition 2025 provide a complementary evaluation setting, as they originate from the domain of model counting rather than All-SAT solving. These instances are typically designed to be challenging with respect to counting the number of satisfying assignments, often featuring large and complex solution spaces.
+Benchmarks from the Model Counting Competition 2025 provide a complementary evaluation setting, as they originate from the domain of model counting rather than AllSAT solving. These instances are typically designed to be challenging with respect to counting the number of satisfying assignments, often featuring large and complex solution spaces.
 
-In contrast to the TabularAllSat experiments, they are not constructed to facilitate implicant shrinking, and thus do not necessarily exhibit structural properties that can be exploited by shrinking techniques. Consequently, they serve as a means to evaluate the performance of CaDiCAll under more general conditions, particularly in scenarios where the benefits of implicant shrinking are limited or absent.
+In contrast to the TabularAllSat benchmarks, they are not constructed to facilitate implicant shrinking, and thus do not necessarily exhibit structural properties that can be exploited by shrinking techniques. Consequently, they serve as a means to evaluate the performance of CaDiCAll under more general conditions, particularly in scenarios where the benefits of implicant shrinking are limited or absent.
 
 \end{itemize}
 
 \subsection{Evaluation Metrics}
 
-All experiments where run on the Helix cluster of the university of Heidelberg with the following specifications: AMD EPYC Milan Processor kernals. Each experiments was run with a time limit of 5000 seconds and a memory limit of 7000 megabyte. The experiments compare the time taken to find each model.
+All benchmarks where run on the Helix cluster of the university of Heidelberg with the following specifications: AMD EPYC Milan Processor kernals. Each benchmark was run with a time limit of 5000 seconds and a memory limit of 7000 megabyte. The benchmarks compare the time taken to find each model.
 
 \subsection{Results}
 
@@ -659,25 +657,25 @@ The different benchmark sets yield notably divergent results. In the TabularAllS
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/bms_all.png}
-    \caption{experiments from TabularAllSat}
+    \caption{Benchmarks from TabularAllSat}
     \label{fig:bms_all}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/custom_all.png}
-    \caption{All Custom experiments}
+    \caption{All Custom Benchmarks}
     \label{fig:custom_all}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/mc_all.png}
-    \caption{All Model Count Competition experiments}
+    \caption{All Model Count Competition benchmarks}
     \label{fig:mc_all}
 \end{figure}
 
-\subsubsection{Benchmark set from TabularAllSat}
+\subsubsection{Benchmark Set from TabularAllSat}
 
 \begin{figure}[H]
     \centering
@@ -686,9 +684,9 @@ The different benchmark sets yield notably divergent results. In the TabularAllS
     \label{fig:bms_all_closeup}
 \end{figure}
 
-A closer examination of the results for the TabularAllSat benchmark set (Figure~\ref{fig:bms_all}) is shown in Figure~\ref{fig:bms_all_closeup}. It reveals a clear performance advantage of TabularAllSat and Dualiza over CaDiCaL, both in terms of runtime and the number of solved instances. More specifically, CaDiCaL configured with shrinking (-s), as well as with both shrinking and reason-based propagation (-s -r), exhibits performance comparable to TabularAllSat and Dualiza for approximately the first 480 instances. Beyond this point, however, the performance of CaDiCaL degrades significantly. Up to around 490 instances, CaDiCaL remains partially competitive with TabularAllSat and Dualiza. However, on the subsequent instances, its performance declines rapidly, ultimately failing to solve the final three experiments. These last three experiments (\verb|BMS_k3_n100_m429_93|, \verb|BMS_k3_n100_m429_30|, and \verb|BMS_k3_n100_m429_303|) represent the most challenging instances in the benchmark set, with model counts of 19.414.570.229, 151.814.114.272, and 1.802.910.617.456, respectively.
+A closer examination of the results for the TabularAllSat benchmark set (Figure~\ref{fig:bms_all}) is shown in Figure~\ref{fig:bms_all_closeup}. It reveals a clear performance advantage of TabularAllSat and Dualiza over CaDiCaL, both in terms of runtime and the number of solved instances. More specifically, CaDiCaL configured with shrinking (-s), as well as with both shrinking and reason-based propagation (-s -r), exhibits performance comparable to TabularAllSat and Dualiza for approximately the first 480 instances. Beyond this point, however, the performance of CaDiCaL degrades significantly. Up to around 490 instances, CaDiCaL remains partially competitive with TabularAllSat and Dualiza. However, on the subsequent instances, its performance declines rapidly, ultimately failing to solve the final three benchmarks. These last three benchmarks (\verb|BMS_k3_n100_m429_93|, \verb|BMS_k3_n100_m429_30|, and \verb|BMS_k3_n100_m429_303|) represent the most challenging instances in the benchmark set, with model counts of 19.414.570.229, 151.814.114.272, and 1.802.910.617.456, respectively.
 
-Disabling shrinking results in a further deterioration of performance, which is consistent with expectations, as implicant shrinking is one of the most viable features and the benchmark set is explicitly designed to showcase effective implicant shrinking. Consequently, approaches that exploit this technique are inherently favored. Interestingly, when a fixed variable ordering is enforced (-f), shrinking no longer yields a performance improvement for CaDiCaL. A plausible explanation for this observation is that, although the experiments are constructed to enable effective shrinking, this advantage depends on the solver's ability to dynamically select a suitable variable ordering. When the variable ordering is fixed, the solver may be unable to identify an arrangement that facilitates effective shrinking, thereby reducing its overall impact on performance.
+Disabling shrinking results in a further deterioration of performance, which is consistent with expectations, as implicant shrinking is one of the most viable features and the benchmark set is explicitly designed to showcase effective implicant shrinking. Consequently, approaches that exploit this technique are inherently favored. Interestingly, when a fixed variable ordering is enforced (-f), shrinking no longer yields a performance improvement for CaDiCaL. A plausible explanation for this observation is that, although the benchmarks are constructed to enable effective shrinking, this advantage depends on the solver's ability to dynamically select a suitable variable ordering. When the variable ordering is fixed, the solver may be unable to identify an arrangement that facilitates effective shrinking, thereby reducing its overall impact on performance.
 
 Overall, the configurations with a fixed variable order (-f) perform significantly worse than the best-performing CaDiCAll configuration as well as both, TabularAllSat and Dualiza. Nevertheless, for approximately the first 470 benchmark instances as shown in Figure~\ref{fig:bms_all}, their performance remains comparable to that of the other CaDiCAll configurations, TabularAllSat and Dualiza. In addition, they exhibit behavior similar to those CaDiCAll configurations without a fixed variable order in which implicant shrinking is disabled.
 
@@ -710,7 +708,7 @@ A direct comparison between TabularAllSat and the best-performing configuration 
 
 When comparing the performance of CaDiCaL with and without reason-based propagation, while shrinking is enabled (Figure~\ref{fig:bms_sr_vs_s}), the overall results are largely similar, with a slight advantage observed for configurations that employ reason-based propagation. One possible explanation is that, without reason-based propagation, CaDiCaL is more prone to revisiting previously explored regions of the search space, thereby incurring additional overhead in recovering from redundant explorations.
 
-However, it is important to note that this effect may also be influenced by the design of the benchmark instances. As these experiments are specifically designed for TabularAllSat, which inherently utilizes reason-based propagation. They may implicitly favor configurations that incorporate this technique. Consequently, implicant shrinking may be more effective when reason-based propagation is enabled, as the benchmark structure is aligned with this operational paradigm.
+However, it is important to note that this effect may also be influenced by the design of the benchmark instances. As these benchmarks are specifically designed for TabularAllSat, which inherently utilizes reason-based propagation. They may implicitly favor configurations that incorporate this technique. Consequently, implicant shrinking may be more effective when reason-based propagation is enabled, as the benchmark structure is aligned with this operational paradigm.
 
 \begin{figure}[H]
     \centering
@@ -726,11 +724,11 @@ This hypothesis is further supported by comparing the performance of CaDiCaL wit
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/custom_no_d_closeup.png}
-    \caption{All Custom experiments Close Up}
+    \caption{All Custom Benchmarks Close Up}
     \label{fig:custom_no_d_closeup}
 \end{figure}
 
-Figure~\ref{fig:custom_no_d_closeup} illustrated a closer look at the performance on the custom experimentset from SATLIB that was shown in Figure~\ref{fig:custom_all} (Dualiza is excluded from this plot). CaDiCAll without a fixed variable order exhibits performance comparable to TabularAllSat on the custom benchmark set. Both approaches successfully solve 32 out of 36 instances within nearly identical runtimes (Figure~\ref{fig:custom_t_vs_r}). When enabling a fixed variable order, CaDiCAll solves 31 instances, one fewer than in the default configuration. However, for the instances that are solved, the runtime remains largely unchanged and is still comparable to both TabularAllSat and CaDiCAll without a fixed variable order. Furthermore, the results indicate that enabling or disabling implicant shrinking and reason-based propagation has no measurable impact on performance for this benchmark set. Specifically, configurations using shrinking (-s) and reason-based propagation (-r) perform identically to those that do not. This behavior is expected, as the custom experiments are not designed to benefit from shrinking, and therefore do not allow these techniques to effectively reduce the search space.
+Figure~\ref{fig:custom_no_d_closeup} illustrated a closer look at the performance on the custom benchmark set from SATLIB that was shown in Figure~\ref{fig:custom_all} (Dualiza is excluded from this plot). CaDiCAll without a fixed variable order exhibits performance comparable to TabularAllSat on the custom benchmark set. Both approaches successfully solve 32 out of 36 instances within nearly identical runtimes (Figure~\ref{fig:custom_t_vs_r}). When enabling a fixed variable order, CaDiCAll solves 31 instances, one fewer than in the default configuration. However, for the instances that are solved, the runtime remains largely unchanged and is still comparable to both TabularAllSat and CaDiCAll without a fixed variable order. Furthermore, the results indicate that enabling or disabling implicant shrinking and reason-based propagation has no measurable impact on performance for this benchmark set. Specifically, configurations using shrinking (-s) and reason-based propagation (-r) perform identically to those that do not. This behavior is expected, as the custom benchmarks are not designed to benefit from shrinking, and therefore do not allow these techniques to effectively reduce the search space.
 
 \begin{figure}[H]
     \centering
@@ -748,11 +746,11 @@ The results of the benchmark set from SATLIB raises the question wether or not t
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/mc_all_closeup.png}
-    \caption{All Model Counting Competition experiments from 2025 Close Up}
+    \caption{All Model Counting Competition Benchmarks from 2025 Close Up}
     \label{fig:mc_all_closeup}
 \end{figure}
 
-These results draw a different picture than what was shown by the TabularAllSat experiments. It was expected, that CaDiCAlls performance may be closer to TabularAllSats, as these experiments where not explicitly designed for TabularAllSat and implicant shrinking. However, it was not expected, that CaDiCAll would perform better than TabularAllSat and Dualiza as CaDiCAll is not optimized. An interessting note is that CaDiCAll with rason-based propagation (21 solved instances) is not only faster but also able to solve more instances than TabularAllSat (18 solved instances). However, if we compare TabularAllSat which enables implicant shrinking to CaDiCAlls configuration where implicant shrinking is activated, the difference in solved experiments is not significant (CaDiCall with 19 vs TabularAllSat with 18 solved instances).
+These results draw a different picture than what was shown by the TabularAllSat benchmarks. It was expected, that CaDiCAlls performance may be closer to TabularAllSats, as these benchmarks where not explicitly designed for TabularAllSat and implicant shrinking. However, it was not expected, that CaDiCAll would perform better than TabularAllSat and Dualiza as CaDiCAll is not optimized. An interessting note is that CaDiCAll with rason-based propagation (21 solved instances) is not only faster but also able to solve more instances than TabularAllSat (18 solved instances). However, if we compare TabularAllSat which enables implicant shrinking to CaDiCAlls configuration where implicant shrinking is activated, the difference in solved instances is not significant (CaDiCall with 19 vs TabularAllSat with 18 solved instances).
 
 \begin{figure}[H]
     \centering
@@ -775,15 +773,15 @@ However, CaDiCAll, TabularAllSat and Dualiza do not yield the same model count f
 
 The experimental results demonstrate that the performance of CaDiCAll is highly dependent on both the chosen configuration and the structural properties of the benchmark instances.
 
-The results on the TabularAllSat benchmark set reveal clear performance differences. Here, TabularAllSat and Dualiza consistently outperforms CaDiCAll, particularly on the most challenging instances. While CaDiCAll with implicant shrinking and especially in combination with reason-based propagation remains competitive on a large portion of the experiments, its performance degrades significantly on the hardest instances. This highlights the importance of shrinking for efficient model enumeration in instances with large and highly structured solution spaces.
+The results on the TabularAllSat benchmark set reveal clear performance differences. Here, TabularAllSat and Dualiza consistently outperforms CaDiCAll, particularly on the most challenging instances. While CaDiCAll with implicant shrinking and especially in combination with reason-based propagation remains competitive on a large portion of the benchmarks, its performance degrades significantly on the hardest instances. This highlights the importance of shrinking for efficient model enumeration in instances with large and highly structured solution spaces.
 
-However, on the custom benchmark set, CaDiCAll performs comparably to TabularAllSat and better than Dualiza. Solving nearly the same number of instances as TabularAllSat within similar runtimes. In this setting, neither implicant shrinking nor reason-based propagation has a measurable impact, which is consistent with the fact that these experiments are not designed to benefit from shrinking.
+However, on the custom benchmark set, CaDiCAll performs comparably to TabularAllSat and better than Dualiza. Solving nearly the same number of instances as TabularAllSat within similar runtimes. In this setting, neither implicant shrinking nor reason-based propagation has a measurable impact, which is consistent with the fact that these benchmarks are not designed to benefit from shrinking.
 
 The results of the custom benchmark set motivates further investigation. The model counting competition benchmark set showcase that CaDiCAll's performance is competable with TabuluarAllSat's and Dualiza's. 
 
-Furthermore, the experiments show that reason-based propagation alone does not significantly improve performance in the absence of shrinking. Its benefits become apparent primarily when combined with shrinking, suggesting a strong interaction between these two techniques. This indicates that reason-based propagation is most effective when it supports the reduction of implicants rather than acting as an independent optimization.
+Furthermore, the experimental results show that reason-based propagation alone does not significantly improve performance in the absence of shrinking. Its benefits become apparent primarily when combined with shrinking, suggesting a strong interaction between these two techniques. This indicates that reason-based propagation is most effective when it supports the reduction of implicants rather than acting as an independent optimization.
 
-Another key observation concerns the role of variable ordering. Enforcing a fixed variable order consistently degrades performance across the TabularAllSat experiments and largely diminishes the benefits of implicant shrinking. This suggests that dynamic variable ordering is crucial for enabling effective shrinking, as it allows the solver to adapt to the structure of the instance. In contrast, the impact of a fixed variable order is less pronounced on the custom experiments, further emphasizing that the effectiveness of these techniques is closely tied to the characteristics of the problem instances.
+Another key observation concerns the role of variable ordering. Enforcing a fixed variable order consistently degrades performance across the TabularAllSat benchmarks and largely diminishes the benefits of implicant shrinking. This suggests that dynamic variable ordering is crucial for enabling effective shrinking, as it allows the solver to adapt to the structure of the instance. In contrast, the impact of a fixed variable order is less pronounced on the custom benchmarks, further emphasizing that the effectiveness of these techniques is closely tied to the characteristics of the problem instances.
 
 Overall, the results indicate that integrating model enumeration into the solver via IPASIR-UP is a viable approach. However, achieving competitive performance requires careful exploitation of shrinking and solver heuristics. In particular, the combination of implicant shrinking, reason-based propagation, and dynamic variable ordering emerges as the most effective configuration for challenging benchmark instances.
 

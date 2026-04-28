@@ -5,28 +5,28 @@
 \contentsline {section}{\numberline {4}CaDiCAll}{6}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Conflict Driven Clause Learning}{6}{subsection.4.1}%
 \contentsline {subsection}{\numberline {4.2}Chronological Backtracking}{7}{subsection.4.2}%
-\contentsline {subsubsection}{\numberline {4.2.1}Backtracking after a model is found}{8}{subsubsection.4.2.1}%
-\contentsline {subsubsection}{\numberline {4.2.2}Conflict induced backtracking}{10}{subsubsection.4.2.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}Backtracking After A Model Is Found}{8}{subsubsection.4.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2}Conflict Induced Backtracking}{10}{subsubsection.4.2.2}%
 \contentsline {subsection}{\numberline {4.3}Implicant Shrinking}{11}{subsection.4.3}%
 \contentsline {subsection}{\numberline {4.4}Deciding}{14}{subsection.4.4}%
 \contentsline {subsection}{\numberline {4.5}Options}{15}{subsection.4.5}%
 \contentsline {section}{\numberline {5}Extending IPASIR-UP}{17}{section.5}%
 \contentsline {subsection}{\numberline {5.1}Setting the ground conditions}{17}{subsection.5.1}%
-\contentsline {subsubsection}{\numberline {5.1.1}Backtracking after a model was found}{17}{subsubsection.5.1.1}%
-\contentsline {subsubsection}{\numberline {5.1.2}Maintaining chronlogical backtracking}{18}{subsubsection.5.1.2}%
-\contentsline {subsubsection}{\numberline {5.1.3}Out of order propagations}{19}{subsubsection.5.1.3}%
+\contentsline {subsubsection}{\numberline {5.1.1}Backtracking After A Model Was Found}{17}{subsubsection.5.1.1}%
+\contentsline {subsubsection}{\numberline {5.1.2}Maintaining Chronlogical Backtracking}{18}{subsubsection.5.1.2}%
+\contentsline {subsubsection}{\numberline {5.1.3}Out Of Order Propagations}{19}{subsubsection.5.1.3}%
 \contentsline {subsection}{\numberline {5.2}Implicant Shrinking}{19}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Optimization}{20}{subsection.5.3}%
-\contentsline {subsubsection}{\numberline {5.3.1}Interacting with the solver}{21}{subsubsection.5.3.1}%
+\contentsline {subsubsection}{\numberline {5.3.1}Interacting With The Solver}{21}{subsubsection.5.3.1}%
 \contentsline {subsubsection}{\numberline {5.3.2}Duplicating Datastructures}{21}{subsubsection.5.3.2}%
 \contentsline {subsubsection}{\numberline {5.3.3}Storing Models}{21}{subsubsection.5.3.3}%
-\contentsline {section}{\numberline {6}Benchmarks}{22}{section.6}%
+\contentsline {section}{\numberline {6}Experiments}{22}{section.6}%
 \contentsline {subsection}{\numberline {6.1}Configuration}{22}{subsection.6.1}%
 \contentsline {subsection}{\numberline {6.2}Baseline}{23}{subsection.6.2}%
 \contentsline {subsection}{\numberline {6.3}Benchmark Sets}{23}{subsection.6.3}%
 \contentsline {subsection}{\numberline {6.4}Evaluation Metrics}{24}{subsection.6.4}%
 \contentsline {subsection}{\numberline {6.5}Results}{24}{subsection.6.5}%
-\contentsline {subsubsection}{\numberline {6.5.1}Benchmark set from TabularAllSat}{28}{subsubsection.6.5.1}%
+\contentsline {subsubsection}{\numberline {6.5.1}Benchmark Set from TabularAllSat}{28}{subsubsection.6.5.1}%
 \contentsline {subsubsection}{\numberline {6.5.2}Benchmark Set from SATLIB}{32}{subsubsection.6.5.2}%
 \contentsline {subsubsection}{\numberline {6.5.3}Benchmark Set from the Model Counting Competition 2025}{33}{subsubsection.6.5.3}%
 \contentsline {subsection}{\numberline {6.6}Mismatching Results}{35}{subsection.6.6}%
