@@ -1,4 +1,5 @@
-﻿@article{Spallitta_Sebastiani_Biere_2024,
+﻿// tabularallsat
+@article{Spallitta_Sebastiani_Biere_2024,
  title={Disjoint Partial Enumeration without Blocking Clauses},
  volume={38},
  url={https://ojs.aaai.org/index.php/AAAI/article/view/28652},
@@ -31,6 +32,7 @@
   pages   = {265--266}
 }
 
+// IPASIR-UP
 @InProceedings{fazekas_et_al:LIPIcs.SAT.2023.8,
   author =	{Fazekas, Katalin and Niemetz, Aina and Preiner, Mathias and Kirchweger, Markus and Szeider, Stefan and Biere, Armin},
   title =	{{IPASIR-UP: User Propagators for CDCL}},
@@ -48,4 +50,90 @@
   URN =		{urn:nbn:de:0030-drops-184709},
   doi =		{10.4230/LIPIcs.SAT.2023.8},
   annote =	{Keywords: SAT, CDCL, Satisfiability Modulo Theories, Satisfiability Modulo Symmetries}
+}
+
+// P vs NP (SAT is NP)
+@article{10.1145/1562164.1562186,
+  author = {Fortnow, Lance},
+  title = {The status of the P versus NP problem},
+  year = {2009},
+  issue_date = {September 2009},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  volume = {52},
+  number = {9},
+  issn = {0001-0782},
+  url = {https://doi.org/10.1145/1562164.1562186},
+  doi = {10.1145/1562164.1562186},
+  abstract = {It's one of the fundamental mathematical problems of our time, and its importance grows with the rise of powerful computers.},
+  journal = {Commun. ACM},
+  month = sep,
+  pages = {78–86},
+  numpages = {9}
+}
+
+// CadiCaL 2.0
+@InProceedings{10.1007/978-3-031-65627-9_7,
+  author="Biere, Armin
+  and Faller, Tobias
+  and Fazekas, Katalin
+  and Fleury, Mathias
+  and Froleyks, Nils
+  and Pollitt, Florian",
+  editor="Gurfinkel, Arie
+  and Ganesh, Vijay",
+  title="CaDiCaL 2.0",
+  booktitle="Computer Aided Verification",
+  year="2024",
+  publisher="Springer Nature Switzerland",
+  address="Cham",
+  pages="133--152",
+  abstract="The SAT solver CaDiCaL provides a rich feature set with a clean library interface. It has been adopted by many users, is well documented and easy to extend due to its effective testing and debugging infrastructure. In this tool paper we give a high-level introduction into the solver architecture and then go briefly over implemented techniques. We describe basic features and novel advanced usage scenarios. Experiments confirm that CaDiCaL despite this flexibility has state-of-the-art performance both in a stand-alone as well as incremental setting.",
+  isbn="978-3-031-65627-9"
+}
+
+// Glucose
+@article{audemard:hal-03299473,
+  TITLE = {{On the Glucose SAT solver}},
+  AUTHOR = {Audemard, Gilles and Simon, Laurent},
+  URL = {https://univ-artois.hal.science/hal-03299473},
+  JOURNAL = {{International Journal on Artificial Intelligence Tools (IJAIT)}},
+  HAL_LOCAL_REFERENCE = {Logiciel : glucose},
+  HAL_LOCAL_REFERENCE = {Axe : Contraintes},
+  VOLUME = {27},
+  NUMBER = {1},
+  PAGES = {1-25},
+  YEAR = {2018},
+  PDF = {https://univ-artois.hal.science/hal-03299473v1/file/preprint.pdf},
+  HAL_ID = {hal-03299473},
+  HAL_VERSION = {v1},
+}
+
+// Kissat
+@inproceedings{BiereFallerFazekasFleuryFroleyksPollitt-SAT-Competition-2024-solvers,
+  author       = {Armin Biere and Tobias Faller and Katalin Fazekas and Mathias Fleury and Nils Froleyks and Florian Pollitt},
+  title	       = {{CaDiCaL}, {Gimsatul}, {IsaSAT} and {Kissat} Entering the {SAT Competition 2024}},
+  editor       = {Marijn Heule and Markus Iser and Matti J{\"a}rvisalo and Martin Suda},
+  booktitle    = {Proc.~of {SAT Competition} 2024 -- Solver, Benchmark and
+                  Proof Checker Descriptions},
+  volume       = {B-2024-1},
+  series       = {Department of Computer Science Report Series B},
+  publisher    = {University of Helsinki},
+  year	       = 2024,
+  pages	       = {8-10},
+}
+
+// IPASIR / Sat Race 2015
+@article{BALYO201645,
+  title = {SAT Race 2015},
+  journal = {Artificial Intelligence},
+  volume = {241},
+  pages = {45-65},
+  year = {2016},
+  issn = {0004-3702},
+  doi = {https://doi.org/10.1016/j.artint.2016.08.007},
+  url = {https://www.sciencedirect.com/science/article/pii/S0004370216300984},
+  author = {Tomáš Balyo and Armin Biere and Ashlin Iser and Carsten Sinz},
+  keywords = {SAT, Competition, SAT-Race},
+  abstract = {Boolean satisfiability (SAT) solving is one of the most competitive research areas of theoretical computer science. The performance of state-of-the-art SAT solvers has been continuously improving in the last decades and has reached a level where SAT solvers can be employed to solve real world problems in fields such as hardware and software verification, automated planning and many others. One of the important driving forces of this progress are the yearly organized (since 2002) SAT competitions. In this paper we describe the 2015 SAT Race that featured the traditional sequential and parallel tracks (with 64 core computers) and introduced the Incremental Library Track, which is particularly interesting for developers of SAT based applications. We describe the 2015 SAT Race and provide a detailed analysis of its results.}
 }

@@ -86,7 +86,8 @@
 \noindent\hrulefill\\
 
 \vspace{1.5cm}
-\Large\sffamily Model Enumeration using IPASIR-UP\\
+\Large\sffamily Model Enumeration using IPASIR-UP \\
+without Blocking Clauses\\
 \vspace{1cm}
 \large\sffamily\bfseries Master's Thesis\\  
 \end{center}
@@ -97,7 +98,7 @@
 \sffamily Prof. Dr. Armin Biere\\
 \vspace{0.5cm}
 \sffamily\textbf{Second Examiner}\\
-\sffamily Prof. Dr. xyz\\
+\sffamily Prof. Dr. Scholl\\
 \vspace{0.5cm}
 \sffamily\textbf{Author}\\
 \sffamily Timpe Hörig\\
@@ -105,7 +106,7 @@
 \sffamily Geburtsort: Neustadt, Deutschland\\
 \vspace{0.5cm}
 \sffamily\textbf{Working Period}\\
-\sffamily start date - end date\\
+\sffamily 18.11.2025 - 18.05.2026\\
 \end{titlepage}
 
 
@@ -137,21 +138,21 @@ This thesis presents CaDiCAll a model enumerator without blocking clauses using 
 % --- Hauptinhalt ---
 \section{Introduction}
 \label{sec:introduction}
-The Boolean satisfiability problem (SAT) is defined as follows:
+The Boolean satisfiability problem (SAT) is defined as follows (Cite?):
 
 Given a propositional formula \( F \) over variables 
 \( V = \{v_1, \dots, v_n\} \), decide whether there exists an assignment 
 \( \alpha : V \to \{0,1\} \) such that \( \alpha \models F \).
 
-This problem was the first to be proven NP-complete by \citet{Cook1971} in 1971 and independently by \citet{Levin1973} in 1973. As a result, finding efficient algorithms for the SAT problem quickly became one of the most important and influential challenges in computer science. Modern Conflict-Driven Clause Learning (CDCL) solvers are capable of handling formulas with millions of variables and clauses. As a result, SAT solving plays a central role in hardware and software verification, automated reasoning, planning, scheduling, model checking, and cryptanalysis.
+This problem was the first to be proven NP-complete by \citet{Cook1971} in 1971 and independently by \citet{Levin1973} in 1973. As a result, finding efficient algorithms for the SAT problem quickly became one of the most important and influential challenges in computer science \cite{BALYO201645}. Modern Conflict-Driven Clause Learning (CDCL) solvers are capable of handling formulas with millions of variables and clauses (Cite?). As a result, SAT solving plays a central role in hardware and software verification, automated reasoning, planning, scheduling, model checking, and cryptanalysis (Cite?).
 
-State-of-the-art solvers such as CaDiCal, Glucose, and Kissat demonstrate how theoretical advances combined with low level optimizations can transform an intractable worst-case problem into a powerful practical tool. These solvers typically focus on the decision problem: Determining whether at least one satisfying assignment exists. If the formula is satisfiable, the solver returns a single model.
+State-of-the-art solvers such as CaDiCal \cite{10.1007/978-3-031-65627-9_7}, Glucose \cite{audemard:hal-03299473}, and Kissat \cite{BiereFallerFazekasFleuryFroleyksPollitt-SAT-Competition-2024-solvers} demonstrate how theoretical advances combined with low level optimizations can transform an intractable worst-case problem into a powerful practical tool. These solvers typically focus on the decision problem: Determining whether at least one satisfying assignment exists. If the formula is satisfiable, the solver returns a single model.
 
-However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments. This task, known as model enumeration (or AllSAT), generalizes the classical SAT problem from computing a single satisfying assignment to computing the whole set \(\{\alpha : V \to {0,1} \mid \alpha \models F\}\). While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible.
+However, many applications require more than just one solution. In areas such as configuration, diagnosis, quantitative reasoning, explanation generation, and formal verification, it is often necessary to enumerate all satisfying assignments (Cite?). This task, known as model enumeration (or AllSAT), generalizes the classical SAT problem from computing a single satisfying assignment to computing the whole set \(\{\alpha : V \to {0,1} \mid \alpha \models F\}\). While conceptually straightforward, model enumeration introduces significant algorithmic challenges. The number of satisfying assignments may be exponential in the number of variables, and naive approaches can quickly become infeasible \cite{Spallitta_Sebastiani_Biere_2024}.
 
 A common technique for model enumeration is the iterative use of SAT solvers combined with blocking clauses. After each model is found, a clause composed of the negation of every literal in that model is added to the CNF formula, ensuring that the solver does not rediscover the same assignment.
 
-With the introduction of standardized interfaces such as IPASIR, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCaL itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
+With the introduction of standardized interfaces such as IPASIR \cite{BALYO201645}, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP \cite{fazekas_et_al:LIPIcs.SAT.2023.8} was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCaL itself remains unchanged. Although effective, this approach has several drawbacks. The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
 
 In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A Sat solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current AllSAT state-of-the-art literature": Conflict Driven Clause Learning short CDCL, Chronological backtracking to avoid blocking clauses and Implicant Shrinking to minimize models. 
 
