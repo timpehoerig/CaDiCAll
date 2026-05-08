@@ -4,45 +4,46 @@ The top-level auxiliary file: thesis.aux
 The style file: plainnat.bst
 Database file #1: literature.bib
 Warning--I didn't find a database entry for "SATLIB"
-You've used 8 entries,
+Warning--empty booktitle in inproceedings
+You've used 15 entries,
             2773 wiz_defined-function locations,
-            676 strings with 7330 characters,
-and the built_in function-call counts, 4981 in all, are:
-= -- 457
-> -- 311
-< -- 9
-+ -- 104
-- -- 95
-* -- 438
-:= -- 763
-add.period$ -- 37
-call.type$ -- 8
-change.case$ -- 53
-chr.to.int$ -- 7
-cite$ -- 16
-duplicate$ -- 208
-empty$ -- 363
-format.name$ -- 105
-if$ -- 1062
+            729 strings with 8879 characters,
+and the built_in function-call counts, 8756 in all, are:
+= -- 806
+> -- 521
+< -- 17
++ -- 173
+- -- 157
+* -- 750
+:= -- 1322
+add.period$ -- 69
+call.type$ -- 15
+change.case$ -- 94
+chr.to.int$ -- 14
+cite$ -- 31
+duplicate$ -- 383
+empty$ -- 666
+format.name$ -- 180
+if$ -- 1887
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 8
-newline$ -- 58
-num.names$ -- 38
-pop$ -- 94
+missing$ -- 14
+newline$ -- 103
+num.names$ -- 69
+pop$ -- 174
 preamble$ -- 1
-purify$ -- 45
+purify$ -- 79
 quote$ -- 0
-skip$ -- 166
+skip$ -- 308
 stack$ -- 0
-substring$ -- 209
-swap$ -- 48
-text.length$ -- 6
+substring$ -- 336
+swap$ -- 87
+text.length$ -- 11
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 88
-warning$ -- 0
-while$ -- 43
+type$ -- 160
+warning$ -- 1
+while$ -- 73
 width$ -- 0
-write$ -- 138
-(There was 1 warning)
+write$ -- 252
+(There were 2 warnings)

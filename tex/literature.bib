@@ -137,3 +137,99 @@
   keywords = {SAT, Competition, SAT-Race},
   abstract = {Boolean satisfiability (SAT) solving is one of the most competitive research areas of theoretical computer science. The performance of state-of-the-art SAT solvers has been continuously improving in the last decades and has reached a level where SAT solvers can be employed to solve real world problems in fields such as hardware and software verification, automated planning and many others. One of the important driving forces of this progress are the yearly organized (since 2002) SAT competitions. In this paper we describe the 2015 SAT Race that featured the traditional sequential and parallel tracks (with 64 core computers) and introduced the Incremental Library Track, which is particularly interesting for developers of SAT based applications. We describe the 2015 SAT Race and provide a detailed analysis of its results.}
 }
+
+// book of satisfiability
+@book{biere2021satisfiability,
+  editor    = {Armin Biere and Marijn Heule and Hans van Maaren and Toby Walsh},
+  title     = {Handbook of Satisfiability},
+  edition   = {2},
+  series    = {Frontiers in Artificial Intelligence and Applications},
+  volume    = {336},
+  year      = {2021},
+  publisher = {IOS Press},
+  address   = {Amsterdam}
+}
+
+// sat comp
+@misc{satcompetition2025,
+  author       = {Cayden Codel, Katalin Fazekas, Marijn Heule and Ashlin Iser},
+  title        = {SAT Competition 2025},
+  year         = {2025},
+  howpublished = {\url{https://satcompetition.github.io/2025/index.html}},
+  note         = {Accessed: 2026-05-08}
+}
+
+// Application in model checking
+@ARTICLE{7225110,
+  author={Vizel, Yakir and Weissenbacher, Georg and Malik, Sharad},
+  journal={Proceedings of the IEEE}, 
+  title={Boolean Satisfiability Solvers and Their Applications in Model Checking}, 
+  year={2015},
+  volume={103},
+  number={11},
+  pages={2021-2035},
+  keywords={Model checking;Boolean functions;Data structures;Context modeling;Algorithm design and analysis;Automatic test pattern generation;Computer science;IC3;interpolation;model checking;proofs;satisfiability solving;IC3;interpolation;model checking;proofs;satisfiability solving},
+  doi={10.1109/JPROC.2015.2455034}}
+
+// Application in cryptanalysis
+@article{10.1007/s42979-020-00181-4,
+  author = {Sahu, Harish Kumar and Pillai, N. Rajesh and Gupta, Indivar and Sharma, R. K.},
+  title = {SMT Solver-Based Cryptanalysis of Block Ciphers},
+  year = {2020},
+  issue_date = {May 2020},
+  publisher = {Springer-Verlag},
+  address = {Berlin, Heidelberg},
+  volume = {1},
+  number = {3},
+  url = {https://doi.org/10.1007/s42979-020-00181-4},
+  doi = {10.1007/s42979-020-00181-4},
+  abstract = {Satisfiability modulo theories (SMT) is a powerful framework for solving constraint satisfaction problem expressed in first-order logic and mainly used for software and hardware verification. In this article, we demonstrate the power of SMT solvers in cryptanalysis. We propose an algorithm for cryptanalysis of block ciphers using SMT solvers. In the cryptanalytic attack, we represent a block cipher in terms of Boolean equations and convert them into a suitable format (i.e. SMT-LIB). Finally, we use SMT solvers to find the key. An important feature of our attack is that it requires a few plaintext-ciphertext pairs to recover the secret key. We use the propose algorithm to demonstrate the cryptanalysis of International Data Encryption Algorithm (IDEA). We use various serial and parallel SMT solvers to apply known plaintext attack on IDEA and compare their performances. SMT solver can recover full key for three round of IDEA and 32 unknown key bits for full IDEA cipher, assuming 96 key bits are known. Furthermore, we compare our results with existing attacks on IDEA.},
+  journal = {SN Comput. Sci.},
+  month = may,
+  numpages = {12},
+  keywords = {IDEA, Block cipher, Cryptanalysis, Satisfiability, SMT solver, Z3, Boolector, 11T71}
+}
+
+// formal hardware verification
+@inproceedings{inproceedings,
+author = {Biere, Armin and Kunz, W.},
+year = {2002},
+month = {12},
+pages = {782- 785},
+title = {SAT and ATPG: Boolean engines for formal hardware verification},
+isbn = {0-7803-7607-2},
+journal = {IEEE/ACM International Conference on Computer-Aided Design, Digest of Technical Papers},
+doi = {10.1109/ICCAD.2002.1167620}
+}
+
+// Application of all-sat
+@INPROCEEDINGS{7113113,
+  author={Akama, Kiyoshi and Nantajeewarawat, Ekawit},
+  booktitle={2013 Third World Congress on Information and Communication Technologies (WICT 2013)}, 
+  title={Solving query-answering problems using all-solution satisfiability solvers: Algorithm and correctness}, 
+  year={2013},
+  volume={},
+  number={},
+  pages={79-84},
+  keywords={Semantics;Query-answering problems;all-solution satisfiability solvers;equivalent transformation;set-bounded variables},
+  doi={10.1109/WICT.2013.7113113}}
+
+// Application of all-sat
+@InProceedings{fried_et_al:LIPIcs.SAT.2023.9,
+  author =	{Fried, Dror and Nadel, Alexander and Shalmon, Yogev},
+  title =	{{AllSAT for Combinational Circuits}},
+  booktitle =	{26th International Conference on Theory and Applications of Satisfiability Testing (SAT 2023)},
+  pages =	{9:1--9:18},
+  series =	{Leibniz International Proceedings in Informatics (LIPIcs)},
+  ISBN =	{978-3-95977-286-0},
+  ISSN =	{1868-8969},
+  year =	{2023},
+  volume =	{271},
+  editor =	{Mahajan, Meena and Slivovsky, Friedrich},
+  publisher =	{Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik},
+  address =	{Dagstuhl, Germany},
+  URL =		{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.SAT.2023.9},
+  URN =		{urn:nbn:de:0030-drops-184717},
+  doi =		{10.4230/LIPIcs.SAT.2023.9},
+  annote =	{Keywords: AllSAT, SAT, Circuits}
+}

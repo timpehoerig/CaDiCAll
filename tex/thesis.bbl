@@ -1,9 +1,17 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{15}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Akama and Nantajeewarawat(2013)]{7113113}
+Kiyoshi Akama and Ekawit Nantajeewarawat.
+\newblock Solving query-answering problems using all-solution satisfiability
+  solvers: Algorithm and correctness.
+\newblock In \emph{2013 Third World Congress on Information and Communication
+  Technologies (WICT 2013)}, pages 79--84, 2013.
+\newblock \doi{10.1109/WICT.2013.7113113}.
 
 \bibitem[Audemard and Simon(2018)]{audemard:hal-03299473}
 Gilles Audemard and Laurent Simon.
@@ -20,6 +28,20 @@ Tomáš Balyo, Armin Biere, Ashlin Iser, and Carsten Sinz.
 \newblock \doi{https://doi.org/10.1016/j.artint.2016.08.007}.
 \newblock URL
   \url{https://www.sciencedirect.com/science/article/pii/S0004370216300984}.
+
+\bibitem[Biere and Kunz(2002)]{inproceedings}
+Armin Biere and W.~Kunz.
+\newblock Sat and atpg: Boolean engines for formal hardware verification.
+\newblock pages 782-- 785, 12 2002.
+\newblock ISBN 0-7803-7607-2.
+\newblock \doi{10.1109/ICCAD.2002.1167620}.
+
+\bibitem[Biere et~al.(2021)Biere, Heule, van Maaren, and
+  Walsh]{biere2021satisfiability}
+Armin Biere, Marijn Heule, Hans van Maaren, and Toby Walsh, editors.
+\newblock \emph{Handbook of Satisfiability}, volume 336 of \emph{Frontiers in
+  Artificial Intelligence and Applications}.
+\newblock IOS Press, Amsterdam, 2 edition, 2021.
 
 \bibitem[Biere et~al.(2024{\natexlab{a}})Biere, Faller, Fazekas, Fleury,
   Froleyks, and Pollitt]{10.1007/978-3-031-65627-9_7}
@@ -44,6 +66,12 @@ Armin Biere, Tobias Faller, Katalin Fazekas, Mathias Fleury, Nils Froleyks, and
   Science Report Series B}, pages 8--10. University of Helsinki,
   2024{\natexlab{b}}.
 
+\bibitem[Cayden~Codel and Iser(2025)]{satcompetition2025}
+Marijn~Heule Cayden~Codel, Katalin~Fazekas and Ashlin Iser.
+\newblock Sat competition 2025.
+\newblock \url{https://satcompetition.github.io/2025/index.html}, 2025.
+\newblock Accessed: 2026-05-08.
+
 \bibitem[Cook(1971)]{Cook1971}
 Stephen~A. Cook.
 \newblock The complexity of theorem-proving procedures.
@@ -65,11 +93,33 @@ Katalin Fazekas, Aina Niemetz, Mathias Preiner, Markus Kirchweger, Stefan
 \newblock URL
   \url{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.SAT.2023.8}.
 
+\bibitem[Fried et~al.(2023)Fried, Nadel, and
+  Shalmon]{fried_et_al:LIPIcs.SAT.2023.9}
+Dror Fried, Alexander Nadel, and Yogev Shalmon.
+\newblock {AllSAT for Combinational Circuits}.
+\newblock In Meena Mahajan and Friedrich Slivovsky, editors, \emph{26th
+  International Conference on Theory and Applications of Satisfiability Testing
+  (SAT 2023)}, volume 271 of \emph{Leibniz International Proceedings in
+  Informatics (LIPIcs)}, pages 9:1--9:18, Dagstuhl, Germany, 2023. Schloss
+  Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik.
+\newblock ISBN 978-3-95977-286-0.
+\newblock \doi{10.4230/LIPIcs.SAT.2023.9}.
+\newblock URL
+  \url{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.SAT.2023.9}.
+
 \bibitem[Levin(1973)]{Levin1973}
 Leonid~A. Levin.
 \newblock Universal search problems.
 \newblock \emph{Problems of Information Transmission}, 9\penalty0 (3):\penalty0
   265--266, 1973.
+
+\bibitem[Sahu et~al.(2020)Sahu, Pillai, Gupta, and
+  Sharma]{10.1007/s42979-020-00181-4}
+Harish~Kumar Sahu, N.~Rajesh Pillai, Indivar Gupta, and R.~K. Sharma.
+\newblock Smt solver-based cryptanalysis of block ciphers.
+\newblock \emph{SN Comput. Sci.}, 1\penalty0 (3), May 2020.
+\newblock \doi{10.1007/s42979-020-00181-4}.
+\newblock URL \url{https://doi.org/10.1007/s42979-020-00181-4}.
 
 \bibitem[Spallitta et~al.(2024)Spallitta, Sebastiani, and
   Biere]{Spallitta_Sebastiani_Biere_2024}
@@ -79,5 +129,13 @@ Giuseppe Spallitta, Roberto Sebastiani, and Armin Biere.
   38\penalty0 (8):\penalty0 8126--8135, Mar. 2024.
 \newblock \doi{10.1609/aaai.v38i8.28652}.
 \newblock URL \url{https://ojs.aaai.org/index.php/AAAI/article/view/28652}.
+
+\bibitem[Vizel et~al.(2015)Vizel, Weissenbacher, and Malik]{7225110}
+Yakir Vizel, Georg Weissenbacher, and Sharad Malik.
+\newblock Boolean satisfiability solvers and their applications in model
+  checking.
+\newblock \emph{Proceedings of the IEEE}, 103\penalty0 (11):\penalty0
+  2021--2035, 2015.
+\newblock \doi{10.1109/JPROC.2015.2455034}.
 
 \end{thebibliography}
