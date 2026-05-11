@@ -11,8 +11,8 @@
 \contentsline {subsection}{\numberline {4.4}Deciding}{14}{subsection.4.4}%
 \contentsline {subsection}{\numberline {4.5}Options}{15}{subsection.4.5}%
 \contentsline {section}{\numberline {5}Extending IPASIR-UP}{17}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Setting the ground conditions}{17}{subsection.5.1}%
-\contentsline {subsubsection}{\numberline {5.1.1}Backtracking After A Model Was Found}{17}{subsubsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1}Enabling Model Enumeration}{17}{subsection.5.1}%
+\contentsline {subsubsection}{\numberline {5.1.1}Backtracking After A Model Is Found}{17}{subsubsection.5.1.1}%
 \contentsline {subsubsection}{\numberline {5.1.2}Maintaining Chronlogical Backtracking}{18}{subsubsection.5.1.2}%
 \contentsline {subsubsection}{\numberline {5.1.3}Out Of Order Propagations}{19}{subsubsection.5.1.3}%
 \contentsline {subsection}{\numberline {5.2}Implicant Shrinking}{19}{subsection.5.2}%
@@ -26,10 +26,10 @@
 \contentsline {subsection}{\numberline {6.3}Benchmark Sets}{23}{subsection.6.3}%
 \contentsline {subsection}{\numberline {6.4}Evaluation Metrics}{24}{subsection.6.4}%
 \contentsline {subsection}{\numberline {6.5}Results}{24}{subsection.6.5}%
-\contentsline {subsubsection}{\numberline {6.5.1}Benchmark Set from TabularAllSat}{28}{subsubsection.6.5.1}%
-\contentsline {subsubsection}{\numberline {6.5.2}Benchmark Set from SATLIB}{32}{subsubsection.6.5.2}%
-\contentsline {subsubsection}{\numberline {6.5.3}Benchmark Set from the Model Counting Competition 2025}{33}{subsubsection.6.5.3}%
-\contentsline {subsection}{\numberline {6.6}Mismatching Results}{35}{subsection.6.6}%
-\contentsline {subsection}{\numberline {6.7}Benchmark Results Overview}{36}{subsection.6.7}%
-\contentsline {section}{\numberline {7}Furture Work}{37}{section.7}%
-\contentsline {section}{\numberline {8}Conclusion}{38}{section.8}%
+\contentsline {subsubsection}{\numberline {6.5.1}Benchmark Set from TabularAllSat}{27}{subsubsection.6.5.1}%
+\contentsline {subsubsection}{\numberline {6.5.2}Benchmark Set from SATLIB}{31}{subsubsection.6.5.2}%
+\contentsline {subsubsection}{\numberline {6.5.3}Benchmark Set from the Model Counting Competition 2025}{32}{subsubsection.6.5.3}%
+\contentsline {subsection}{\numberline {6.6}Mismatching Results}{34}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}Benchmark Results Overview}{35}{subsection.6.7}%
+\contentsline {section}{\numberline {7}Furture Work}{36}{section.7}%
+\contentsline {section}{\numberline {8}Conclusion}{37}{section.8}%
