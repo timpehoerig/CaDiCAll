@@ -153,7 +153,7 @@ However, many applications require more than just one solution. In areas such as
 
 A common technique for model enumeration is the iterative use of SAT solvers combined with blocking clauses. After each model is found, a clause composed of the negation of every literal in that model is added to the CNF formula, ensuring that the solver does not rediscover the same assignment.
 
-With the introduction of standardized interfaces such as IPASIR \cite{BALYO201645}, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP \cite{fazekas_et_al:LIPIcs.SAT.2023.8} was introduced, expanding IPASIR with User Propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCaL itself remains unchanged. Although effective, this approach has several drawbacks: The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
+With the introduction of standardized interfaces such as IPASIR \cite{BALYO201645}, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP \cite{fazekas_et_al:LIPIcs.SAT.2023.8} was introduced, expanding IPASIR with user propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCaL itself remains unchanged. Although effective, this approach has several drawbacks: The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
 
 In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A SAT solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current AllSAT state-of-the-art literature": Conflict-Driven Clause Learning short CDCL, chronological backtracking to avoid blocking clauses and implicant shrinking to minimize models. 
 
@@ -224,7 +224,7 @@ void add_observed_var (int var);
 void remove_observed_var (int var);
 \end{minted}
 
-Then the \verb|User Propagator| can simply be connected and disconnected to the solver by calling \verb|connect_external_propagator| and \verb|disconnect_external_propagator|. The notification callback functions are only called for variables that are marked as \verb|observed|. The user can mark and unmark variables through the functions \verb|add_observed_var| and \verb|remove_observed_var|.
+Then the \verb|user propagator| can simply be connected and disconnected to the solver by calling \verb|connect_external_propagator| and \verb|disconnect_external_propagator|. The notification callback functions are only called for variables that are marked as \verb|observed|. The user can mark and unmark variables through the functions \verb|add_observed_var| and \verb|remove_observed_var|.
 
 \newpage
 
