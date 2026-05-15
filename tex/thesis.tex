@@ -155,7 +155,7 @@ A common technique for model enumeration is the iterative use of SAT solvers com
 
 With the introduction of standardized interfaces such as IPASIR \cite{BALYO201645}, SAT solvers can be seamlessly integrated into larger systems without the need to maintain the solver itself. More recently, IPASIR-UP \cite{fazekas_et_al:LIPIcs.SAT.2023.8} was introduced, expanding IPASIR with user propagators. This allows adding clauses without restarting the search. Using IPASIR-UP with Blocking Clauses yields a very clean model enumerator that benefits from the underlying solver CaDiCaL while CaDiCaL itself remains unchanged. Although effective, this approach has several drawbacks: The repeated addition of blocking clauses increases the size of the formula, thereby degrading solver performance by affecting propagation efficiency and memory consumption. As the number of models grows, these effects scale up, eventually making blocking clauses infeasible.
 
-In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A SAT solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current AllSAT state-of-the-art literature": Conflict-Driven Clause Learning short CDCL, chronological backtracking to avoid blocking clauses and implicant shrinking to minimize models. 
+In 2024 Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} presented TabularAllSat: A SAT solver that is especially designed for disjoint projected enumeration for SAT and SMT without blocking clauses. The claim that TabularAllSat outperforms all other state-of-the-art AllSAT solvers. This was achieved by "combining the best of current AllSAT state-of-the-art literature": Conflict-Driven Clause Learning short CDCL, chronological backtracking to avoid blocking clauses and implicant shrinking to minimize models. 
 
 Besides adding clauses iteratively, IPASIR-UP also allows interfering with decision-making, backtracking and found models. This raises the question whether it is possible to create a model enumerator through IPASIR-UP without blocking clauses by using all state-of-the-art techniques from TabularAllSat.
 
@@ -235,7 +235,7 @@ In order to discover all models for one CNF, a model enumerator must continue ex
 
 However, this approach introduces several challenges: First, modern SAT solvers are generally not designed to explore the search space in a strictly systematic manner, as they rely on heuristic-driven decision strategies and other features such as restarts or back-jumping. Second, a systematic exploration of the search space may become computationally infeasible, since the search space can grow exponentially with the number of variables.
 
-We introduce CaDiCAll, a fully functional model enumerator using CaDiCaL almost exclusively through the IPASIR-UP interface. It overcomes these challenges by implementing all three state-of-the-art mechanisms defined by Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} for AllSAT solvers: Conflict-Driven Clause Learning (Section \ref{sec:cdcl}), chronological backtracking (Section \ref{sec:chronological_backtracking}) and implicant shrinking (Section \ref{sec:implicant_shrinking}).
+Our model enumerator CaDiCAll which uses CaDiCaL almost exclusively through the IPASIR-UP interface overcomes these challenges by implementing all three state-of-the-art mechanisms defined by Spallitta et al. \citep{Spallitta_Sebastiani_Biere_2024} for AllSAT solvers: Conflict-Driven Clause Learning (Section \ref{sec:cdcl}), chronological backtracking (Section \ref{sec:chronological_backtracking}) and implicant shrinking (Section \ref{sec:implicant_shrinking}).
 
 \subsection{Conflict-Driven Clause Learning}
 \label{sec:cdcl}
@@ -246,20 +246,36 @@ The analysis starts with the conflicting clause (the clause that is falsified by
 
 By learning new clauses and pruning conflicting regions of the search space, CDCL significantly improves the efficiency of SAT solving. For this reason, it forms the basis of most modern SAT solvers.
 
-As CaDiCaL is a CDCL-based solver, CDCL is implicitly used by CaDiCAll as it uses CaDiCaL through the IPASIR-UP interface.
+This advantage is inherited by CaDiCAll, as it uses the CDCL-based SAT solver CaDiCaL through the IPASIR-UP interface.
 
 \subsection{Chronological Backtracking}
 \label{sec:chronological_backtracking}
 
 Model enumeration ensures that each model is counted exactly once by excluding paths that have already led to a model from further exploration. In common model enumerators this is done by blocking clauses, which permit the solver to run into the same model again. Without blocking clauses we must ensure manually that every path is explored exactly once.
 
-Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtrack across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can introduce redundant work. In standard SAT solving, this is usually not an issue, since the solver stops after finding a single model, encountering the same model again cannot happen. However, when enumerating all models, the solver does not terminate after finding the first model. Instead, it must check the remaining search space for others. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model, implying blocking clauses.
+Modern SAT solvers based on Conflict-Driven Clause Learning (CDCL) employ non-chronological backtracking (NCB). During conflict analysis, the solver may determine that some earlier decisions did not contribute to the conflict and can therefore backtrack across multiple decision levels at once. By skipping parts of the search tree that cannot lead to a solution, this approach significantly improves efficiency, but it also changes the order in which decisions are revisited and effectively reshapes the search tree during the search. NCB can introduce redundant work. In standard SAT solving, this is usually not an issue, since the solver stops after finding a single model, encountering the same model again is impossible. However, when enumerating all models, the solver does not terminate after finding the first model. Instead, it must check the remaining search space for others. As NCB can alter the search space and does not uncover the search space systematically, the only possibility to prevent the solver from rediscovering the same model again is to exclude the exact combination of literals in this model, implying blocking clauses.
 
 Exploring the search space systematically makes blocking clauses redundant. The idea is simple: When backtracking, always only backtrack to the last decision and flip it. If there is no more decision to flip, we can terminate as the whole search space is uncovered. This is known as chronological backtracking (CB). With CB all currently made decisions split the search space into two parts: The part that already has been uncovered and the part that is left to explore. With this approach it suffices to keep track of the current decisions instead of all models that have already been explored.
 
-Transferring this idea to CaDiCAll imposes different challenges: First, backtracking after a model is found was not supported by the IPASIR-UP interface. Second, even though chronological backtracking can be set as an option in CaDiCaL. CaDiCaL does not guarantee to assign the negation of the old decision. Thus, to keep track of the current decisions we store them. As discussed in Section \ref{sec:deciding} the decision order as well as the phase of decisions can be chosen freely and is left for CaDiCaL to decide. Therefore, in order to keep track of the current decisions, for each decision level we store a counter (decision counter) and the decided variable. The decision counter indicates how often a variable was assigned. A count of one stands for a new decision while a count of two indicates that this decision was already flipped. The decision level CaDiCAll backtracks to is then simply the highest decision level with a decision count of one.
+Transferring this idea to CaDiCAll imposes different challenges: First, backtracking after a model is found was not supported by the IPASIR-UP interface. Second, even though chronological backtracking can be set as an option in CaDiCaL, it does not guarantee to assign the negation of the old decision. To solve the latter, we could store the decisions. However, as discussed in Section \ref{sec:deciding}, the decision order as well as the phase of decisions can be chosen freely and is left for CaDiCaL to decide. Therefore, we do not store the decision itself but for each decision level we store a counter (decision counter) and the decided variable. The decision counter indicates how often a variable was assigned. A count of one stands for a new decision while a count of two indicates that this decision was already flipped. The decision level CaDiCAll backtracks to is then simply the highest decision level with a decision count of one.
 
-\subsubsection{Backtracking After A Model Is Found}
+After a backtracking occurred CaDiCaL may retain certain literals from higher decision levels and propagate before CaDiCAll can continue its search. However, this may lead to different solver states. Let the previously made decision be denoted by \verb|d|. In this context, four cases can be distinguished:
+
+\begin{itemize}
+
+\item \textbf{The solver propagates the previous decision \texttt{d}.} In this case, the solver effectively re-enters the same search space. This is directly detected in \verb|notify_assignment| as CaDiCAll notices that the previous decision has been assigned again. However, the earliest point at which this situation can be handled is either \verb|cb_decide| or \verb|cb_check_found_model|, since these are the only callback functions capable of enforcing backtracking. The function \verb|notify_assignment| marks the current search path as a duplicate, and as soon as either \verb|cb_decide| or \verb|cb_check_found_model| is invoked, the solver is forced to backtrack further. This behavior is sound because all assignments leading to the propagation of \verb|d| are themselves consequences of earlier decisions. Hence, the propagation of \verb|d| is a direct implication of the current decision level.
+
+\item \textbf{The solver encounters a conflict during propagation.} In this case, conflict-induced backtracking is triggered. This mechanism is described in Section~\ref{sec:conflict_induced_backtracking}.
+
+\item \textbf{The solver propagates only literals different from \texttt{d}, or performs no propagation at all.}
+
+\item \textbf{The solver propagates \texttt{$\lnot$d}.}
+
+\end{itemize}
+
+The first two cases are always the same while the handling of the latter two depends on the context in which a backtracking occurs and must be considered in the following sections.
+
+\subsubsection{Backtracking After a Model Is Found}
 
 Backtracking after a model is found was not supported by the IPASIR-UP interface. However, as discussed in Section \ref{sec:extending_ipasir_up} it is fairly easy to add and does not introduce any bad behavior. Thus, allowing to force CaDiCaL to backtrack when a model is found was added to the newest version of CaDiCaL's IPASIR-UP interface by Katalin Fazekas.
 
@@ -268,44 +284,36 @@ When a model is found, CaDiCAll determines the highest decision level \verb|dl| 
 There are two different options to continue the search from here: Either propagate the negation of the decision at level \verb|dl - 1| via \verb|cb_propagate| or decide the negation of the decision at level \verb|dl| via \verb|cb_decide|. Both versions are implemented in CaDiCAll. \\
 
 \noindent
-\textbf{Continuing the search by propagating} the negation of decision literals via  the callback function \verb|cb_propagate| appears to be a natural and elegant approach. When the solver propagates the negation of previously made decisions and subsequently backtracks, these literals no longer appear as decision literals and therefore do not need to be considered but simply can be backtracked over.
+\textbf{Continuing the search by propagating} the negation of decision literals via the callback function \verb|cb_propagate| appears to be a natural and elegant approach. When the solver propagates the negation of previously made decisions and subsequently backtracks, these literals no longer appear as decision literals and therefore do not need to be considered but simply can be backtracked over.
 
 However, if a propagated literal participates in a conflict and is examined during conflict analysis, the solver requests a reason clause via \verb|cb_add_reason_clause_lit|. The corresponding reason clause for such a literal consists of the negation of all decisions made at lower decision levels. Consequently, reason clauses do not need to be stored explicitly but can instead be generated on demand when required.
 
 This approach has two main advantages compared to blocking clauses: First, reason clauses are typically smaller, as they only include decisions from lower levels of the search tree. Second, they are only constructed when needed, avoiding unnecessary extensions of the CNF.
 
-Nevertheless, when the user propagator forces CaDiCaL to backtrack after a model has been found, the solver may retain certain literals from higher decision levels. As a consequence, CaDiCaL may propagate before continuing the search which can lead to different solver states. Let the previously made decision be denoted by \verb|d|. In this context, four cases can be distinguished:
+When the search is continued by propagating the negation of the last decision, the last two of the four cases described above are handled as follows: Let \verb|d| denote the previous decision.
 
-\begin{enumerate}
+\begin{itemize}
 
-\item The solver propagates the previous decision \verb|d| again. In this case, the solver effectively enters the same search path, which is directly detected in \verb|notify_assignment| as CaDiCAll notices that the previous decision has been assigned again. However, the earliest point at which this situation can be handled is either \verb|cb_decide| or \verb|cb_check_found_model|, since these are the only callback functions capable of enforcing backtracking. The function \verb|notify_assignment| marks the current search path as a duplicate, and as soon as either \verb|cb_decide| or \verb|cb_check_found_model| is invoked, the solver is forced to backtrack further. This behavior is sound because all assignments leading to the propagation of \verb|d| are themselves consequences of earlier decisions. Hence, the propagation of \verb|d| is a direct implication of the current decision level.
+\item \textbf{The solver propagates only literals different from \texttt{d}, or performs no propagation at all.} In this situation, when \verb|cb_propagate| is called, the literal $\lnot$\verb|d| is propagated.
 
-\item The solver encounters a conflict during propagation. In this case, conflict-induced backtracking is triggered. This mechanism is described in Section~\ref{sec:conflict_induced_backtracking}.
+\item \textbf{The solver propagates \texttt{$\lnot$d}.} In this case, CaDiCAll still attempts to enforce $\lnot$\verb|d| via \verb|cb_propagate|. However, CaDiCaL ignores this request, as the literal is already assigned, and continues the search process.
 
-\item The solver propagates only literals different from \verb|d|, or performs no propagation at all. In this situation, when \verb|cb_propagate| is called, the literal $\lnot$\verb|d| is propagated.
-
-\item The solver propagates $\lnot$\verb|d|. In this case, CaDiCAll still attempts to enforce $\lnot$\verb|d| via \verb|cb_propagate|. However, CaDiCaL ignores this request, as the literal is already assigned, and continues the search process.
-
-\end{enumerate}
+\end{itemize}
 
 While this approach optimizies blocking clauses, it still uses them. Consequently, CaDiCAll focuses on the second approach, which does not require adding any clauses at all. Nevertheless, the first approach remains available in CaDiCAll by running it via the \verb|--reason| (\verb|-r|) option and is also included in the benchmark evaluation presented in Section~\ref{sec:experiments}. \\
 
 \noindent
 \textbf{Continuing the search by deciding} the negation of the previous decision via \verb|cb_decide| does not require the addition of any clauses. After identifying the highest decision level \verb|dl| with a decision count of one, CaDiCAll backtracks to decision level \verb|dl - 1|. It then enforces the negation of the previous decision by returning it in \verb|cb_decide| and continues the search from there.
 
-However, before \verb|cb_decide| is invoked and the negation can be enforced, CaDiCaL propagates, which may again influence the solver state. Let \verb|d| denote the previous decision. In this context, four cases must be distinguished:
+Recall that before \verb|cb_decide| is invoked and the negation can be enforced, CaDiCaL propagates, which may influence the solver state. Let \verb|d| denote the previous decision. In this context, the two last cases look like the following:
 
-\begin{enumerate}
+\begin{itemize}
 
-\item The solver propagates the previous decision \verb|d|. Again, in this case, the solver re-enters the previously explored search path. This situation is directly detected in \verb|notify_assignment|, but again can only be addressed once either \verb|cb_decide| or \verb|cb_check_found_model| is invoked, as these are the only callback functions that can enforce backtracking. There, CaDiCAll forces the solver to backtrack further.
+\item \textbf{The solver propagates only literals different from \texttt{d}, or performs no propagation at all.} In this case, when \verb|cb_decide| is invoked, CaDiCAll detects that a decision has already been made at the current decision level as its decision count is already one. Therefore, it enforces its negation by returning it.
 
-\item The solver encounters a conflict during propagation. In this case, conflict-induced backtracking is triggered. This mechanism is described in Section~\ref{sec:conflict_induced_backtracking}.
+\item \textbf{The solver propagates \texttt{$\lnot$d} directly.} In this situation, the user propagator does not need to explicitly enforce this decision. Instead, it can allow the solver to select the next decision freely by returning zero in \verb|cb_decide|.
 
-\item The solver propagates only literals different from \verb|d|, or performs no propagation at all. In this case, when \verb|cb_decide| is invoked, CaDiCAll detects that a decision has already been made at the current decision level as its decision count is already one. Therefore, it enforces its negation by returning it.
-
-\item The solver propagates $\lnot$\verb|d| directly. In this situation, the user propagator does not need to explicitly enforce this decision. Instead, it can allow the solver to select the next decision freely by returning zero in \verb|cb_decide|.
-
-\end{enumerate}
+\end{itemize}
 
 Here it is essential to note that now decision can have a decision counter of two. This is not a problem when a model is found and the user propagator forces the solver to backtrack, since the decision level to backtrack to is explicitly determined by the user propagator.
 
@@ -318,21 +326,21 @@ When CaDiCAll encounters a conflict and performs backtracking, it is handled com
 
 With chronological backtracking activated, it is guaranteed that CaDiCaL backtracks exactly one decision level after a conflict occured, as it always backtracks to the most recent decision. However, when the search has been continued by deciding the negation of the last decision and not through propagating it. The last decision has a decision count of two. Thus, we do not want to backtrack to this decision but instead backtrack to the most recent decision with a decision count of one. However, backtracking after a conflict is handled internally by CaDiCaL which does not know about the user propagator's decision counts. Therefore, CaDiCaL always backtracks to the most recent decision and continues the search from there, no matter the decision count.
 
-If CaDiCaL backtracks to a decision with a count of two, it rediscovers a previously explored portion of the search space. Consequently, any progress made from that point onward must eventually be undone again. CaDiCAll detects this situation by observing that the decision count at the current exceeds two, and therefore enforces an additional backtracking. However, this mechanism may introduce computational overhead, as the solver can spend time performing propagations before the user propagator is able to intervene. In the worst case, the solver may propagate a long sequence of literals or even rediscover a total model before the user propagator can intervene by forcing the solver to backtrack further. 
+If CaDiCaL backtracks to a decision with a count of two, it rediscovers a previously explored portion of the search space. Consequently, any progress made from that point onward must eventually be undone again. CaDiCAll detects this situation by observing that the decision count at the current decision level exceeds two, and therefore enforces an additional backtracking. However, this mechanism may introduce computational overhead, as the solver can spend time performing propagations before the user propagator is able to intervene. In the worst case, the solver may propagate a long sequence of literals or even rediscover a total model before the user propagator can intervene by forcing the solver to backtrack further.
 
-It remains to handle the case where CaDiCaL backtracks to a decision with a count of one. Although CaDiCaL derives a learned clause from the encountered conflict, it does not necessarily learn the negation of the old decisions. As a result, the same four cases that arise after backtracking when a model is found may occur:
+It remains to handle the case where CaDiCaL backtracks to a decision with a count of one. Although CaDiCaL derives a learned clause from the encountered conflict, it does not necessarily learn the negation of the old decisions. As a result, the same four cases may occur. While the first two remain unchanged, the latter two need to adapt:
 
-\begin{enumerate}
+\begin{itemize}
   
-\item The solver propagates the old decision \verb|d|. Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further.
+\item \textbf{The solver propagates the old decision \texttt{d}.} Thus, the solver starts to rediscover the old path. This is again detected directly in \verb|notify_assignment| but can be handled the earliest when either \verb|cb_decide| or \verb|cb_check_found_model| is called. There, the solver is forced to backtrack further.
 
-\item The solver encounters a conflict during propagating. In this case a conflict-induced backtracking occurs again.
+\item \textbf{The solver encounters a conflict during propagating.} In this case a conflict-induced backtracking occurs again.
 
-\item The solver only propagates variables that are different to decision \verb|d| or none at all. In that case the user propagator can continue normally and return the flipped decision in \verb|cd_decide| or propagate the flipped decision with \verb|cb_propagate|.
+\item \textbf{The solver only propagates variables that are different to decision \texttt{d} or none at all.} In that case the user propagator can continue normally and return the flipped decision in \verb|cd_decide| or propagate the flipped decision with \verb|cb_propagate|.
 
-\item The solver propagates $\lnot$\verb|d| itself. Then the user propagator does not need to decide or propagate it manually and can let the next decision be chosen by the solver itself by returning zero in the next call to \verb|cb_decide|.
+\item \textbf{The solver propagates \texttt{$\lnot$d} itself.} Then the user propagator does not need to decide or propagate it manually and can let the next decision be chosen by the solver itself by returning zero in the next call to \verb|cb_decide|.
 
-\end{enumerate}
+\end{itemize}
 
 \subsection{Implicant Shrinking}
 \label{sec:implicant_shrinking}
@@ -483,7 +491,7 @@ We propose three categories of extensions to IPASIR-UP. First, we introduce the 
 
 Most changes only affect the user propagator and not the solver directly. However, there are some features of CaDiCaL that break the chronological order of the search space and must be taken into account.
 
-\subsubsection{Backtracking After A Model Is Found}
+\subsubsection{Backtracking After a Model Is Found}
 
 In conventional SAT solving, backtracking only occurs when the solver encounters a conflict. To continue the search, the solver must undo at least one previous decision and explore a different branch of the search space.
 
@@ -569,7 +577,7 @@ Currently, CaDiCAll implements this functionality by using this backdoor directl
 
 The primary goal of this thesis was to investigate whether and how a model enumerator can be implemented using IPASIR-UP. Optimizing CaDiCAll and the IPASIR-UP interface to minimize runtime was not the main focus of this work. Nevertheless, while implementing CaDiCAll, we identified some bottlenecks that could be optimized by adapting the IPASIR-UP interface.
 
-\subsubsection{Interacting With The Solver}
+\subsubsection{Interacting With the Solver}
 
 When the solver calls the functions \verb|notify_assignments| and \verb|cb_check_found_models| it creates a vector containing assigned literals. When we timed CaDiCAll, in CNFs with many models, CaDiCAll spend around 40 \% of its total time with vector operations. We found that when the solver is passing these vectors to the user propagator, the solver allocates new memory for each vector and frees it afterwords again. By making these vectors persistent, the total running time of CaDiCAll on CNFs with many models was cut in half. This optimization is implemented in CaDiCAll's version of the IPASIR-UP interface but is not yet part of the official IPASIR-UP interface.
 
