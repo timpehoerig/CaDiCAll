@@ -348,8 +348,6 @@ Models (also called implicants) found by the solver are total. Models are total 
 
 Finding out which literals can be dropped is non-trivial. As described by Spallitta et al. \cite{Spallitta_Sebastiani_Biere_2024}, implicant shrinking algorithms from non-chronological backtracking based model enumerators do not guarantee mutual exclusiveness between different assignments. Thus, they introduce their own shrinking algorithm that is both: Compatible with chronological backtracking and that tries to cut the highest amount of literals while still ensuring mutual exclusivity. This algorithm starts with the last literal on the trail and tries to drop as many literals as possible. A literal \(\ell\) can be dropped if \(\ell\) is a decision and all clauses in which \(\ell\) occurs contain another literal \(\ell'\) that satisfies the clause.
 
-\newpage
-
 \begin{minted}[escapeinside=§§]{cpp}
 int implicant_shrinking(vector<int> stack) {
     int b = 0;
@@ -421,7 +419,7 @@ int implicant_shrinking(vector<int> stack) {
 }
 \end{minted}
 
-Flipping decisions by propagation their negations (Section \ref{sec:cadicall}) is not affected by this fix, as the highest decision count is always one.
+Flipping decisions by propagating their negations (Section \ref{sec:cadicall}) is not affected by this fix, as there the highest decision count is always one.
 
 \subsection{Deciding}
 \label{sec:deciding}
@@ -538,7 +536,7 @@ bool Internal::propagate_out_of_order_units () {
 };
 \end{minted}
 
-However, when CaDiCaL now tries to remove falsified literals it must not remove the literals which are out-of-order and are not fully propagated at root level. Therefore, we filter for these literals in the garbage collection and propagation.
+However, when CaDiCaL now tries to remove falsified literals it must not remove the literals which are out-of-order and are not fully propagated at the root level. Therefore, we filter for these literals in the garbage collection and propagation.
 
 \subsection{Implicant Shrinking}
 The implicant shrinking algorithm described in section \ref{sec:implicant_shrinking} needs access to the watch-lists of a given literal in order to determine whether the other watched literal of a clause satisfies it or not. However, this is not supported via the IPASIR-UP interface. The implicant shrinking algorithm uses them read-only. Exposing a read-only reference to watch-lists is unproblematic and could be integrated into IPASIR-UP without any changes to CaDiCaL itself. Here it is important to note that literals can be named differently externally and internally. However, functions that translate from internal to external and vice versa already exist and thus, the internal representation easily could be completely hidden through the IPASIR-UP interface.
@@ -628,7 +626,7 @@ All combinations of these options are evaluated, resulting in a total of eight c
 
 \subsection{Baseline}
 
-In order to properly assess CaDiCAlls performance, we compare it to \textbf{TabularAllSat} and \textbf{Dualiza}.
+In order to properly assess CaDiCAll's performance, we compare it to \textbf{TabularAllSat} and \textbf{Dualiza}.
 
 \begin{itemize}
 
@@ -746,7 +744,7 @@ This hypothesis is further supported by comparing the performance of CaDiCAll wi
     \label{fig:custom_no_d_closeup}
 \end{figure}
 
-Figure~\ref{fig:custom_no_d_closeup} illustrated a closer look at the performance on the custom benchmark set from SATLIB that was shown in Figure~\ref{fig:custom_all} (Dualiza is excluded from this plot). CaDiCAll without a fixed variable order exhibits performance comparable to TabularAllSat on the custom benchmark set. Both approaches successfully solve 32 out of 36 instances within nearly identical runtimes (Figure~\ref{fig:custom_t_vs_r}). When enabling a fixed variable order, CaDiCAll solves 31 instances, one fewer than in the default configuration. However, for the instances that are solved, the runtime remains largely unchanged and is still comparable to both TabularAllSat and CaDiCAll without a fixed variable order. Furthermore, the results indicate that enabling or disabling implicant shrinking and reason-based propagation has no measurable impact on performance for this benchmark set. Specifically, configurations using shrinking (-s) and reason-based propagation (-r) perform identically to those that do not. This behavior is expected, as the custom benchmarks are not designed to benefit from shrinking, and therefore do not allow these techniques to effectively reduce the search space.
+Figure~\ref{fig:custom_no_d_closeup} illustrated a closer look at the performance on the custom benchmark set from SATLIB that was shown in Figure~\ref{fig:custom_all} (Dualiza is excluded from this plot). CaDiCAll without a fixed variable order exhibits performance comparable to TabularAllSat on the custom benchmark set. Both approaches successfully solve 32 out of 36 instances within nearly identical runtimes (Figure~\ref{fig:custom_t_vs_r}). When enabling a fixed variable order, CaDiCAll solves 31 instances, one fewer than in the default configuration. However, for the instances that are solved, the runtime remains largely unchanged and is still comparable to both TabularAllSat and CaDiCAll without a fixed variable order. Furthermore, the results indicate that enabling or disabling implicant shrinking and reason-based propagation has no measurable impact on performance for this benchmark set. Specifically, configurations using shrinking (\verb|-s|) and reason-based propagation (\verb|-r|) perform identically to those that do not. This behavior is expected, as the custom benchmarks are not designed to benefit from shrinking, and therefore do not allow these techniques to effectively reduce the search space.
 
 \begin{figure}[H]
     \centering
