@@ -31,5 +31,5 @@
 \contentsline {subsubsection}{\numberline {6.5.3}Benchmark Set from the Model Counting Competition 2025}{32}{subsubsection.6.5.3}%
 \contentsline {subsection}{\numberline {6.6}Mismatching Results}{34}{subsection.6.6}%
 \contentsline {subsection}{\numberline {6.7}Benchmark Results Overview}{35}{subsection.6.7}%
-\contentsline {section}{\numberline {7}Furture Work}{36}{section.7}%
+\contentsline {section}{\numberline {7}Future Work}{36}{section.7}%
 \contentsline {section}{\numberline {8}Conclusion}{37}{section.8}%
