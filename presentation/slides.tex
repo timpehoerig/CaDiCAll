@@ -1,0 +1,301 @@
+\documentclass{beamer}
+\usepackage{amsmath,amssymb}
+\usepackage{mathtools}
+\usepackage{stmaryrd}
+\usepackage{mathpartir}
+\usepackage[most]{tcolorbox}
+\usepackage{xcolor}
+\usepackage{forest}
+
+
+\newtcolorbox{beamerbox}[1][]{
+  enhanced,
+  colback=blue!5!white,
+  fonttitle=\bfseries,
+  boxrule=0pt,
+  arc=4pt,
+  left=6pt,
+  right=6pt,
+  top=6pt,
+  bottom=6pt,
+}
+
+% Theme with minimal styling
+\usetheme{default}
+
+% Set black background and white text
+\usecolortheme{default}
+\definecolor{mybg}{RGB}{0,0,0}
+\definecolor{myfg}{RGB}{255,255,255}
+\setbeamercolor{background canvas}{bg=mybg}
+\setbeamercolor{normal text}{fg=myfg}
+\setbeamercolor{frametitle}{fg=myfg, bg=black}
+\setbeamercolor{title}{fg=myfg, bg=black}
+\setbeamercolor{footline}{bg=black, fg=myfg}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Custom footer
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,center]{footline}%
+    \insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.34\paperwidth,ht=2.5ex,dp=1ex,center]{footline}%
+    \insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,right]{footline}%
+    \insertframenumber{} / \inserttotalframenumber
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+% Metadata
+\title[CaDiCAll]{\textbf{Model Enumeration using IPASIR-UP without Blocking Clauses}}
+\author{Timpe Hörig}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{}
+    \center{\textcolor{green}{\textbf{Model Enumeration}} \textbf{using} \textcolor{red}{\textbf{IPASIR-UP}} \\ \textbf{without} \textcolor{orange}{\textbf{Blocking Clauses}}}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}}}
+  \center{cnf: $(X \lor Y) \land (\bar{Y} \lor Z)$}
+  \begin{align*}
+    solution \ 1: \ &X \land Y \land Z \\
+    solution \ 2: \ &\bar{X} \land Y \land Z \\
+    solution \ 3: \ &X \land \bar{Y} \land Z \\
+    solution \ 4: \ &X \land \bar{Y} \land \bar{Z} \\
+  \end{align*}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} using \textcolor{orange}{\textbf{Blocking Clauses}}}
+  \textbf{Pseudo Code}
+  \begin{beamerbox}[Beispielbox]
+    \begin{tabular}{l}
+    \texttt{\textcolor{cyan}{list}[\textcolor{cyan}{model}] ms} \\
+    \texttt{\textcolor{magenta}{while} solver.\textcolor{orange}{solve}(cnf) == SAT:}\\
+    \texttt{\quad \textcolor{cyan}{model} m = solver.\textcolor{orange}{solution}()}\\
+    \texttt{\quad ms += [m]}\\
+    \texttt{\quad cnf += \textcolor{orange}{not}(m)}
+    \end{tabular}
+  \end{beamerbox}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} using \textcolor{orange}{\textbf{Blocking Clauses}}}
+  \textbf{Blocking Clause}
+  \begin{align*}
+  cnf&: (X \lor Y) \land (\bar{Y} \lor Z)\\
+  model&: X \land Y \land Z\\
+  \textcolor{red}{not}(model)&: \neg (X \land Y \land Z) \iff \bar{X} \lor \bar{Y} \lor \bar{Z}\\
+  new \ cnf&: (X \lor Y) \land (\bar{Y} \lor Z) \land \textcolor{orange}{(\bar{X} \lor \bar{Y} \lor \bar{Z})}
+  \end{align*}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} using \textcolor{red}{\textbf{IPASIR-UP}}}
+  \textbf{IPASIR-UP} extends IPASIR by an User Propagator
+  \begin{itemize}
+  \item cb\_check\_found\_model
+  \item cb\_has\_external\_clause
+  \item cb\_add\_external\_clause\_lit
+  \item notify\_assignment
+  \item notify\_new\_decision\_level
+  \item notify\_backtrack
+  \item cb\_decide
+  \item cb\_propagate
+  \item vb\_add\_reason\_clause\_lit
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} without \textcolor{orange}{\textbf{Blocking Clauses}}}
+  cnf: $(X \lor Y) \land (\bar{Y} \lor Z)$ \\
+  \begin{align*}
+  \begin{forest}
+    [
+      [\textcolor{green}{X}
+        [\textcolor{green}{Y}
+          [\textcolor{orange}{Z}]
+          [\textcolor{red}{$\lnot$Z}]
+        ]
+        [\textcolor{green}{$\lnot$Y}
+          [\textcolor{green}{Z}]
+          [\textcolor{green}{$\lnot$Z}]
+        ]
+      ]
+      [\textcolor{green}{$\lnot$X}
+        [\textcolor{orange}{Y}
+          [\textcolor{orange}{Z}]
+          [\textcolor{red}{$\lnot$Z}]
+        ]
+        [\textcolor{red}{$\lnot$Y}
+          [\textcolor{red}{Z}]
+          [\textcolor{red}{$\lnot$Z}]
+        ]
+      ]
+    ]
+  \end{forest}
+\end{align*}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} without \textcolor{orange}{\textbf{Blocking Clauses}}}
+  \textbf{Continue the search after finding a model}
+  \begin{beamerbox}[Beispielbox]
+    \begin{tabular}{l}
+    \texttt{\textcolor{cyan}{bool} \textcolor{orange}{cb\_check\_found\_model}(\textcolor{cyan}{model \&}m): } \\
+    \texttt{\quad ...} \\
+    \texttt{\quad new\_dl = \textcolor{orange}{highest\_dl\_with\_positive\_decision}()} \\
+    \texttt{\quad \textcolor{magenta}{if} (new\_dl <= 0) \textcolor{magenta}{return} \textcolor{cyan}{true}} \\
+    \texttt{\quad solver->\textcolor{orange}{force\_backtrack}(new\_dl - 1)} \\
+    \texttt{\quad ...} \\
+    \texttt{\quad \textcolor{magenta}{return} \textcolor{cyan}{false}}
+    \end{tabular}
+  \end{beamerbox}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} \textbf{without} \textcolor{orange}{\textbf{Blocking Clauses}}}
+  \textbf{Continue the search after backtracking}
+  \begin{enumerate}
+    \item Propagate the negation of the old decision
+    \item Decide the negation of the old decision
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} \textbf{without} \textcolor{orange}{\textbf{Blocking Clauses}}}
+  \textbf{Propagate the negation of the old decision}
+  \begin{beamerbox}[Beispielbox]
+    \begin{tabular}{l}
+    \texttt{\textcolor{cyan}{bool} \textcolor{orange}{cb\_propagate}(): } \\
+    \texttt{\quad ...} \\
+    \texttt{\quad \textcolor{magenta}{return} -decisions.\textcolor{orange}{back}()} \\
+    \\
+    \texttt{\textcolor{cyan}{bool} \textcolor{orange}{cb\_add\_reason\_clause\_lit}(\textcolor{cyan}{propagated\_lit}): } \\
+    \texttt{\quad \textcolor{magenta}{return} propagated\_lit} \\
+    \texttt{\quad \textcolor{magenta}{return} -decisions[dl]} \\
+    \texttt{\quad ...}\\
+    \texttt{\quad \textcolor{magenta}{return} -decisions[1]} \\
+    \texttt{\quad \textcolor{magenta}{return} 0}
+    \end{tabular}
+  \end{beamerbox}
+\end{frame}
+
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} \textbf{without} \textcolor{orange}{\textbf{Blocking Clauses}}}
+  \textbf{Decide the negation of the old decision}
+  \begin{beamerbox}[Beispielbox]
+    \begin{tabular}{l}
+    \texttt{\textcolor{cyan}{bool} \textcolor{orange}{cb\_decide}(): } \\
+    \texttt{\quad ...} \\
+    \texttt{\quad \textcolor{magenta}{if} decision\_count\_per\_level[dl + 1] == 1:} \\
+    \texttt{\quad \quad \textcolor{magenta}{return} -decisions[dl + 1]} \\
+    \texttt{\quad \textcolor{magenta}{if} decision\_count\_per\_level[dl + 1] == 1:} \\
+    \texttt{\quad ...}
+    \end{tabular}
+  \end{beamerbox}
+  In \textcolor{orange}{cb\_checl\_found\_model}:
+  \begin{beamerbox}[Beispielbox]
+    \begin{tabular}{l}
+    \texttt{\textcolor{olive}{\# new\_dl = highest\_dl\_with\_positive\_decision()}} \\
+    \texttt{new\_dl = \textcolor{orange}{highest\_dl\_with\_decision\_count\_one()}}
+    \end{tabular}
+  \end{beamerbox}
+\end{frame}
+
+
+
+\begin{frame}{\textbf{\textcolor{teal}{Projected} \textcolor{green}{Model Enumeration}}}
+  \textcolor{teal}{Projected} cnf file for $(X \lor Y) \land (\bar{Y} \lor Z)$
+  \begin{beamerbox}[Beispielbox]
+      \textcolor{teal}{c 1,2} \\
+      p cnf 3 2 \\
+      1 2 0 \\
+      -2 3 0
+  \end{beamerbox}
+    \ \\
+    \textcolor{magenta}{for} (\textcolor{cyan}{int} var : \textcolor{yellow}{get\_projected\_vars}(cnf\_file)) \{ \\
+      \quad solver.\textcolor{yellow}{add\_observed\_var}(var); \\
+    \}
+\end{frame}
+
+\definecolor{darkgreen}{RGB}{0, 100, 0}
+
+\begin{frame}{\textbf{Minimizing Models}}
+  \textcolor{cyan}{bool} \textcolor{yellow}{cb\_check\_found\_model}(\textcolor{cyan}{model \&}m) \{\\
+  \quad \textcolor{darkgreen}{// new\_model = m;} \\
+  \quad \textcolor{magenta}{for} (\textcolor{cyan}{int} lit : m) \{ \\
+  \quad \quad new\_model.\textcolor{yellow}{push\_back}(lit); \\
+  \quad \quad \textcolor{magenta}{if} (\textcolor{yellow}{sat}(cnf, new\_model)) \textcolor{magenta}{break};\\
+  \quad \} \\
+  \ \\
+  \quad all\_models.\textcolor{yellow}{push\_back}(new\_model); \\
+  \quad \textcolor{magenta}{return} \textcolor{cyan}{false}; \\
+  \};
+\end{frame}
+
+\begin{frame}{\textbf{\textcolor{pink}{Proof}}}
+  solver.\textcolor{yellow}{trace\_proof}(\textcolor{pink}{proof\_file}); \\
+  \ \\
+  \textcolor{pink}{Proof} file for $(X \lor Y) \land (\bar{Y} \lor Z)$
+  \begin{beamerbox}[Beispielbox]
+    i 1 1 2 0 \\
+    i 2 -2 3 0 \\
+    q 0 \\
+    i 3 -3 -2 -1 0 \\
+    i 4 -3 -2 1 0 \\
+    ... \\
+    i 6 -3 2 -1 0 \\
+    ... \\
+    i 10 3 2 -1 0 \\
+    ... \\
+    s UNSATISFIABLE \\
+    ...
+  \end{beamerbox}
+\end{frame}
+
+\begin{frame}{\textbf{\textcolor{pink}{Proof} about my program}}
+  \begin{itemize}
+    \item no identical models
+    \item if minimized: models differ
+    \item if not minimized: models are total
+    \item if projected: cnf with model assumption is SAT
+    \item if not projected: models satisfy cnf
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{\textbf{\textcolor{pink}{Proof} no identical models}}
+  Loop over all models. \\
+  Add every model to a set, if it is not already in there. \\
+  Also check that no literal occurs twice.
+\end{frame}
+
+\begin{frame}{\textbf{\textcolor{pink}{Proof} if minimized: models differ}}
+  Check that all models pairwise contain at least one literal that occurs negative in the other.
+\end{frame}
+
+\begin{frame}{\textbf{\textcolor{pink}{Proof} if not minimized: models are total}}
+  Check that all models contain all (projected) literals.
+\end{frame}
+
+\begin{frame}{\textbf{\textcolor{pink}{Proof} if projected: cnf with model assumption is SAT}}
+  For each model:\\
+  \quad Create a new solver instance. \\
+  \quad Assume all literals from one model. \\
+  \quad Check that it is still SAT.
+\end{frame}
+
+\begin{frame}{\textbf{\textcolor{pink}{Proof} if not projected: models satisfy cnf}}
+  For each model:\\
+  \quad Check that it satisfies the cnf.
+\end{frame}
+
+\begin{frame}{\textbf{Thats about it}}
+  \center{Showcase?}
+\end{frame}
+
+\end{document}
