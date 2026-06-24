@@ -111,7 +111,7 @@
   \item notify\_backtrack
   \item cb\_decide
   \item cb\_propagate
-  \item vb\_add\_reason\_clause\_lit
+  \item cb\_add\_reason\_clause\_lit
   \end{itemize}
 \end{frame}
 
@@ -194,7 +194,6 @@
     \texttt{\quad ...} \\
     \texttt{\quad \textcolor{magenta}{if} decision\_count\_per\_level[dl + 1] == 1:} \\
     \texttt{\quad \quad \textcolor{magenta}{return} -decisions[dl + 1]} \\
-    \texttt{\quad \textcolor{magenta}{if} decision\_count\_per\_level[dl + 1] == 1:} \\
     \texttt{\quad ...}
     \end{tabular}
   \end{beamerbox}
@@ -207,91 +206,143 @@
   \end{beamerbox}
 \end{frame}
 
+\begin{frame}{\textcolor{green}{\textbf{Model Enumeration}} \textbf{without} \textcolor{orange}{\textbf{Blocking Clauses}}}
+  \textbf{CaDiCaL may:}
+  \begin{enumerate}
+    \item propagate the previous decision
+    \item encounter a conflict during propagation
+    \item propagate only literals different from the previous decision
+    \item propagate the negation of the previous decision
+  \end{enumerate}
+\end{frame}
 
+\begin{frame}{\textcolor{pink}{\textbf{Implicant Shrinking}}}
+  cnf: $(X \lor Y) \land (\bar{Y} \lor Z)$ \\
+  \begin{align*}
+  \begin{forest}
+    [
+      [\textcolor{green}{X}
+        [\textcolor{green}{Y}
+          [\textcolor{orange}{Z}]
+          [\textcolor{red}{$\lnot$Z}]
+        ]
+        [\textcolor{green}{$\lnot$Y}
+          [\textcolor{pink}{Z}]
+          [\textcolor{pink}{$\lnot$Z}]
+        ]
+      ]
+      [\textcolor{green}{$\lnot$X}
+        [\textcolor{orange}{Y}
+          [\textcolor{orange}{Z}]
+          [\textcolor{red}{$\lnot$Z}]
+        ]
+        [\textcolor{red}{$\lnot$Y}
+          [\textcolor{red}{Z}]
+          [\textcolor{red}{$\lnot$Z}]
+        ]
+      ]
+    ]
+  \end{forest}
+\end{align*}
+\end{frame}
 
-\begin{frame}{\textbf{\textcolor{teal}{Projected} \textcolor{green}{Model Enumeration}}}
-  \textcolor{teal}{Projected} cnf file for $(X \lor Y) \land (\bar{Y} \lor Z)$
+\begin{frame}{\textcolor{pink}{\textbf{Implicant shrinking}}}
+  \textbf{2-watching literal scheme}
+
+  \[
+  \begin{aligned}
+    \\
+    \texttt{cnf: }&(\underset{\uparrow}{X} \lor \underset{\uparrow}{Y}) \land (\underset{\uparrow}{\bar{Y}} \lor \underset{\uparrow}{Z})\\
+    \\
+    \texttt{cnf': }&(\underset{\uparrow}{X} \lor \underset{\uparrow}{Y}) \land (\underset{\uparrow}{\bar{Y}} \lor \underset{\uparrow}{Z} \lor X)
+  \end{aligned}
+  \]
+\end{frame}
+
+\begin{frame}{\textcolor{pink}{\textbf{Implicant shrinking}}}
+  \textbf{Access to watches}
   \begin{beamerbox}[Beispielbox]
-      \textcolor{teal}{c 1,2} \\
-      p cnf 3 2 \\
-      1 2 0 \\
-      -2 3 0
-  \end{beamerbox}
-    \ \\
-    \textcolor{magenta}{for} (\textcolor{cyan}{int} var : \textcolor{yellow}{get\_projected\_vars}(cnf\_file)) \{ \\
-      \quad solver.\textcolor{yellow}{add\_observed\_var}(var); \\
-    \}
-\end{frame}
-
-\definecolor{darkgreen}{RGB}{0, 100, 0}
-
-\begin{frame}{\textbf{Minimizing Models}}
-  \textcolor{cyan}{bool} \textcolor{yellow}{cb\_check\_found\_model}(\textcolor{cyan}{model \&}m) \{\\
-  \quad \textcolor{darkgreen}{// new\_model = m;} \\
-  \quad \textcolor{magenta}{for} (\textcolor{cyan}{int} lit : m) \{ \\
-  \quad \quad new\_model.\textcolor{yellow}{push\_back}(lit); \\
-  \quad \quad \textcolor{magenta}{if} (\textcolor{yellow}{sat}(cnf, new\_model)) \textcolor{magenta}{break};\\
-  \quad \} \\
-  \ \\
-  \quad all\_models.\textcolor{yellow}{push\_back}(new\_model); \\
-  \quad \textcolor{magenta}{return} \textcolor{cyan}{false}; \\
-  \};
-\end{frame}
-
-\begin{frame}{\textbf{\textcolor{pink}{Proof}}}
-  solver.\textcolor{yellow}{trace\_proof}(\textcolor{pink}{proof\_file}); \\
-  \ \\
-  \textcolor{pink}{Proof} file for $(X \lor Y) \land (\bar{Y} \lor Z)$
-  \begin{beamerbox}[Beispielbox]
-    i 1 1 2 0 \\
-    i 2 -2 3 0 \\
-    q 0 \\
-    i 3 -3 -2 -1 0 \\
-    i 4 -3 -2 1 0 \\
-    ... \\
-    i 6 -3 2 -1 0 \\
-    ... \\
-    i 10 3 2 -1 0 \\
-    ... \\
-    s UNSATISFIABLE \\
-    ...
+    \begin{tabular}{l}
+    \texttt{\textcolor{cyan}{int} \textcolor{orange}{check\_literal}(\textcolor{cyan}{int} v, \textcolor{cyan}{int} b, ...): } \\
+    \texttt{\quad \textcolor{magenta}{for} lit \textcolor{magenta}{in} \textcolor{pink}{other\_watching\_literal(v)}:} \\
+    \texttt{\quad \quad \textcolor{magenta}{if} !sat(lit, \textcolor{orange}{get\_n}(stack, index)):} \\
+    \texttt{\quad \quad \quad b = max(b, decision\_level(l))} \\
+    \texttt{\quad \textcolor{magenta}{return} b}
+    \end{tabular}
   \end{beamerbox}
 \end{frame}
 
-\begin{frame}{\textbf{\textcolor{pink}{Proof} about my program}}
+\begin{frame}{Drawbacks}
   \begin{itemize}
-    \item no identical models
-    \item if minimized: models differ
-    \item if not minimized: models are total
-    \item if projected: cnf with model assumption is SAT
-    \item if not projected: models satisfy cnf
+    \item Maintaining chronological order (ask\_decision)
+    \item Out of order propagations
+    \item No access to watches
+    \item Optimizations: Interacting with the solver
+    \item Optimizations: Duplication of data
   \end{itemize}
 \end{frame}
 
-\begin{frame}{\textbf{\textcolor{pink}{Proof} no identical models}}
-  Loop over all models. \\
-  Add every model to a set, if it is not already in there. \\
-  Also check that no literal occurs twice.
+\begin{frame}{Benchmarks}
+  \textbf{Benchmark Sets}
+  \begin{itemize}
+    \item TabularAllSat
+    \item SATLIB
+    \item Model Counting Competition 2025
+  \end{itemize}
+  \textbf{Solvers}
+  \begin{itemize}
+    \item CaDiCAll
+    \item TabularAllSat
+    \item Dualiza
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{\textbf{\textcolor{pink}{Proof} if minimized: models differ}}
-  Check that all models pairwise contain at least one literal that occurs negative in the other.
+\begin{frame}{TabularAllSat Benchmarks}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\textwidth]{../tex/figures/bms_all.png}
+    \end{figure}
 \end{frame}
 
-\begin{frame}{\textbf{\textcolor{pink}{Proof} if not minimized: models are total}}
-  Check that all models contain all (projected) literals.
+\begin{frame}{SATLIB Benchmarks}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\textwidth]{../tex/figures/custom_all.png}
+    \end{figure}
 \end{frame}
 
-\begin{frame}{\textbf{\textcolor{pink}{Proof} if projected: cnf with model assumption is SAT}}
-  For each model:\\
-  \quad Create a new solver instance. \\
-  \quad Assume all literals from one model. \\
-  \quad Check that it is still SAT.
+\begin{frame}{Model Counting Competition 2025 Benchmarks}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\textwidth]{../tex/figures/mc_all.png}
+    \end{figure}
 \end{frame}
 
-\begin{frame}{\textbf{\textcolor{pink}{Proof} if not projected: models satisfy cnf}}
-  For each model:\\
-  \quad Check that it satisfies the cnf.
+\begin{frame}{Four Figures - BMS, Custom, MC}
+\centering
+\begin{tabular}{cc}
+    \includegraphics[width=0.4\textwidth]{../tex/figures/bms_t_vs_sr.png} &
+    \includegraphics[width=0.4\textwidth]{../tex/figures/custom_t_vs_r.png} \\[0.5em]
+    \includegraphics[width=0.4\textwidth]{../tex/figures/mc_t_vs_r.png} &
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Mismatching Results}
+  \textbf{TabularAllSat Benchmarks (T C vs D)}
+  \begin{itemize}
+    \item BMS\_k3\_n100\_m429\_454
+  \end{itemize}
+  \textbf{SATLIB Benchmarks (T vs C D)}
+  \begin{itemize}
+    \item qg4-09
+  \end{itemize}
+  \textbf{Model Counting Competition 2025 Benchmarks (T vs C D)}
+  \begin{itemize}
+    \item mc2025\_track1\_79
+    \item mc2025\_track1\_93
+    \item mc2025\_track1\_95
+    \item mc2025\_track1\_101
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{\textbf{Thats about it}}
