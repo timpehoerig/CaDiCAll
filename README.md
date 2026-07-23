@@ -1,6 +1,6 @@
 #CaDiCAll
 
-[Thesis](/tex/thesis.pdf) | [CaDiCAll](/CaDiCAll/)
+[Thesis](/tex/thesis.pdf) | [CaDiCAll](/CaDiCAll/) | [Slides](/presentation/slides.pdf)
 
 The Boolean satisfiability problem (SAT) is a fundamental NP-complete problem with nu-
 merous applications in verification and reasoning. While modern Conflict-Driven Clause
