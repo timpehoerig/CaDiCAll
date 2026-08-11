@@ -2,17 +2,15 @@
 
 ## IMPORTANT
 
-This is not a finished Version.
-
-To make this work following changes must be done in cadical:
-
-In cadical/src/external_propagate.cpp:
-
-1. In 'ask_decision' add at the end of the first if an 'else return ask_decision()'
-
-2. In 'external_check_solution' add 'forced_backt_allowed = true' before 'int elit = external->propagator->cb_decide ();' and 'forced_backt_allowed = false' after.
+This uses CaDiCaL as an underlying solver. However, there must be made certain changes to CaDiCaL itself to work. Thus, this repo includes a version of CaDiCaL that contains all those changes. If you want to use a different version, you must add the changes yourself. All changes and their reasons are described in the thesis.
 
 ## USAGE:
+
+1. Compile CaDiCaL:
+
+Move to 'cadical' and run `./configure $$ make`
+
+2. Compile CaDiCAll:
 
 Run `make` on this level to compile all (CaDiCAll and checker), run `make clean` to clean up all files produced by `make` and the execution of either.
 

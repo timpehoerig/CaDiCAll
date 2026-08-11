@@ -62,10 +62,6 @@ int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, iv
         int e_other_var = std::abs(e_other_lit);
 
         if (VERBOSE) std::cout << "also by: " << std::to_string(e_other_lit) << " internal: " << std::to_string(i_other_lit) << std::endl;
-        // if (!(std::count(Trail.begin(), Trail.end(), e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
-        // change search for index comparison (own map lit -> index)
-        // assert(!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0) == !(poss_in_stack[e_other_var] < poss_in_stack[e_var] && values[e_other_var] * e_other_lit > 0));
-        //if (!(std::count(stack.begin(), stack.begin() + i, e_other_var) > 0 && values[e_other_var] * e_other_lit > 0)) {
         if ((poss_in_stack[e_other_var] >= poss_in_stack[e_var]) || (values[e_other_var] * e_other_lit <= 0)) { 
             if (VERBOSE) std::cout << "c b = max(" << std::to_string(b) << "," << std::to_string(dls[e_var]) << ")" << std::endl;
             b = std::max(b, dls[e_var]);
@@ -291,7 +287,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             return {val, level, is_decision};
         }
 
-        // if no start is given, starting with at dl
+        // if no start is given, starting with current dl
         int highest_dl_to_flip(int start = -1) {
             if (VERBOSE) std::cout << "c\nc highest_dl_to_flip:" << std::endl;
             START (cadicall_highest_dl_to_flip);
@@ -333,7 +329,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 if (SHRINK) b = implicant_shrinking(stack, is_ds, dls, values, decision_counts_per_level, poss_in_stack, internal);
                 if (COUNT) {
                     count += power(2, dl - b);
-                    // count++;
                 } else {
                     tmodel new_model;
                     new_model.reserve(model.size());
@@ -381,7 +376,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 START (cadicall_forced_backtrack_model_found);
                 solver->force_backtrack(highest_pos_dl - 1);
                 STOP (cadicall_forced_backtrack_model_found);
-                // propagate_lit = true;
             }
 
             propagate_lit = true;
@@ -530,8 +524,6 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
             START (cadicall_cb_decide);
 
-            // if backtracked decision is not forced negated, TODO: can this also happen when the decisions count was on one? is it then unnoticed?
-            // should not be a problem, if this would happen, the decision count was one, so the next decision is fixed.
             if (decision_counts_per_level.back() > 2) {
                 false_backtrack = true;
                 if (VERBOSE) std::cout << "c decision count exceeded 2, false_backtrack = true" << std::endl;
