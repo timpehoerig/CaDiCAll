@@ -1,4 +1,4 @@
-#CaDiCAll
+# CaDiCAll
 
 [Thesis](/tex/thesis.pdf) | [CaDiCAll](/CaDiCAll/) | [Slides](/presentation/slides.pdf)
 
