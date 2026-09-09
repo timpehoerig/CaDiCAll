@@ -11,5 +11,6 @@ checker:
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C checker clean
-	rm -f -r ./tests/tmp/
-	rm -f -r ./stats/tmp/
+	rm -f -r ./tests/tmp*
+	rm -f -r ./stats/tmp*
+	rm -f -r ./verify/tmp*

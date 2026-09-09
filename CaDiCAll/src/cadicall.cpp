@@ -713,7 +713,9 @@ int main(int argc, char* argv[]) {
 
     // setting options for chronological backtracking
     // how to disable preprocessing?
+    solver->set("chrono", true);
     solver->set("chronoalways", true);
+    solver->set("chronostrict", true);
     solver->set("restart", false);
     solver->set("inprocessing", false);
     solver->set("rephase", true);

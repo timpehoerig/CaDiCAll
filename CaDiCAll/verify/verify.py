@@ -2,6 +2,7 @@ import argparse
 import os
 from os import path
 import subprocess
+from enum import Enum
 
 from typing import Optional
 
@@ -85,31 +86,61 @@ def check_results(results: dict[str, int], stats: dict[str, int]) -> bool:
     return flag
 
 
+class Color(Enum):
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    RESET = "\033[0m"
+
+
+class BackgroundColor(Enum):
+    RED = "\033[41m"
+    GREEN = "\033[42m"
+    YELLOW = "\033[43m"
+    BLUE = "\033[44m"
+    MAGENTA = "\033[45m"
+    CYAN = "\033[46m"
+    WHITE = "\033[47m"
+    RESET = "\033[0m"
+
+
+def color(text: str, color: Color) -> str:
+    return f"{color.value}{text}{Color.RESET.value}"
+
+
+def background_color(text: str, color: BackgroundColor) -> str:
+    return f"\033[48;5;{color.value}m{text}{Color.RESET.value}"
+
+
 def pretty(file_name: str, results: dict[str, int], count: int, head: bool = True, counts: Optional[tuple[int, int]] = None) -> str:
     top: str = "count\t"
     bot: str = f"{count}\t"
 
     if counts is not None:
         top += "correct\tfalse\t"
-        bot += f"{counts[0]}\t{counts[1]}\t"
+        bot += f"{color(str(counts[0]), Color.GREEN)}\t{color(str(counts[1]), Color.RED)}\t"
 
     top += "dualiza\t"
     bot += f"{results['dualiza']}\t"
 
     top += "CaDiCAll:\t"
-    bot += f"{"verified" if check_results(results, {}) else "failed"}\t"
+    bot += f"{color('verified', Color.GREEN) if check_results(results, {}) else color('failed', Color.RED)}\t"
 
     for name, result in results.items():
         if name == "dualiza":
             continue
-        top += f"{name.replace("cadicall", "").replace("_", " -").strip()}\t"
+        top += f"{name.replace("cadicall", "").replace("_", "-").strip()}\t"
         bot += f"{result}\t"
 
     top += "CNF"
     bot += file_name
 
     if head:
-        return top + "\n" + bot
+        return "\033[2J\033[H\n\n" + color(top, Color.MAGENTA) + "\n" + bot
     return bot
 
 
@@ -160,7 +191,6 @@ if __name__ == "__main__":
         print(pretty(args.cnf, results, 1))
 
     elif args.directory != "":
-        head = True
         for filename in os.listdir(args.directory):
             if filename.endswith(".cnf"):
                 cnf_path = path.join(args.directory, filename)
@@ -170,11 +200,9 @@ if __name__ == "__main__":
                 else:
                     count_false += 1
                 count += 1
-                print(pretty(filename, results, count, head, (count_correct, count_false)))
-                head = False
+                print(pretty(filename, results, count, True, (count_correct, count_false)))
 
     else:
-        head = True
         while True:
             results = run_once(options)
             if not check_results(results, stats):
@@ -182,5 +210,4 @@ if __name__ == "__main__":
             else:
                 count_correct += 1
             count += 1
-            print(pretty("tmp_fuzzed.cnf", results, count, head, (count_correct, count_false)))
-            head = False
+            print(pretty("tmp_fuzzed.cnf", results, count, True, (count_correct, count_false)))

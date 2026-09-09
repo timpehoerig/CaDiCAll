@@ -13,23 +13,18 @@ int Internal::clause_contains_fixed_literal (Clause *c) {
   int satisfied = 0, falsified = 0;
   for (const auto &lit : *c) {
     const int tmp = fixed (lit);
-    const bool propagated = !level || var(lit).trail < control[0].trail;
     if (tmp > 0) {
       LOG (c, "root level satisfied literal %d in", lit);
       satisfied++;
     }
-    if (tmp < 0 && propagated) {
+    if (tmp < 0) {
       LOG (c, "root level falsified literal %d in", lit);
       falsified++;
-    }
-    if (tmp < 0 && !propagated) {
-      LOG (c, "not simplifying root level falsified but not propagated literal %d in", lit);
-      falsified = INT_MIN;
     }
   }
   if (satisfied)
     return 1;
-  else if (falsified > 0)
+  else if (falsified)
     return -1;
   else
     return 0;
@@ -51,8 +46,13 @@ void Internal::remove_falsified_literals (Clause *c) {
       num_non_false++;
   if (num_non_false < 2)
     return;
-  if (proof)
+  if (proof) {
+    // Flush changes the clause id, external forgettables need to be
+    // marked here (or the new id could be used instead of old one)
+    if (opts.check && is_external_forgettable (c->id))
+      mark_garbage_external_forgettable (c->id);
     proof->flush_clause (c);
+  }
   literal_iterator j = c->begin ();
   for (i = j; i != end; i++) {
     const int lit = *j++ = *i, tmp = fixed (lit);
@@ -181,7 +181,7 @@ size_t Internal::flush_occs (int lit) {
     if (c->collect ())
       continue;
     *j++ = c->moved ? c->copy : c;
-    assert (!c->redundant);
+    // assert (!c->redundant); // -> not true in sweeping
     res++;
   }
   os.resize (j - os.begin ());
