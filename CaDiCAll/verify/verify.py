@@ -3,7 +3,6 @@ import os
 from os import path
 import subprocess
 from enum import Enum
-import shutil
 
 from typing import Optional
 
@@ -129,7 +128,7 @@ def pretty(file_name: str, results: dict[str, int], count: int, head: bool = Tru
     bot += f"{results['dualiza']}\t"
 
     top += "CaDiCAll:\t"
-    bot += f"{color('verified', Color.GREEN) if check_results(results, {}) else color('failed  ', Color.RED)}\t"
+    bot += f"{color('verified', Color.GREEN) if check_results(results, {}) else color('failed', Color.RED)}\t"
 
     for name, result in results.items():
         if name == "dualiza":
@@ -181,9 +180,6 @@ if __name__ == "__main__":
         ["-f", "-s"],
         ["-f", "-s", "-r"],
     ]
-
-    options = [["-s"]]
-
     stats: dict[str, int] = dict()
     count_correct: int = 0
     count_false: int = 0
@@ -211,7 +207,6 @@ if __name__ == "__main__":
             results = run_once(options)
             if not check_results(results, stats):
                 count_false += 1
-                shutil.copy("./tmp/fuzzed.cnf", f"./failed/fuzzed_failed_{count}_{results['dualiza']}.cnf")
             else:
                 count_correct += 1
             count += 1

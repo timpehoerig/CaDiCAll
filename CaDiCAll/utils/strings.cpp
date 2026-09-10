@@ -30,27 +30,6 @@ std::string to_string(ivec model, bool neg) {
 }
 
 
-std::string to_string(std::vector<size_t> model) {
-    if (model.empty()) return "";
-
-    std::string str;
-    str.reserve(model.size() * 12);
-
-    char buffer[32];
-
-    size_t lit = model[0];
-    auto [ptr, ec] = std::to_chars(buffer, buffer + 32, lit);
-    str.append(buffer, ptr);
-
-    for (size_t i = 1; i < model.size(); i++) {
-        str.push_back(' ');
-        auto [ptr, ec] = std::to_chars(buffer, buffer + 32, model[i]);
-        str.append(buffer, ptr);
-    }
-
-    return str;
-}
-
 // to_string(models) == "model1 | model2"
 std::string to_string(ivvec models, bool neg) {
 
@@ -68,50 +47,54 @@ std::string to_string(ivvec models, bool neg) {
 }
 
 // to_string(values, dls, is_ds) == ..."
-std::string to_string(ivec decisions, ivec reason_to_dl, size_t dl) {
-    size_t l = 0;
-    std::string top = "c l | " + std::to_string(l);
-    std::string mid = "c d | ";
-    std::string bot = "c r | ";
-    for (size_t i = 0; i < reason_to_dl.size(); i++) {
-        if (reason_to_dl[i] != 0) continue;
-        bot += std::to_string(i) + " ";
-    }
+std::string to_string(const ivec &stack, const ivec &values, const ivec &dls, const bvec &is_ds) {
+    std::string top = "c lvl (" + std::to_string(dls[0]) + ")";
+    std::string mid = "c val ( " + std::to_string(values[0]) + ")";
+    std::string bot = "c why ( " + std::string(is_ds[0] ? "d" : "f") + ")";
 
-    size_t m = std::max(top.size(), std::max(mid.size(), bot.size()));
-    while (top.size() < m) top += " ";
-    while (mid.size() < m) mid += " ";
-    while (bot.size() < m) bot += " ";
+    int old_l = -1;
+    for (int var : stack) {
+        int v = values[var];
+        int l = dls[var];
+        bool d = is_ds[var];
 
-    for (int d : decisions) {
-        if (d == 0) continue;
-        l++;
-        top += " | " + std::to_string(l) + ((l == dl) ? "*" : " ");
-        mid += " | " + std::to_string(d) + " ";
-        bot += " | ";
-        for (size_t i = 0; i < reason_to_dl.size(); i++) {
-            if (reason_to_dl[i] == (int)l) {
-                bot += std::to_string(i) + " ";
-            }
+        if (l > old_l) {
+            top += " | " + std::to_string(l) + " ";
+            mid += " | " + std::to_string(v * var) + " ";
+            bot += " | " + std::string((d ? "d" : "f")) + " ";
+            old_l = l;
+        } else {
+            mid += std::to_string(v * var) + " ";
+            bot += std::string((d ? "d" : "f")) + " ";
         }
-
-        m = std::max(top.size(), std::max(mid.size(), bot.size()));
+        size_t m = std::max(top.size(), std::max(mid.size(), bot.size()));
         while (top.size() < m) top += " ";
         while (mid.size() < m) mid += " ";
         while (bot.size() < m) bot += " ";
     }
+    top += " |";
+    mid += " |";
+    bot += " |";
 
-    if (decisions.size() <= dl) {
-        top += " | " + std::to_string(dl) + "*";
-        mid += " | ";
-        bot += " | ";
+    return top + "\n" + mid + "\n" + bot + "\n";
+}
+
+std::string to_string(const ivec &decisions, const ivec &decisions_count, int dl) {
+    std::string top = "c dl (0)";
+    std::string mid = "c d  (" + std::to_string(decisions[0]) + ")";
+    std::string bot = "c dc (" + std::to_string(decisions_count[0]) + ")";
+
+    for (int i = 1; i < (int)decisions.size() || i < (int)decisions_count.size(); i++) {
+
+        top += " | " + std::to_string(i) + " ";
+        if (i < (int)decisions.size()) mid += " | " + std::to_string(decisions[i]) + " ";
+        if (i < (int)decisions_count.size()) bot += " | " + std::to_string(decisions_count[i]) + " ";
+
+        size_t m = std::max(top.size(), std::max(mid.size(), bot.size()));
+        while (top.size() < m) top += " ";
+        while (mid.size() < m) mid += " ";
+        while (bot.size() < m) bot += " ";
     }
-
-    m = std::max(top.size(), std::max(mid.size(), bot.size()));
-    while (top.size() < m) top += " ";
-    while (mid.size() < m) mid += " ";
-    while (bot.size() < m) bot += " ";
-
     top += " |";
     mid += " |";
     bot += " |";
