@@ -116,5 +116,5 @@ std::string to_string(ivec decisions, ivec reason_to_dl, size_t dl) {
     mid += " |";
     bot += " |";
 
-    return top + "\n" + mid + "\n" + bot + "\n";
+    return top + "\n" + mid + "\n" + bot;
 }

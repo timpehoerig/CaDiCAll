@@ -35,88 +35,68 @@ tcnf cnf;
 const char* NEGATED_MODELS = "tmp_cadicall_negated_models.txt";
 
 
-int check_literal(int e_var, int b, ivec stack, ivec dls, ivec values, int i, ivec poss_in_stack, CaDiCaL::Internal *internal) {
-    if (VERBOSE) std::cout << "c\nc check_literal:" << std::endl;
-    START (cadicall_check_literal);
+int check_literal(int b, int el, ivec decisions, int dl_e, CaDiCaL::Internal *internal) {
+    // el is a decision
+    if (VERBOSE) std::cout << "c checking: " << std::to_string(el) << std::endl;
+    std::cout << "HERE1" << std::endl;
+    std::cout << "e2i: " << internal->external << std::endl;
+    int iv = internal->external->e2i[std::abs(el)];
+    std::cout << "HERE2" << std::endl;
+    int il = internal->external->vals[iv] ? iv : -iv;
+    std::cout << "HERE3" << std::endl;
+    for (auto watch : internal->watches(il)) {
 
-    int e_lit = e_var * values[e_var];
-    int i_var = internal->external->e2i[e_var];
-    int i_lit = internal->external->vals[i_var] ? i_var : -i_var;
-    if (VERBOSE) std::cout << "c checking literal: " + std::to_string(e_lit) << " internal: " << std::to_string(i_lit) << std::endl;
-    if (VERBOSE) std::cout << "c watched clauses:" << std::endl;
-    for (auto watch : internal->watches(i_lit)) {
-        if (VERBOSE) {
-            std::cout << "c ";
-            for (int i = 0; i < watch.size; i++) {
-                std::cout << std::to_string(internal->externalize(watch.clause->literals[i])) << " ";
+        int iwl1 = watch.clause->literals[0];
+        int iwl2 = watch.clause->literals[1];
+
+        int iwl_other = il == iwl1 ? iwl2 : iwl1;
+        int ewl_other = internal->externalize(iwl_other);
+
+        // checks if ewl_other is satisfied by the remaining stack
+        if (el * ewl_other <= 0) {
+            b = std::max(b, dl_e);
+        } else {
+            // pull this in so it may not need to be executed
+            bool out = false;
+            for (int i = decisions.size() - 1; dl_e < i; i--) {
+                if (decisions[i] == ewl_other) out = true; 
             }
-        }
-        int i_wl1 = watch.clause->literals[0];
-        int i_wl2 = watch.clause->literals[1];
 
-        // other is now the other watched literal
-        int i_other_lit = i_lit == i_wl1 ? i_wl2 : i_wl1;
-        int e_other_lit = internal->externalize(i_other_lit);
-        int e_other_var = std::abs(e_other_lit);
-
-        if (VERBOSE) std::cout << "also by: " << std::to_string(e_other_lit) << " internal: " << std::to_string(i_other_lit) << std::endl;
-        if ((poss_in_stack[e_other_var] >= poss_in_stack[e_var]) || (values[e_other_var] * e_other_lit <= 0)) { 
-            if (VERBOSE) std::cout << "c b = max(" << std::to_string(b) << "," << std::to_string(dls[e_var]) << ")" << std::endl;
-            b = std::max(b, dls[e_var]);
-        } else if (VERBOSE) {
-            std::cout << "c clause is still satisfied" << std::endl;
+            if (out) b = std::max(b, dl_e);
         }
     }
-    STOP(cadicall_check_literal);
-    if (VERBOSE) std::cout << "c returning b = " << std::to_string(b) << std::endl;
+    
     return b;
 }
 
 
-int implicant_shrinking(ivec stack, bvec is_ds, ivec dls, ivec values, ivec dcpl, ivec poss_in_stack, CaDiCaL::Internal *internal) {
-    if (VERBOSE) std::cout << "c\nc implicant_shrinking:" << std::endl;
-    START (cadicall_implicant_shrinking);
-
+int implicant_shrinking(ivec stack, ivec decisions, CaDiCaL::Internal *internal) {
+    if (VERBOSE) std::cout << "c shrinking: " << to_string(stack) << std::endl;
     int b = 0;
-    int index = stack.size() - 1;
-    while (index >= 0) {
-        int v = stack[index];
-        // (is_ds[v] && dcpl[dls[v] - 1] > 1) == values[v] < 0
-        if (!is_ds[v] || (is_ds[v] && dcpl[dls[v]] == 2)) {
-            if (VERBOSE) std::cout << "c " << std::to_string(v * values[v]) << " is not a decision or dc == 2 -> b = max(" << std::to_string(b) << "," << std::to_string(dls[v]) << ")" << std::endl;
-            b = std::max(b, dls[v]);
-        } else if (dls[v] > b) {
-            b = check_literal(v, b, stack, dls, values, index, poss_in_stack, internal);
-        } else if (dls[v] == 0 || dls[v] == b) {
-            if (VERBOSE) std::cout << "c dl of " << std::to_string(v * values[v]) << " is " << std::to_string(dls[v]) << "(0 or b)" << std::endl;
+    int i_stack = stack.size() - 1;
+    int i_decisions = decisions.size() - 1;
+
+    while (0 <= i_stack && 0 < i_decisions) {
+        if (VERBOSE) std::cout << "c trying: " << std::to_string(stack[i_stack]) << std::endl;
+
+        // != -> no decisions
+        if (stack[i_stack] != decisions[i_decisions]) {
+            if (VERBOSE) std::cout << "c not a decisions" << std::endl;
+            // no decision -> only decrease i_stack
+            i_stack--;
+            b = std::max(b, i_decisions);
+        } else if (i_decisions > b) {
+            // decision -> decrease both
+            b = check_literal(b, stack[i_stack], decisions, i_decisions, internal);
+            i_stack--;
+            i_decisions--;
+        } else if (i_decisions == b) {
+            // also decision but break out anyway -> decrease unnecessary
             break;
         }
-        index--;
     }
-    STOP(cadicall_implicant_shrinking);
+
     return b;
-}
-
-
-void assign_or_append(ivec &vec, int val, int dl) {
-    if (VERBOSE) std::cout << "c\nc assign_or_append: " << val << " to " << to_string(vec) << std::endl;
-
-    if (dl < (int)vec.size()) {
-        vec[dl] = val;
-    } else {
-        vec.push_back(val);
-    }
-}
-
-
-void increase_or_append(ivec &vec, int dl) {
-    if (VERBOSE) std::cout << "c\nc increase_or_append: " << to_string(vec) << std::endl;
-
-    if (dl < (int)vec.size()) {
-        vec[dl]++;
-    } else {
-        vec.push_back(1);
-    }
 }
 
 
@@ -172,6 +152,9 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         // decision level
         size_t dl = 0;
 
+        // stack of all assignments, only needed for shrinking, as we need the order of assignments
+        ivec stack;
+
         // decisions == [0, d1, d2, ...]
         // |decisions| - 1 == dl
         // decisions[dl] == decision @ dl
@@ -189,6 +172,8 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             decisions.reserve(n + 1);
             decisions.push_back(0);
 
+            stack.reserve(n);
+
             reason_to_dl.assign(n + 1, -1);
         }
 
@@ -199,15 +184,15 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         tmodels all_models;
 
         bool cb_check_found_model (const tmodel &model) override {
-            if (VERBOSE) std::cout << "c\nc cb_check_found_model:" << std::endl;
+            if (VERBOSE) std::cout << "c\nc cb_check_found_model:" << to_string(model) << std::endl;
 
             int b = dl;
 
-            // if (SHRINK) b = implicant_shrinking(stack, is_ds, dls, values, decision_counts_per_level, poss_in_stack, internal);
+            if (SHRINK) b = implicant_shrinking(stack, decisions, internal);
 
             if (COUNT) {
-                if (VERBOSE) std::cout << "c counting model: " << to_string(model) << std::endl;
                 count += power(2, dl - b);
+                if (VERBOSE) std::cout << "c count += " << std::to_string(power(2, dl - b)) << std::endl;
             } else {
                 all_models.push_back(model);
             }
@@ -238,9 +223,15 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         // this function is called when observed variables are assigned (either by BCP, Decide, or Learning a unit clause). It has a single read-only argument containing literals that became satisfied by the new assignment. In case the notification reports more than one literal, it is guaranteed that all of the reported literals were assigned on the same (current) decision level.
         void notify_assignment(const ivec &list) override {
-            if (VERBOSE) std::cout << "c\nc notify_assignment:" << std::endl;
+            if (VERBOSE) std::cout << "c\nc notify_assignment: " << to_string(list) << std::endl;
 
             assert (list.size() > 0);
+
+            if (VERBOSE) std::cout << "c stack: " << to_string(stack) << std::endl;
+            for (int l : list) {
+                stack.push_back(l);
+            }
+            if (VERBOSE) std::cout << "c stack: " << to_string(stack) << std::endl;
 
             if (solver->is_decision(list[0])) {
                 if (decisions.size() <= dl) {
@@ -258,28 +249,30 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         // the call of this function indicates to the user that on the trail a new decision level has started. The function does not report the actual decision that started this new level or the current decision level — it only reports that a decision happened and thus, the decision level is increased.
         void notify_new_decision_level () override {
-            if (VERBOSE) std::cout << "c\nc notify_new_decision_level:" << std::endl;
+            if (VERBOSE) std::cout << "c\nc notify_new_decision_level: " << std::to_string(dl + 1) << std::endl;
 
             dl++;
-
-            if (VERBOSE) std::cout << "c " + std::to_string(dl) << std::endl;
-
 
             if (VERBOSE) std::cout << to_string(decisions, reason_to_dl, dl) << std::endl;
         };
 
         // this function indicates that the solver backtracked to a lower decision level. Its single argument reports the new decision level. All assignments that were made above this target decision level must be considered as unassigned.
         void notify_backtrack (size_t new_level) override {
-            if (VERBOSE) std::cout << "c\nc notify_backtrack:" << std::endl;
-            if (VERBOSE) std::cout << "c backtracking to " + std::to_string(new_level) << std::endl;
+            if (VERBOSE) std::cout << "c\nc notify_backtrack: " << std::to_string(new_level) << std::endl;
+
             while (decisions.size() - 1 > new_level) {
-                if (VERBOSE) std::cout << "c removed " + std::to_string(decisions.back()) << std::endl;
+                if (VERBOSE) std::cout << "c removed decision: " << std::to_string(decisions.back()) << std::endl;
 
                 decision_to_propagate = decisions.back();
                 decisions.pop_back();
                 propagate_lit = true;
             }
 
+            if (VERBOSE) std::cout << "c stack: " << to_string(stack) << std::endl;
+            while (stack.back() != decisions.back()) {
+                stack.pop_back();
+            }
+            if (VERBOSE) std::cout << "c stack: " << to_string(stack) << std::endl;
 
             dl = new_level;
 
@@ -288,7 +281,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
 
         // called before the solver makes a decision. Return your decision or 0 (solver makes one).
         int cb_decide () override {
-            if (VERBOSE) std::cout << "c\nc cb_decide:" << std::endl;
+            if (VERBOSE) std::cout << "c\nc cb_decide: 0 (let the solver decide)" << std::endl;
 
             return 0;
         };
@@ -311,8 +304,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
         };
 
         int cb_add_reason_clause_lit (int propagated_lit) override {
-            if (VERBOSE) std::cout << "c\nc cb_add_reason_clause_lit:" << std::endl;
-            if (VERBOSE) std::cout << "c for: " << std::to_string(propagated_lit) << std::endl;
+            if (VERBOSE) std::cout << "c\nc cb_add_reason_clause_lit: " << std::to_string(propagated_lit) << std::endl;
 
             static bool flag = true;
             static size_t reason_clause_idx = 0;
@@ -322,25 +314,18 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
                 flag = false;
                 if (VERBOSE) std::cout << "c adding: " << std::to_string(propagated_lit) << std::endl;
 
-                std::cout << "decisions: " << to_string(decisions) << std::endl;
-                std::cout << "reason_to_dl: " << to_string(reason_to_dl) << std::endl;
-                std::cout << "dl: " << std::to_string(dl) << std::endl;
-                if (VERBOSE) std::cout << to_string(decisions, reason_to_dl, dl) << std::endl;
                 return propagated_lit;
             }
 
             if (reason_clause_idx > 0) {
                 if (VERBOSE) std::cout << "c adding: " << std::to_string(-decisions[reason_clause_idx]) << std::endl;
 
-                std::cout << "decisions: " << to_string(decisions) << std::endl;
-                std::cout << "reason_to_dl: " << to_string(reason_to_dl) << std::endl;
-                std::cout << "dl: " << std::to_string(dl) << std::endl;
-                if (VERBOSE) std::cout << to_string(decisions, reason_to_dl, dl) << std::endl;
                 return -decisions[reason_clause_idx--];
             }
 
             if (VERBOSE) std::cout << "c adding: 0" << std::endl;
             flag = true;
+            if (VERBOSE) std::cout << to_string(decisions, reason_to_dl, dl) << std::endl;
             return 0;
         };
 
@@ -397,13 +382,14 @@ int main(int argc, char* argv[]) {
 
     // setting options for chronological backtracking
     // how to disable preprocessing?
-    solver->set("chrono", true);
+    // false != not set
+    // solver->set("chrono", true);
     solver->set("chronoalways", true);
     solver->set("chronostrict", true);
     solver->set("restart", false);
     solver->set("inprocessing", false);
     solver->set("rephase", true);
-    solver->set("log", false);
+    solver->set("log", true);
 
     // default is 2
     if (PROFILE) {
