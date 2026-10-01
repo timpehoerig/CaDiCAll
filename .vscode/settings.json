@@ -2,5 +2,6 @@
     "files.associations": {
         "*.ttml": "xml",
         "*.ttss": "css"
-    }
+    },
+    "cmake.sourceDirectory": "/home/timpe/repos/master_thesis/gperftools"
 }
