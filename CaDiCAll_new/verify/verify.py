@@ -172,15 +172,15 @@ if __name__ == "__main__":
 
     # create tmp dir if it does not exist
     create_dir(PATH_TMP)
-    options = [
-        ["-f"],
-        ["-r"],
-        ["-s"],
-        ["-r", "-f"],
-        ["-r", "-s"],
-        ["-f", "-s"],
-        ["-f", "-s", "-r"],
-    ]
+    # options = [
+    #     ["-f"],
+    #     ["-r"],
+    #     ["-s"],
+    #     ["-r", "-f"],
+    #     ["-r", "-s"],
+    #     ["-f", "-s"],
+    #     ["-f", "-s", "-r"],
+    # ]
 
     options = [["-s"]]
 
@@ -196,6 +196,7 @@ if __name__ == "__main__":
 
     elif args.directory != "":
         for filename in os.listdir(args.directory):
+            print(filename)
             if filename.endswith(".cnf"):
                 cnf_path = path.join(args.directory, filename)
                 results = run_once(options, cnf_path)

@@ -721,6 +721,9 @@ int main(int argc, char* argv[]) {
     solver->set("rephase", true);
     solver->set("log", false);
 
+    // setting external eager reasons to avoid bug in CaDiCaL (no longer there in next release)
+    solver->set("exteagerreasons", true);
+
     // default is 2
     if (PROFILE) {
         solver->set("profile", 2);

@@ -269,7 +269,7 @@ class EnumProp : public CaDiCaL::ExternalPropagator, public CaDiCaL::InternalTra
             }
 
             if (VERBOSE) std::cout << "c stack: " << to_string(stack) << std::endl;
-            while (stack.back() != decisions.back()) {
+            while (stack.size() && stack.back() != decisions.back()) {
                 stack.pop_back();
             }
             if (VERBOSE) std::cout << "c stack: " << to_string(stack) << std::endl;

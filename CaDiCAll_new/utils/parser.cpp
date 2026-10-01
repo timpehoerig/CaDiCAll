@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <sstream>
 
 
 bool get_projected_vars(char* path, tclause& vars) {

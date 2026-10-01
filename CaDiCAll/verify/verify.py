@@ -3,18 +3,20 @@ import os
 from os import path
 import subprocess
 from enum import Enum
+import shutil
 
 from typing import Optional
 
 
 # PATHS
 PATH_TMP = "tmp"
+PATH_FAILED = "failed"
 PATH_DUALIZA = "../../dualiza/dualiza"
 PATH_CNFUZZ = "../../cnfuzz/cnfuzz"
 PATH_CADICALL = "../src/cadicall"
 
 
-def fuzz(path_cnf: str, size: str = "--tiny") -> None:
+def fuzz(path_cnf: str, size: str = "--small") -> None:
     create_file(path_cnf, run_cpp(PATH_CNFUZZ, size).stdout)
 
 
@@ -171,6 +173,7 @@ if __name__ == "__main__":
 
     # create tmp dir if it does not exist
     create_dir(PATH_TMP)
+    create_dir(PATH_FAILED)
     options = [
         ["-f"],
         ["-r"],
@@ -207,6 +210,7 @@ if __name__ == "__main__":
             results = run_once(options)
             if not check_results(results, stats):
                 count_false += 1
+                shutil.move(PATH_TMP + "/fuzzed.cnf", PATH_FAILED + f"/fuzzed_{count_false}_{results["dualiza"]}m.cnf")
             else:
                 count_correct += 1
             count += 1
